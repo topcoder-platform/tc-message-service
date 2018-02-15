@@ -220,6 +220,7 @@ module.exports = (logger) => {
     });
   }
 
+
   /**
    * Grants access to a user by adding that user to the Discrouse topic (or private post)
    * @param {String} userName identifies the user that should receive access
@@ -323,6 +324,19 @@ module.exports = (logger) => {
   }
 
   /**
+   * Create a new webhook for post replies
+   * @param {Object} body request payload
+   * @return {Promise} promise
+   */
+  function createWebhook(body) {
+    return getClient().post('/admin/api/web_hooks', body, {
+      params: {
+        api_username: config.get('discourseSystemUsername'),
+      },
+    });
+  }
+
+  /**
    * Uploads image
    * @param {String} username user uploading the image
    * @param {Object} file image file to upload
@@ -404,6 +418,7 @@ module.exports = (logger) => {
     createPost,
     updatePost,
     deletePost,
+    createWebhook,
     uploadImage,
     createPrivatePost,
     getPost,

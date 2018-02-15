@@ -19,6 +19,7 @@ const getPostHandler = require('./posts/get');
 const updatePostHandler = require('./posts/update');
 const deletePostHandler = require('./posts/delete');
 const systemUserFilter = require('../middleware/system-user-filter.js');
+const webhookHandler = require('./webhooks.js');
 
 const jwt = require('jsonwebtoken');
 
@@ -29,6 +30,9 @@ const jwt = require('jsonwebtoken');
  * @return {Object} response
  */
 module.exports = (logger, db) => {
+  // webhooks
+  router.post('/v4/webhooks', webhookHandler);
+
   // health check
   router.get('/_health', (req, res, next) => { // eslint-disable-line
     // check if we can connect to discourse

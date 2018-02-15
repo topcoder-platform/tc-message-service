@@ -6,6 +6,7 @@ module.exports = {
     POST_CREATED: 'post.created',
     POST_UPDATED: 'post.edited',
     POST_DELETED: 'post.deleted',
+    POST_REPLY: 'post.created',
   },
   USER_ROLE: {
     TOPCODER_ADMIN: 'administrator',
@@ -24,5 +25,6 @@ module.exports = {
     POST_CREATED: 'connect.project.post.created',
     POST_UPDATED: 'connect.project.post.edited',
     POST_DELETED: 'connect.project.post.deleted',
+    POST_REPLY: 'connect.project.post.created',
   },
 };

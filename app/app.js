@@ -15,6 +15,7 @@ const coreLib = require('tc-core-library-js');
 const Routes = require('./routes');
 const db = require('./models');
 const rabbitMQService = require('./services/rabbitmq');
+const Discourse = require('./services/discourse');
 
 // Define and configure app
 const app = express();
@@ -64,6 +65,35 @@ app.use(routes);
 // Event listener for Bus Api
 // =======================
 busApi(app, db, logger);
+
+
+// Set Discourse Webhooks
+function initWebhooks() {
+  const discourseClient = Discourse(logger);
+
+  // webhook payload
+  const requestBody = {
+    payload_url: `${config.get('webhookPayloadBaseUrl')}/v4/webhooks`,
+    content_type: 0,
+    secret: '',
+    wildcard_web_hook: true,
+    verify_certificate: true,
+    active: true,
+    web_hook_event_type_ids: ['post_created'],
+    category_ids: [],
+    group_ids: [],
+  };
+
+  discourseClient.createWebhook(requestBody).then(response => response)
+    .catch((err) => {
+      throw new Error({
+        message: 'Error creating webhook endpoint',
+        httpError: err,
+      });
+    });
+}
+
+initWebhooks();
 
 // Queues
 app.services = {};
