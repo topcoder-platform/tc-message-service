@@ -45,22 +45,6 @@ module.exports = (app, db, logger) => {
     });
   });
 
-  app.on(EVENT.POST_REPLY, ({ post }) => {
-    db.topics.findOne({ where: { discourseTopicId: post.topic_id } })
-      .then((topic) => {
-        if (topic && topic.reference.toLowerCase() === 'project') {
-          createEvent(BUS_API_EVENT.POST_REPLY, {
-            topicId: post.topic_id,
-            postId: post.id,
-            postContent: post.body,
-            userId: post.username,
-            projectId: topic.referenceId,
-            initiatorUserId: post.username,
-          }, logger);
-        }
-      });
-  });
-
   app.on(EVENT.POST_DELETED, ({ req }) => {
     db.topics.findOne({ where: { discourseTopicId: req.params.topicId } })
     .then((topic) => {

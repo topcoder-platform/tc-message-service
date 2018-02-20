@@ -30,9 +30,6 @@ const jwt = require('jsonwebtoken');
  * @return {Object} response
  */
 module.exports = (logger, db) => {
-  // webhooks
-  router.post('/v4/webhooks', webhookHandler);
-
   // health check
   router.get('/_health', (req, res, next) => { // eslint-disable-line
     // check if we can connect to discourse
@@ -93,6 +90,8 @@ module.exports = (logger, db) => {
   router.use(systemUserFilter(logger));
 
   // Register all the routes
+  router.post('/v4/webhooks', webhookHandler);
+
   router.route('/v4/topics/:topicId')
     .get(getTopicHandler(db))
     .delete(topicDeleteHandler(db));

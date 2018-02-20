@@ -1,13 +1,22 @@
 
 const { EVENT } = require('../constants');
+const Discourse = require('../services/discourse');
 
 module.exports = (req, res) => {
-  const post = req.body.post;
-  post.body = post.cooked;
+  const dPost = req.body.post;
+  const logger = req.log;
+  const discourseClient = Discourse(logger);
 
-  req.app.emit(EVENT.POST_REPLY, { post, req });
-  res.json({
-    status: 200,
-    message: 'Event recieved !',
+  discourseClient.getPost(dPost.username, dPost.topic_id).then((post) => {
+    req.app.emit(EVENT.POST_CREATED, { post, req });
+    res.json({
+      status: 200,
+      message: 'Event recieved !',
+    });
+  }).catch((err) => {
+    res.json({
+      status: 500,
+      error: err,
+    });
   });
 };
