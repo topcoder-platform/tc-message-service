@@ -8,11 +8,13 @@ module.exports = (req, res) => {
   const discourseClient = Discourse(logger);
 
   discourseClient.getPost(dPost.username, dPost.topic_id).then((post) => {
-    req.app.emit(EVENT.POST_CREATED, { post, req });
-    res.json({
-      status: 200,
-      message: 'Event recieved !',
-    });
+    if (post.via_email === true) {
+      req.app.emit(EVENT.POST_CREATED, { post, req });
+      res.json({
+        status: 200,
+        message: 'Event recieved !',
+      });
+    }
   }).catch((err) => {
     res.json({
       status: 500,
