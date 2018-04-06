@@ -72,6 +72,7 @@ app.use(addRequestId);
 app.use(cors());
 app.use(coreLib.middleware.logger(null, logger));
 app.use(bodyParser.json({
+  limit: '50mb',
   verify: (req, res, buf) => {
     req.rawBody = buf.toString();
   },
