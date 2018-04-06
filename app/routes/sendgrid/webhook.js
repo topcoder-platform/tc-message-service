@@ -41,6 +41,7 @@ module.exports = db => (req, resp, next) => {
     // eslint-disable-next-line
 	  return;
   }
+  logger.trace(`token=> ${token}`);
 
   const helper = HelperService(logger, db);
   logger.debug(`Processing email from ${fromAddress} to ${toAddress} with token ${token} and topic id ${topicId}`);
@@ -54,6 +55,7 @@ module.exports = db => (req, resp, next) => {
       userEmail: fromAddress,
     };
     const correctToken = jwt.sign(body, config.authSecret, { noTimestamp: true }).split('.')[2];
+    logger.trace(`correctToken=> ${correctToken}`);
 
     if (correctToken !== token) {
       status = 'fail';
