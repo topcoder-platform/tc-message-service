@@ -19,6 +19,7 @@ const getPostHandler = require('./posts/get');
 const updatePostHandler = require('./posts/update');
 const deletePostHandler = require('./posts/delete');
 const systemUserFilter = require('../middleware/system-user-filter.js');
+const webhookHandler = require('./webhooks.js');
 
 const jwt = require('jsonwebtoken');
 
@@ -89,6 +90,8 @@ module.exports = (logger, db) => {
   router.use(systemUserFilter(logger));
 
   // Register all the routes
+  router.post('/v4/webhooks', webhookHandler);
+
   router.route('/v4/topics/:topicId')
     .get(getTopicHandler(db))
     .delete(topicDeleteHandler(db));

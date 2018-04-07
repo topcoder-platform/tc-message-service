@@ -220,6 +220,7 @@ module.exports = (logger) => {
     });
   }
 
+
   /**
    * Grants access to a user by adding that user to the Discrouse topic (or private post)
    * @param {String} userName identifies the user that should receive access
