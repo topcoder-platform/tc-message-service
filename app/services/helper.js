@@ -245,6 +245,18 @@ module.exports = (logger, db) => {
     return (url && url.replace(/http[s]?:\/\//, '').split('/').slice(1).join('/')) || '';
   }
 
+  /**
+   * Helper method to clean up the provided email address for deducing the final address that matters for
+   * the delivery of the email i.e. removing any non standard parts in the email address e.g. getting rid
+   * of anything after + sign in the local part of the email.
+   */
+  function sanitizeEmail(email) {
+    if (email) {
+      return email.substring(0,email.indexOf('+')) + email.substring(email.indexOf('@'));
+    }
+    return '';
+  }
+
   return {
     getTopcoderUser,
     lookupUserHandles,
@@ -257,5 +269,6 @@ module.exports = (logger, db) => {
     mentionUserIdToHandle,
     isAdmin,
     s3KeyFromUrl,
+    sanitizeEmail,
   };
 };
