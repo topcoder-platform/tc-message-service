@@ -298,6 +298,6 @@ module.exports = (logger, db) => {
     isAdmin,
     s3KeyFromUrl,
     lookupTopic,
-    sanitizeEmail
+    sanitizeEmail,
   };
 };
