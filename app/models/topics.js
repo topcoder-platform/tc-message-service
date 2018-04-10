@@ -96,6 +96,7 @@ module.exports = (Sequelize, DataTypes) => {
     const dbTopic = models.topics.build({
       reference: topic.reference,
       referenceId: topic.referenceId,
+      discourseTopicId:topic.discourseTopicId,
       title: topic.title,
       tag: topic.tag,
       hidden: false,
