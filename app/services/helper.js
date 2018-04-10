@@ -1,3 +1,5 @@
+
+
 const _ = require('lodash');
 const config = require('config');
 const axios = require('axios');
@@ -267,6 +269,22 @@ module.exports = (logger, db) => {
     return (url && url.replace(/http[s]?:\/\//, '').split('/').slice(1).join('/')) || '';
   }
 
+  /**
+   * Helper method to clean up the provided email address for deducing the final address that matters for
+   * the delivery of the email i.e. removing any non standard parts in the email address e.g. getting rid
+   * of anything after + sign in the local part of the email.
+   *
+   * @param {String} email email address to be sanitized
+   *
+   * @returns {String} sanitized email
+   */
+  function sanitizeEmail(email) {
+    if (email) {
+      return email.substring(0, email.indexOf('+')) + email.substring(email.indexOf('@'));
+    }
+    return '';
+  }
+
   return {
     getTopcoderUser,
     lookupUserHandles,
@@ -280,5 +298,6 @@ module.exports = (logger, db) => {
     isAdmin,
     s3KeyFromUrl,
     lookupTopic,
+    sanitizeEmail
   };
 };
