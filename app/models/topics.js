@@ -133,9 +133,11 @@ module.exports = (Sequelize, DataTypes) => {
         order: [['postNumber', 'desc']],
         where: postsWhere,
         limit: numberOfPosts !== -1 ? numberOfPosts : null,
+        required: false,
         include: [{
           model: models.post_user_stats,
           as: 'userStats',
+          required: false,
           // order: [['postNumber', 'desc']],
           // where: userStatsWhere,
           // limit: numberOfPosts !== -1 ? numberOfPosts : null,

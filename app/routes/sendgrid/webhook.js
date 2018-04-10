@@ -52,7 +52,7 @@ module.exports = db => (req, resp, next) => {
     const body = {
       userId,
       topicId,
-      userEmail: HelperService.sanitizeEmail(fromAddress),
+      userEmail: helper.sanitizeEmail(fromAddress),
     };
     const correctToken = jwt.sign(body, config.authSecret, { noTimestamp: true }).split('.')[2];
     logger.trace(`correctToken=> ${correctToken}`);
