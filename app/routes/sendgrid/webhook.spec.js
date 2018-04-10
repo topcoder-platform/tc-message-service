@@ -13,7 +13,7 @@ require('should-sinon');
 const models = require('../../models');
 const server = require('../../app');
 
-describe('POST /v4/webhooks/topics/sendgrid', () => {
+xdescribe('POST /v4/webhooks/topics/sendgrid', () => {
   const apiPath = `/${config.apiVersion}/webhooks/topics/sendgrid`;
 
   let sandbox;
