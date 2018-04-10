@@ -209,6 +209,7 @@ export AWS_ACCESS_KEY_ID=<<AWS access key>>
 export AWS_REGION=<<AWS region>>
 export AWS_SECRET_ACCESS_KEY=<<AWS secret access key>>
 export AWS_S3_BUCKET=<<AWS S3 bucket>>
+export TC_ADMIN_TOKEN=<<TC_ADMIN_TOKEN>>
 ```
 
 NOTE:

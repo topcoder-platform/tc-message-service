@@ -63,7 +63,7 @@ const generateId = (type, id) => `${type}_${id}`;
 const savePost = (db, req, resp, post, formatMessage) => {
   const logger = req.log;
   const adapter = new Adapter(logger, db);
-  const userId = post.user_id;
+  const userId = post.username;
   return new Promise((resolve, reject) => {
     // get new topic id
     DynamoService.findById(generateId('topic', post.topicId)).then((data) => {
@@ -80,7 +80,7 @@ const savePost = (db, req, resp, post, formatMessage) => {
               topic.save().then(() => logger.debug(formatMessage('Topic updated async for post.', post, savedPost)));
               db.post_user_stats.createStats(db, logger, {
                 post: savedPost,
-                userId: post.user_id,
+                userId: post.username,
                 action: 'READ',
               }).then(() => logger.debug(formatMessage('post_user_stats entry created for post.', post, savedPost)));
               adapter.adaptPost(savedPost)
@@ -139,7 +139,8 @@ const saveTopic = (db, req, resp, topic, formatMessage) => {
   const logger = req.log;
   const adapter = new Adapter(logger, db);
 
-  const userId = topic.user_id;
+  const userId = topic.details.created_by.username;
+  
   const helper = HelperService(logger, db);
 
   return new Promise((resolve, reject) => {
@@ -148,7 +149,10 @@ const saveTopic = (db, req, resp, topic, formatMessage) => {
       const pgTopic = {
         reference: 'project',
         title: topic.title,
-        referenceId,
+        discourseTopicId:topic.id,
+        tag:"PRIMARY",
+        referenceId
+        
       };
       db.topics.createTopic(db, pgTopic, userId)
         .then((savedTopic) => { /* eslint no-param-reassign: ["error", { "props": true, "ignorePropertyModificationsFor": ["savedTopic"] }] */
