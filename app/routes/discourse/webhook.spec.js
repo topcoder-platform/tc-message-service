@@ -17,8 +17,8 @@ const existingTopicJson = require('../../tests/discourseReferenceLookup.json');
 const models = require('../../models');
 const server = require('../../app');
 
-const topicHash = 'sha256=d02971ffe4f66f63024f3b55ac1c6d765e663b0fdf8496bdaec0e70c5563efee';
-const postHash = 'sha256=52921b7fe74a31ea2c3805c9cddacb2e889a85182c636b6a56c8f86824989cdf';
+const topicHash = 'sha256=8c63bf6e86694e10d23b3003e36afd4c229eaa970eba79949f4389b997a4db7f';
+const postHash = 'sha256=3da04b10161a61d3347c0414606b15560cd872a49f477619fe03a0b70c92755c';
 
 describe('POST /v4/webhooks/topics/discourse', () => {
   const apiPath = `/${config.apiVersion}/webhooks/topics/discourse`;

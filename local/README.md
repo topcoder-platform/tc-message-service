@@ -210,6 +210,7 @@ export AWS_REGION=<<AWS region>>
 export AWS_SECRET_ACCESS_KEY=<<AWS secret access key>>
 export AWS_S3_BUCKET=<<AWS S3 bucket>>
 export TC_ADMIN_TOKEN=<<TC_ADMIN_TOKEN>>
+export DISCOURSE_WEBHOOK_SECRET=<<DISCOURSE_WEBHOOK_SECRET>>
 ```
 
 NOTE:
