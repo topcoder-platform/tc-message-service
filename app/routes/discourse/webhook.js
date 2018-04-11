@@ -93,11 +93,7 @@ const savePost = (db, req, resp, post, formatMessage) => {
             .then((adaptedPost) => {
               logger.debug(adaptedPost, 'adaptedPost');
               req.app.emit(EVENT.POST_CREATED, {
-                post: {
-                  topicId,
-                  id: adaptedPost.id,
-                  postContent: adaptedPost.rawContent
-                },
+                post: savedPost,
                 topic,
                 req: {
                   authUser: {
