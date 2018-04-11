@@ -166,7 +166,8 @@ const findById = id => getAdapter().findById(id);
 const findPayloadById = id =>
   new Promise((resolve) => {
     findById(id).then((item) => {
-      if (item && item.Item && item.Item.Payload && item.Item.Payload.S) {
+      if (item && item.Item && item.Item.Payload && item.Item.Payload.S &&
+        item.Item.Status && item.Item.Status.S === DISCOURSE_WEBHOOK_STATUS.ERROR) {
         try {
           const existing = JSON.parse(item.Item.Payload.S);
           resolve(existing);

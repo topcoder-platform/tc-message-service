@@ -71,7 +71,7 @@ function Adapter(logger, db, _discourseClient = null) {// eslint-disable-line
     const topics = _.map(dbTopics, (dbTopic) => {
       let userId = dbTopic.createdBy;
       userId = userId !== 'system' && userId !== DISCOURSE_SYSTEM_USERNAME ? parseInt(userId, 10) : userId;
-      const totalPosts = _.find(topicsPostsCount, tpc => tpc.topicId === dbTopic.id).totalPosts;
+      const totalPosts = (_.find(topicsPostsCount, tpc => tpc.topicId === dbTopic.id) || { totalPosts: 0 }).totalPosts;
       const topic = {
         id: dbTopic.id,
         dbId: dbTopic.id,

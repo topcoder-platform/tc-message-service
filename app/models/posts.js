@@ -79,7 +79,7 @@ module.exports = (Sequelize, DataTypes) => {
     Post.hasMany(models.post_user_stats, { as: 'userStats', foreignKey: 'postId' });
   };
 
-  Post.createPost = (models, postBody, topic, reqUserId) => {
+  Post.createPost = (models, postBody, topic, reqUserId, id = null) => {
     const post = models.posts.build({
       topicId: topic.id,
       raw: postBody,
@@ -92,6 +92,9 @@ module.exports = (Sequelize, DataTypes) => {
       updatedAt: new Date(),
       updatedBy: reqUserId,
     });
+    if (id) {
+      post.id = id;
+    }
     return post.save();
   };
 

@@ -58,7 +58,7 @@ module.exports = (logger, db) => {
     };
     const discourseToken = req.header('x-discourse-event-signature');
     const discourseEvent = req.header('x-discourse-event');
-    const allowedEvents = (discourseEvent === 'post_created' || discourseEvent === 'topic_created');
+    const allowedEvents = ['post_created', 'post_edited', 'topic_created', 'topic_edited'].indexOf(discourseEvent) >= 0;
 
     if (discourseToken) {
       const token = SecurityHelper.calculateHmac(req.rawBody || '', 'sha256=');

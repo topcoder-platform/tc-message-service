@@ -64,56 +64,94 @@ const savePost = (db, req, resp, post, formatMessage) => {
   const logger = req.log;
   const adapter = new Adapter(logger, db);
   const userId = post.username;
+  logger.debug('savePost called');
   return new Promise((resolve, reject) => {
+    logger.debug('discourse topic id: '+post.topic_id);
     // get new topic id
-    DynamoService.findById(generateId('topic', post.topicId)).then((data) => {
-      const topicId = (data.Item && data.Item.NewId) ? data.Item.NewId.S : '';
-      if (!topicId.trim()) {
-        reject(formatMessage('Unable to find matching topic for post.', post));
-      }
-      db.topics.findById(topicId)
-        .then((topic) => { /* eslint no-param-reassign: ["error", { "props": true, "ignorePropertyModificationsFor": ["topic"] }] */
-          if (topic) {
-            db.posts.createPost(db, post.cooked, topic, userId).then((savedPost) => {
-              logger.debug(formatMessage('Post created via discourse webhook.', post));
-              topic.highestPostNumber += 1;
-              topic.save().then(() => logger.debug(formatMessage('Topic updated async for post.', post, savedPost)));
-              db.post_user_stats.createStats(db, logger, {
-                post: savedPost,
-                userId: post.username,
-                action: 'READ',
-              }).then(() => logger.debug(formatMessage('post_user_stats entry created for post.', post, savedPost)));
-              adapter.adaptPost(savedPost)
-                .then((adaptedPost) => {
-                  req.app.emit(EVENT.POST_CREATED, {
-                    post: {
-                      topicId,
-                      id: post.id,
-                      postContent: post.raw
-                    },
-                    topic,
-                    req: {
-                      authUser: {
-                        userId
-                      }
-                    }
-                  });
-                  resolve(adaptedPost);
-                }).catch((e) => {
-                  logger.error(e);
-                  reject(formatMessage('Unable to adapt post for emit.', post, savedPost));
-                });
+    db.topics.findTopics(db, adapter, { filters: {discourseTopicId:post.topic_id}, numberOfPosts: -1, reqUserId: userId })
+      .then((dbTopics) => {
+        if (!dbTopics || dbTopics.length === 0) {
+          logger.debug(formatMessage('Could not find topic by discourse id.', post));
+          reject(formatMessage('Unable to find matching topic for post.', post));
+          return;
+        }
+        const topic = dbTopics[0];
+        const topicId = topic.id;
+        if (!topic.highestPostNumber) topic.highestPostNumber=1;
+        db.posts.createPost(db, post.cooked, topic, userId, post.id).then((savedPost) => {
+          logger.debug(formatMessage('Post created via discourse webhook.', post));
+
+          topic.highestPostNumber += 1;
+          db.topics.updateTopic(db,adapter,{highestPostNumber:topic.highestPostNumber}, {topicId:topic.id, reqUserId:userId}).
+            then(() => logger.debug(formatMessage('Topic updated async for post.', post, savedPost)));
+          db.post_user_stats.createStats(db, logger, {
+            post: savedPost,
+            userId: post.username,
+            action: 'READ',
+          }).then(() => logger.debug(formatMessage('post_user_stats entry created for post.', post, savedPost)));
+          adapter.adaptPost(savedPost)
+            .then((adaptedPost) => {
+              req.app.emit(EVENT.POST_CREATED, {
+                post: {
+                  topicId,
+                  id: post.id,
+                  postContent: post.raw
+                },
+                topic,
+                req: {
+                  authUser: {
+                    userId
+                  }
+                }
+              });
+              resolve(adaptedPost);
+            }).catch((e) => {
+              logger.error(e);
+              reject(formatMessage('Unable to adapt post for emit.', post, savedPost));
             });
-          } else {
-            reject(formatMessage('No topic found.', post));
-          }
         }).catch((e) => {
-          reject(formatMessage('Error while finding topic from system.', post));
-        });
+          logger.error(e);
+          reject(formatMessage('Error creating topic in db.', post));
+        });         
     }).catch((e) => {
-      logger.warn(formatMessage('Error while finding topic from logs.', post));
+      logger.warn(formatMessage('Error while finding topic by discourse topic id.', post));
       logger.warn(e);
     })
+  });
+};
+
+/*
+* Updates the post.
+* @param {Object} db the database
+* @param {Object} req the request
+* @param {Object} resp the response
+* @param {Object} post the raw post to save
+* @param {Function} formatMessage function to format the log message
+* @returns {Object} promise that will resolve when the post is saved
+*/
+const updatePost = (db, req, resp, post, formatMessage) => {
+  const logger = req.log;
+  const adapter = new Adapter(logger, db);
+  const userId = post.username;
+
+  return new Promise((resolve, reject) => {
+
+    db.posts.updatePost(db, adapter, { raw: post.cooked }, { postId:post.id, reqUserId: post.username })
+      .then((updatedPost) => {
+        logger.debug(formatMessage('Post updated via discourse webhook.', post));
+        //find topic
+        db.topics.findTopic(db, adapter, { topicId:updatedPost.topicId, raw: true }).then(topic=>{
+          logger.debug(formatMessage('Post topic fetched for emit.', post));
+          req.app.emit(EVENT.POST_UPDATED, { updatedPost, req, topic });
+          resolve(updatedPost);
+        }).catch((e) => {
+          logger.error(e);
+          reject(formatMessage('Unable to get post topic for emit.', updatedPost, updatedPost));
+        });
+      }).catch((e) => {
+        logger.error(e);
+        reject(formatMessage('Unable to update post.', post));
+      });
   });
 };
 
@@ -144,6 +182,7 @@ const saveTopic = (db, req, resp, topic, formatMessage) => {
   const helper = HelperService(logger, db);
 
   return new Promise((resolve, reject) => {
+
     helper.lookupTopic(topic.id).then((mirrorTopic) => {
       const referenceId = mirrorTopic.referenceId;
       const pgTopic = {
@@ -164,7 +203,9 @@ const saveTopic = (db, req, resp, topic, formatMessage) => {
             if (data && data.Items) {
               data.Items.map(post => post['Id']['S']).forEach((postId) => {
                 DynamoService.findPayloadById(postId).then((post) => {
-                  process(db, req, resp, null, post);
+                  if (post){
+                    process(db, req, resp, null, post,'create');
+                  }
                 }).catch((e) => {
                   logger.warn(formatMessage('Unable to save post for topic', topic));
                   logger.warn(e);
@@ -189,6 +230,51 @@ const saveTopic = (db, req, resp, topic, formatMessage) => {
 };
 
 /*
+* Updates the topic.
+*
+* @param {Object} db the database
+* @param {Object} req the request
+* @param {Object} resp the response
+* @param {Object} topic the raw topic to save
+* @param {Function} formatMessage function to format the log message
+* @returns {Object} promise that will resolve when the topic is saved
+*/
+const updateTopic = (db, req, resp, topic, formatMessage) => {
+  const logger = req.log;
+  const adapter = new Adapter(logger, db);
+
+  const userId = topic.details.created_by.username;
+  
+  const helper = HelperService(logger, db);
+
+  return new Promise((resolve, reject) => {
+    db.topics.findTopics(db, adapter, { filters: {discourseTopicId:topic.id}, numberOfPosts: -1, reqUserId: userId })
+      .then((dbTopics) => {
+        if (!dbTopics || dbTopics.length === 0) {
+          logger.debug(formatMessage('Could not find topic by discourse id.', topic));
+          reject(formatMessage('Unable to get topic to update.', topic));
+          return;
+        }
+        const pgTopic = dbTopics[0];
+        logger.info(pgTopic);
+        db.topics.updateTopic(db, adapter, { title:topic.title }, { topicId : pgTopic.id, reqUserId: userId })
+          .then((savedTopic) => {
+            logger.debug(formatMessage('Topic updated in Postgres.', topic, savedTopic));
+            resolve(savedTopic);
+          }).catch((error) => {
+            logger.error(formatMessage(error, topic));
+            logger.debug(formatMessage('Unable to update topic.', topic, savedTopic));
+            resolve(savedTopic);
+          });
+        
+      }).catch((errorMessage) => {
+        logger.error(formatMessage(errorMessage, topic));
+        reject(formatMessage('Error while fetching topic by discourse id.', topic));
+      });
+  });
+};
+
+/*
 * Process the topic or post from the discourse webhook.
 *
 * @param {Object} db the database
@@ -198,12 +284,13 @@ const saveTopic = (db, req, resp, topic, formatMessage) => {
 * @param {Object} post the raw post to save
 * @returns {Object} promise that will resolve when the topic is saved
 */
-const process = (db, req, resp, topic, post) => {
+const process = (db, req, resp, topic, post, modelUpdateType) => {
   const logger = req.log;
 
   // objects
   const obj = topic || post;
-  const type = topic ? 'topic' : 'post';
+  const type = topic ? (modelUpdateType=='create'?'topic':'topic_update')
+                     : (modelUpdateType=='create'?'post':'post_update');
 
   // ids
   const id = generateId(type, obj.id);
@@ -211,11 +298,12 @@ const process = (db, req, resp, topic, post) => {
 
   // specific functions
   const formatMessage = topic ? createTopicLogMessage : createPostLogMessage;
-  const save = topic ? saveTopic : savePost;
+  const handler = topic ?  (modelUpdateType=='create'?saveTopic:updateTopic)
+                         : (modelUpdateType=='create'?savePost:updatePost);
 
   return DynamoService.findOrCreate(id, topicId, type, obj).then((data) => {
     logger.debug(formatMessage(`Initial loading of ${type} from discourse webhook successful.`, obj));
-    return save(db, req, resp, obj, formatMessage).then((saved) => {
+    return handler(db, req, resp, obj, formatMessage).then((saved) => {
       return DynamoService.updateNewIdAndStatus(id, saved.id, DISCOURSE_WEBHOOK_STATUS.COMPLETED).then((data) => {
         logger.info(formatMessage(`Completed ${type} processing from discourse webhook.`, obj, saved));
       }).catch((e) => {
@@ -242,9 +330,11 @@ module.exports = db => (req, resp, next) => {
   const logger = req.log;
   const post = req.body.post ? Object.assign({}, req.body.post, { topicId: req.body.post.topic_id }) : null;
   const topic = req.body.topic;
+  const discourseEvent = req.header('x-discourse-event');
+  const modelUpdateType = discourseEvent.indexOf('created')>0?'create':'update';
 
   if (topic || post) {
-    return process(db, req, resp, topic, post).finally(() => success(resp));
+    return process(db, req, resp, topic, post, modelUpdateType).finally(() => success(resp));
   } else {
     logger.warn('Unable to process discourse webhook', req);
     return Promise.resolve();
