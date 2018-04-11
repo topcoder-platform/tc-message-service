@@ -41,18 +41,22 @@ module.exports = (logger, db) => {
     const url = `${config.get('topicServiceUrl')}/${topicId}`;
     logger.debug(`Helper.lookupTopic for topicId: ${topicId} against ${url}`);
 
-    return axios.get(url, {
-      headers: {
-        Authorization: `Bearer ${config.get('TC_ADMIN_TOKEN')}`,
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-      },
-    })
-    .then((response) => {
-      const data = _.get(response, 'data.result.content', null);
-      if (!data) { throw new Error('Response does not have result.content'); }
-      logger.debug('Helper.lookupTopic response', data);
-      return data;
+    return util.getSystemUserToken(logger)
+    .then((token) => {
+      logger.debug(`Bearer ${token}`);
+      return axios.get(url, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+      })
+      .then((response) => {
+        const data = _.get(response, 'data.result.content', null);
+        if (!data) { throw new Error('Response does not have result.content'); }
+        logger.debug('Helper.lookupTopic response', data);
+        return data;
+      });
     });
   }
 
