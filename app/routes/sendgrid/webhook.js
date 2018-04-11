@@ -76,7 +76,7 @@ module.exports = db => (req, resp, next) => {
         logger.error('incoming email token is not valid');
         status = 'fail-invalid-token';
       }
-      const emailLog = db.emailLogs.build({
+      const emailLog = db.email_logs.build({
         fromAddress,
         toAddress,
         ccAddresses,

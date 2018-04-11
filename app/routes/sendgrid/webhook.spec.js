@@ -28,7 +28,7 @@ xdescribe('POST /v4/webhooks/topics/sendgrid', () => {
   });
 
   it('should be able to process status failure', (done) => {
-    models.emailLogs.count().then((initialCount) => {
+    models.email_logs.count().then((initialCount) => {
       const getHttpClientStub = sandbox.stub(util, 'getHttpClient');
       getHttpClientStub.returns(axios);
 
@@ -73,9 +73,9 @@ xdescribe('POST /v4/webhooks/topics/sendgrid', () => {
           getHttpClientStub.calledOnce.should.be.true();
           getStub.calledOnce.should.be.true();
           postStub.calledOnce.should.be.true();
-          models.emailLogs.count().then((afterCount) => {
+          models.email_logs.count().then((afterCount) => {
             afterCount.should.be.eql(initialCount + 1);
-            findLast(models.emailLogs).then((emailLog) => {
+            findLast(models.email_logs).then((emailLog) => {
               emailLog.fromAddress.should.be.eql('jon@gmail.com');
               emailLog.status.should.be.eql('fail');
               done();
@@ -86,7 +86,7 @@ xdescribe('POST /v4/webhooks/topics/sendgrid', () => {
   });
 
   it('should be able to process status successfully', (done) => {
-    models.emailLogs.count().then((initialCount) => {
+    models.email_logs.count().then((initialCount) => {
       const getHttpClientStub = sandbox.stub(util, 'getHttpClient');
       getHttpClientStub.returns(axios);
 
@@ -135,9 +135,9 @@ xdescribe('POST /v4/webhooks/topics/sendgrid', () => {
           getStub.calledOnce.should.be.true();
           postStub.calledOnce.should.be.true();
           jwtStub.calledOnce.should.be.true();
-          models.emailLogs.count().then((afterCount) => {
+          models.email_logs.count().then((afterCount) => {
             afterCount.should.be.eql(initialCount + 1);
-            findLast(models.emailLogs).then((emailLog) => {
+            findLast(models.email_logs).then((emailLog) => {
               emailLog.fromAddress.should.be.eql('jon@gmail.com');
               emailLog.status.should.be.eql('success');
               done();

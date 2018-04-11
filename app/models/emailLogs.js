@@ -7,7 +7,7 @@
  * @return {void}
  */
 module.exports = (Sequelize, DataTypes) => {
-  const EmailLog = Sequelize.define('emailLogs', {
+  const EmailLog = Sequelize.define('email_logs', {
     // The primary key
     id: {
       type: DataTypes.BIGINT,

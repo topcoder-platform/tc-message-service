@@ -2,7 +2,7 @@
 module.exports = {
   up: function (queryInterface, Sequelize) {
     queryInterface.createTable(
-        'emailLogs',
+        'email_logs',
         {
             id: {
               type: Sequelize.BIGINT,
@@ -59,6 +59,6 @@ module.exports = {
     );
   },
   down: function (queryInterface, Sequelize) {
-    queryInterface.dropTable('emailLogs');
+    queryInterface.dropTable('email_logs');
   }
 };

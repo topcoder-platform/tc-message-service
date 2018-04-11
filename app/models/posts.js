@@ -24,7 +24,7 @@ module.exports = (Sequelize, DataTypes) => {
       allowNull: false,
     },
     // discourse post id for mapping updates in posts via discourse webhook
-    discoursePostId: {  
+    discoursePostId: {
       type: Sequelize.BIGINT,
       allowNull: true,
     },
@@ -153,10 +153,10 @@ module.exports = (Sequelize, DataTypes) => {
   Post.updatePost = (models, adapter, updatedFields, { postId, discoursePostId, reqUserId }) => {
     const where = { deletedAt: { [Sequelize.Op.eq]: null } };
     if (postId) {
-      where['id'] = postId;
+      where.id = postId;
     }
     if (discoursePostId) {
-      where['discoursePostId'] = discoursePostId;
+      where.discoursePostId = discoursePostId;
     }
     return models.posts.update(
       Object.assign({}, updatedFields, { updatedBy: reqUserId }),
