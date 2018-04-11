@@ -79,7 +79,7 @@ const savePost = (db, req, resp, post, formatMessage) => {
         const topicId = topic.id;
         if (!topic.highestPostNumber) topic.highestPostNumber=1;
         db.posts.createPost(db, post.cooked, topic, userId, post.id).then((savedPost) => {
-          logger.debug(formatMessage('Post created via discourse webhook.', post));
+          logger.debug(formatMessage('Post created via discourse webhook.', post, savedPost));
 
           topic.highestPostNumber += 1;
           db.topics.updateTopic(db,adapter,{highestPostNumber:topic.highestPostNumber}, {topicId:topic.id, reqUserId:userId}).

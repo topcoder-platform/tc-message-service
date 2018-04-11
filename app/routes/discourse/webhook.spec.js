@@ -17,8 +17,9 @@ const existingTopicJson = require('../../tests/discourseReferenceLookup.json');
 const models = require('../../models');
 const server = require('../../app');
 
+// hashes created using discourseWebhookSecret value from config
 const topicHash = 'sha256=8c63bf6e86694e10d23b3003e36afd4c229eaa970eba79949f4389b997a4db7f';
-const postHash = 'sha256=3da04b10161a61d3347c0414606b15560cd872a49f477619fe03a0b70c92755c';
+const postHash = 'sha256=b04d2c86a6da3bd1b3c42ab99fb79c54caaea45985ccfddea85f87b42c6a40ec';
 
 describe('POST /v4/webhooks/topics/discourse', () => {
   const apiPath = `/${config.apiVersion}/webhooks/topics/discourse`;
@@ -138,7 +139,7 @@ describe('POST /v4/webhooks/topics/discourse', () => {
     });
   });
 
-  xit('should return 200 and process post', (done) => {
+  it('should return 200 and process post', (done) => {
     models.posts.count().then((initialCount) => {
       const existingTopic = {
         Item: {
@@ -167,13 +168,13 @@ describe('POST /v4/webhooks/topics/discourse', () => {
         .post(apiPath)
         .set({
           'x-discourse-event-signature': postHash,
-          'x-discourse-event': 'topic_created',
+          'x-discourse-event': 'post_created',
         })
         .send(postJson)
         .expect(200)
         .end((err) => {
           should.not.exist(err);
-          stubGetItem.calledTwice.should.be.true();
+          stubGetItem.calledOnce.should.be.true();
           stubPutItem.calledOnce.should.be.true();
           stubUpdateItem.calledOnce.should.be.true();
           models.posts.count().then((afterCount) => {
