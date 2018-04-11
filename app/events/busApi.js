@@ -1,4 +1,4 @@
-// import _ from 'lodash';
+import _ from 'lodash';
 import 'config';
 import { EVENT, BUS_API_EVENT } from '../constants';
 import { createEvent } from '../services/busApi';
@@ -11,7 +11,7 @@ module.exports = (app, db, logger) => {
       createEvent(BUS_API_EVENT.TOPIC_CREATED, {
         topicId: topic.id,
         topicTitle: topic.title,
-        postContent: topic.posts[0].raw,
+        postContent: _.get(topic, 'posts[0].raw', ''),
         userId: req.authUser.userId,
         projectId: topic.referenceId,
         initiatorUserId: req.authUser.userId,

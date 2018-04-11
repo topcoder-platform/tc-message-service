@@ -190,8 +190,8 @@ const saveTopic = (db, req, resp, topic, formatMessage) => {
         title: topic.title,
         discourseTopicId:topic.id,
         tag:"PRIMARY",
-        referenceId
-        
+        referenceId,
+        posts: [] // discourse sends separate events for topic and post creation for intial topic creation
       };
       db.topics.createTopic(db, pgTopic, userId)
         .then((savedTopic) => { /* eslint no-param-reassign: ["error", { "props": true, "ignorePropertyModificationsFor": ["savedTopic"] }] */
