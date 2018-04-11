@@ -94,8 +94,8 @@ const savePost = (db, req, resp, post, formatMessage) => {
               req.app.emit(EVENT.POST_CREATED, {
                 post: {
                   topicId,
-                  id: post.id,
-                  postContent: post.raw
+                  id: adaptedPost.id,
+                  postContent: adaptedPost.rawContent
                 },
                 topic,
                 req: {
@@ -136,7 +136,7 @@ const updatePost = (db, req, resp, post, formatMessage) => {
 
   return new Promise((resolve, reject) => {
 
-    db.posts.updatePost(db, adapter, { raw: post.cooked }, { postId:post.id, reqUserId: post.username })
+    db.posts.updatePost(db, adapter, { raw: post.cooked }, { discoursePostId: post.id, reqUserId: post.username })
       .then((updatedPost) => {
         logger.debug(formatMessage('Post updated via discourse webhook.', post));
         //find topic

@@ -23,6 +23,11 @@ module.exports = (Sequelize, DataTypes) => {
       type: DataTypes.STRING,
       allowNull: false,
     },
+    // discourse post id for mapping updates in posts via discourse webhook
+    discoursePostId: {  
+      type: Sequelize.BIGINT,
+      allowNull: true,
+    },
     // topic id
     topicId: {
       type: DataTypes.BIGINT,
@@ -79,9 +84,10 @@ module.exports = (Sequelize, DataTypes) => {
     Post.hasMany(models.post_user_stats, { as: 'userStats', foreignKey: 'postId' });
   };
 
-  Post.createPost = (models, postBody, topic, reqUserId, id = null) => {
+  Post.createPost = (models, postBody, topic, reqUserId, discoursePostId = null) => {
     const post = models.posts.build({
       topicId: topic.id,
+      discoursePostId,
       raw: postBody,
       postNumber: topic.highestPostNumber + 1,
       viaEmail: false,
@@ -92,9 +98,6 @@ module.exports = (Sequelize, DataTypes) => {
       updatedAt: new Date(),
       updatedBy: reqUserId,
     });
-    if (id) {
-      post.id = id;
-    }
     return post.save();
   };
 
@@ -147,8 +150,14 @@ module.exports = (Sequelize, DataTypes) => {
     });
   };
 
-  Post.updatePost = (models, adapter, updatedFields, { postId, reqUserId }) => {
-    const where = { id: postId, deletedAt: { [Sequelize.Op.eq]: null } };
+  Post.updatePost = (models, adapter, updatedFields, { postId, discoursePostId, reqUserId }) => {
+    const where = { deletedAt: { [Sequelize.Op.eq]: null } };
+    if (postId) {
+      where['id'] = postId;
+    }
+    if (discoursePostId) {
+      where['discoursePostId'] = discoursePostId;
+    }
     return models.posts.update(
       Object.assign({}, updatedFields, { updatedBy: reqUserId }),
       {

@@ -36,6 +36,11 @@ module.exports = {
           type: Sequelize.TEXT,
           allowNull: true,
         },
+        // discourse post id for mapping updates in posts via discourse webhook
+        discoursePostId: {  
+          type: Sequelize.BIGINT,
+          allowNull: true,
+        },
         // topic id
         topicId: {
           type: Sequelize.BIGINT,
