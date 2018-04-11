@@ -91,6 +91,7 @@ const savePost = (db, req, resp, post, formatMessage) => {
           }).then(() => logger.debug(formatMessage('post_user_stats entry created for post.', post, savedPost)));
           adapter.adaptPost(savedPost)
             .then((adaptedPost) => {
+              logger.debug(adaptedPost, 'adaptedPost');
               req.app.emit(EVENT.POST_CREATED, {
                 post: {
                   topicId,
