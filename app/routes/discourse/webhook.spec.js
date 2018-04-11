@@ -16,6 +16,7 @@ const postJson = require('../../tests/discourseNewPostWebhook.json');
 const existingTopicJson = require('../../tests/discourseReferenceLookup.json');
 const models = require('../../models');
 const server = require('../../app');
+const util = require('../../util');
 
 // hashes created using discourseWebhookSecret value from config
 const topicHash = 'sha256=8c63bf6e86694e10d23b3003e36afd4c229eaa970eba79949f4389b997a4db7f';
@@ -94,7 +95,17 @@ describe('POST /v4/webhooks/topics/discourse', () => {
   it('should return 200 and process topic', (done) => {
     models.topics.count().then((initialCount) => {
 
+      const getHttpClientStub = sandbox.stub(util, 'getHttpClient');
+      getHttpClientStub.returns(axios);
+      // axios post stub
+      const postStub = sandbox.stub(axios, 'post');
+      // stubs getSystemUserToken calls, resolves the identity call
+      postStub.resolves({
+        data: { result: { status: 200, content: { token: 'mock' } } },
+      });
+      // get stub for axios
       const getStub = sandbox.stub(axios, 'get');
+      // stubs the get topic call
       getStub.withArgs(`${config.get('topicServiceUrl')}/15`).resolves(existingTopicJson);
 
       // see if exists
