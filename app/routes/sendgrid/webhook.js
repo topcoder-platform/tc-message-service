@@ -1,3 +1,5 @@
+import _ from 'lodash';
+
 const config = require('config');
 const jwt = require('jsonwebtoken');
 const errors = require('common-errors');
@@ -39,61 +41,66 @@ module.exports = db => (req, resp, next) => {
     logger.error(`Can't parse incomming email with payload ${payload}`, ex);
     resp.status(200).send(''); // no need to retry if the email can't be parsed
     // eslint-disable-next-line
-	  return;
+	  return Promise.resolve();
   }
   logger.trace(`token=> ${token}`);
 
   const helper = HelperService(logger, db);
+
   logger.debug(`Processing email from ${fromAddress} to ${toAddress} with token ${token} and topic id ${topicId}`);
-  helper.lookupUserFromEmail(fromAddress).then((user) => {
-    logger.debug(`Got user by email ${user}`);
-    const userId = parseInt(user.id, 10);
-    // get jwt token then encode it with base64
-    const body = {
-      userId,
-      topicId,
-      userEmail: HelperService.sanitizeEmail(fromAddress),
-    };
-    const correctToken = jwt.sign(body, config.authSecret, { noTimestamp: true }).split('.')[2];
-    logger.trace(`correctToken=> ${correctToken}`);
+  return helper.lookupPossibleUsersFromEmail(fromAddress, true)
+  .then((users) => {
+    logger.debug(`Got users by email lookup ${users}`);
+    let userId = null;
+    const user = _.find(users, (usr) => {
+      userId = parseInt(usr.id, 10);
+      // get jwt token then encode it with base64
+      const body = {
+        userId,
+        topicId,
+        userEmail: HelperService.sanitizeEmail(usr.email),
+      };
+      const correctToken = jwt.sign(body, config.authSecret, { noTimestamp: true }).split('.')[2];
+      logger.trace(`correctToken[${userId}]=> ${correctToken}`);
 
-    if (correctToken !== token) {
-      status = 'fail';
-    }
-
-    const emailLog = db.emailLogs.build({
-      fromAddress,
-      toAddress,
-      ccAddresses,
-      subject,
-      rawText,
-      userId,
-      topicId,
-      postId: 0,
-      token,
-      status,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      return correctToken === token;
     });
-    emailLog.save()
+
+    return db.topics.findById(topicId)
+    .then((topic) => { /* eslint no-param-reassign: ["error", { "props": true, "ignorePropertyModificationsFor": ["topic"] }] */
+      if (!topic) {
+        logger.debug(`Topic ${topicId} not found in the database`);
+        status = 'fail-topic-not-found';
+      }
+      if (!user) {
+        logger.error('incoming email token is not valid');
+        status = 'fail-invalid-token';
+      }
+      const emailLog = db.emailLogs.build({
+        fromAddress,
+        toAddress,
+        ccAddresses,
+        subject,
+        rawText,
+        userId,
+        topicId,
+        postId: 0,
+        token,
+        status,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+      return emailLog.save()
       .then(() => {
         logger.info('email log saved in Postgres');
-        if (status === 'fail') {
-          logger.error('incoming email token is not valid');
-          resp.status(200).send(''); // no need to retry if the token is invalid
-          return;
-        }
-        // eslint-disable-next-line
-        return db.topics.findById(topicId)
-      .then((topic) => { /* eslint no-param-reassign: ["error", { "props": true, "ignorePropertyModificationsFor": ["topic"] }] */
-        if (!topic) {
-          logger.debug(`Topic ${topicId} not found in the database`);
-          resp.status(200).send(''); // no need to retry if the topic is invalid
-          // eslint-disable-next-line
+        if (status !== 'success') {
+          logger.error(`Error in processing sendgrid webhook: ${status}`);
+          // send 200 to sendgrid, no need to let it retry, we can look into email logs for this
+          resp.status(200).send(status);
           return;
         }
 
-        logger.debug(`Topic ${topicId} found in the database. Creating post`);
+        logger.debug(`Topic ${topicId} found in the database. Creating post...`);
         // eslint-disable-next-line
         return db.posts.createPost(db, rawText, topic, userId).then((savedPost) => {
           logger.info('post created');
@@ -115,7 +122,7 @@ module.exports = db => (req, resp, next) => {
           return resp.status(200).send('');
         });
       });
-      });
+    });
   })
   // send 500 status code back to sendgrid if any error occurs
   // eslint-disable-next-line

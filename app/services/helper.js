@@ -17,6 +17,22 @@ const { REFERENCE_LOOKUPS } = require('../constants');
  */
 module.exports = (logger, db) => {
   /**
+   * Helper method to clean up the provided email address for deducing the final address that matters for
+   * the delivery of the email i.e. removing any non standard parts in the email address e.g. getting rid
+   * of anything after + sign in the local part of the email.
+   *
+   * @param {String} email email address to be sanitized
+   *
+   * @returns {String} sanitized email
+   */
+  function sanitizeEmail(email) {
+    if (email) {
+      return email.substring(0, email.indexOf('+')) + email.substring(email.indexOf('@'));
+    }
+    return '';
+  }
+
+  /**
    * Lookup topic from previous service.
    * @param  {Number} topicId the id of the topic we want
    * @return {Promise} promise
@@ -43,9 +59,10 @@ module.exports = (logger, db) => {
   /**
    * Lookup user handles from emails
    * @param  {Array} userEmails user emails
+   * @param {Boolean} isPattern flag to indicate that pattern matching is required or not
    * @return {Promise} promise
    */
-  function lookupUserEmails(userEmails) {
+  function lookupUserEmails(userEmails, isPattern = false) {
     logger.debug(`${config.get('identityServiceEndpoint')}`);
     return util.getSystemUserToken(logger)
     .then((token) => {
@@ -58,7 +75,7 @@ module.exports = (logger, db) => {
         },
         params: {
           fields: 'handle,id,email',
-          filter: _.map(userEmails, i => `email=${i}`).join(' OR '),
+          filter: _.map(userEmails, i => (isPattern ? `email LIKE ${i}` : `email=${i}`)).join(' OR '),
         },
       })
       .then((response) => {
@@ -130,9 +147,17 @@ module.exports = (logger, db) => {
    * @param {Number} userEmail email of user
    * @return {Promise} promise
    */
-  function lookupUserFromEmail(userEmail) {
+  function lookupPossibleUsersFromEmail(userEmail) {
     return lookupUserEmails([userEmail])
-      .then(users => users[0]);
+      .then((users) => {
+        if (users && users.length > 0) {
+          return users[0];
+        }
+        const emailLocal = userEmail.substring(0, userEmail.indexOf('@'));
+        const emailLocalSanitized = sanitizeEmail(emailLocal);
+        return lookupUserEmails([`${emailLocalSanitized}%`], true)
+          .then(possibleUsers => possibleUsers);
+      });
   }
 
   /**
@@ -162,7 +187,7 @@ module.exports = (logger, db) => {
         },
         timeout: config.get('referenceLookupTimeout'),
       }).then((response) => {
-        logger.debug(response.data);
+        logger.debug(_.get(response, 'data.result.status', 'Reference endpoint status'));
         if (response.data && response.data.result &&
           response.data.result.status === 200 && response.data.result.content) {
           return [true, response.data.result.content];
@@ -269,27 +294,11 @@ module.exports = (logger, db) => {
     return (url && url.replace(/http[s]?:\/\//, '').split('/').slice(1).join('/')) || '';
   }
 
-  /**
-   * Helper method to clean up the provided email address for deducing the final address that matters for
-   * the delivery of the email i.e. removing any non standard parts in the email address e.g. getting rid
-   * of anything after + sign in the local part of the email.
-   *
-   * @param {String} email email address to be sanitized
-   *
-   * @returns {String} sanitized email
-   */
-  function sanitizeEmail(email) {
-    if (email) {
-      return email.substring(0, email.indexOf('+')) + email.substring(email.indexOf('@'));
-    }
-    return '';
-  }
-
   return {
     getTopcoderUser,
     lookupUserHandles,
     lookupUserFromId,
-    lookupUserFromEmail,
+    lookupPossibleUsersFromEmail,
     userHasAccessToEntity,
     callReferenceEndpoint,
     checkAccessAndProvision,
