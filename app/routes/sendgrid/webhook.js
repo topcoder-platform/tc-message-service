@@ -18,7 +18,7 @@ module.exports = db => (req, resp, next) => {
   const payload = req.fields;
   let rawText = payload.text;
   logger.debug(rawText, 'rawText');
-  rawText = rawText.replace(/On(.*?)wrote:([\s\S]*.*?)$/gm, '');
+  rawText = rawText.replace(/On[\s\S\.]*wrote:[\s\S.]*$/gm, '').trim();
   logger.debug(rawText, 'rawText.cleaned');
   const subject = payload.subject;
   const ccAddresses = payload.cc || '';
