@@ -92,15 +92,13 @@ const savePost = (db, req, resp, post, formatMessage) => {
           adapter.adaptPost(savedPost)
             .then((adaptedPost) => {
               logger.debug(adaptedPost, 'adaptedPost');
-              req.app.emit(EVENT.POST_CREATED, {
-                post: savedPost,
-                topic,
-                req: {
-                  authUser: {
-                    userId
-                  }
-                }
-              });
+              // if topic has 0 posts before we added this one
+              if (topic.totalPosts && topic.totalPosts == 0) {
+                topic.posts = [adaptedPost];
+                req.app.emit(EVENT.TOPIC_CREATED, { topic, req: { authUser: { userId } } });
+              } else {
+                req.app.emit(EVENT.POST_CREATED, { post: savedPost, topic, req: { authUser: { userId } } });
+              }
               resolve(adaptedPost);
             }).catch((e) => {
               logger.error(e);
@@ -192,7 +190,6 @@ const saveTopic = (db, req, resp, topic, formatMessage) => {
       };
       db.topics.createTopic(db, pgTopic, userId)
         .then((savedTopic) => { /* eslint no-param-reassign: ["error", { "props": true, "ignorePropertyModificationsFor": ["savedTopic"] }] */
-          req.app.emit(EVENT.TOPIC_CREATED, { topic: pgTopic, req: { authUser: { userId } } });
           logger.debug(formatMessage('Topic saved in Postgres.', topic, savedTopic));
 
           // reprocess any failed posts that came in before the topic
