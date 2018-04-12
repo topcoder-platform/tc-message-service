@@ -70,9 +70,9 @@ module.exports = (logger, db) => {
     logger.debug(`${config.get('identityServiceEndpoint')}`);
     let filter = _.map(userEmails, i => `email=${i}`).join(' OR ');
     if (isPattern) {
-      filter += '&like=true'
+      filter += '&like=true';
     }
-    logger.debug("filter for users api call", filter);
+    logger.debug('filter for users api call', filter);
     return util.getSystemUserToken(logger)
     .then((token) => {
       logger.debug(`Bearer ${token}`);
