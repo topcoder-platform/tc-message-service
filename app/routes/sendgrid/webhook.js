@@ -16,7 +16,10 @@ module.exports = db => (req, resp, next) => {
   logger.info('Entered Sendgrid webhook handler');
   logger.trace(req.fields);
   const payload = req.fields;
-  const rawText = payload.text;
+  let rawText = payload.text;
+  logger.debug(rawText, 'rawText');
+  rawText = rawText.replace(/.*On(.*?)wrote:([\s\S]*.*?)$/gmi, '');
+  logger.debug(rawText, 'rawText.cleaned');
   const subject = payload.subject;
   const ccAddresses = payload.cc || '';
   let envelope;
