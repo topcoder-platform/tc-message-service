@@ -68,6 +68,11 @@ module.exports = (logger, db) => {
    */
   function lookupUserEmails(userEmails, isPattern = false) {
     logger.debug(`${config.get('identityServiceEndpoint')}`);
+    let filter = _.map(userEmails, i => `email=${i}`).join(' OR ');
+    if (isPattern) {
+      filter += '&like=true'
+    }
+    logger.debug("filter for users api call", filter);
     return util.getSystemUserToken(logger)
     .then((token) => {
       logger.debug(`Bearer ${token}`);
@@ -79,7 +84,7 @@ module.exports = (logger, db) => {
         },
         params: {
           fields: 'handle,id,email',
-          filter: _.map(userEmails, i => (isPattern ? `email LIKE ${i}` : `email=${i}`)).join(' OR '),
+          filter,
         },
       })
       .then((response) => {
@@ -159,7 +164,7 @@ module.exports = (logger, db) => {
         }
         const emailLocal = userEmail.substring(0, userEmail.indexOf('@'));
         const emailLocalSanitized = sanitizeEmail(emailLocal);
-        return lookupUserEmails([`${emailLocalSanitized}%`], true)
+        return lookupUserEmails([`${emailLocalSanitized}*`], true)
           .then(possibleUsers => possibleUsers);
       });
   }
