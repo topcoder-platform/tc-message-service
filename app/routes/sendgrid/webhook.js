@@ -12,6 +12,7 @@ const { EVENT } = require('../../constants');
  */
 module.exports = db => (req, resp, next) => {
   const logger = req.log;
+  const helper = HelperService(logger, db);
   logger.info('Entered Sendgrid webhook handler');
   logger.trace(req.fields);
   const payload = req.fields;
@@ -45,8 +46,6 @@ module.exports = db => (req, resp, next) => {
   }
   logger.trace(`token=> ${token}`);
 
-  const helper = HelperService(logger, db);
-
   logger.debug(`Processing email from ${fromAddress} to ${toAddress} with token ${token} and topic id ${topicId}`);
   return helper.lookupPossibleUsersFromEmail(fromAddress, true)
   .then((users) => {
@@ -58,7 +57,7 @@ module.exports = db => (req, resp, next) => {
       const body = {
         userId,
         topicId,
-        userEmail: HelperService.sanitizeEmail(usr.email),
+        userEmail: helper.sanitizeEmail(usr.email),
       };
       const correctToken = jwt.sign(body, config.authSecret, { noTimestamp: true }).split('.')[2];
       logger.trace(`correctToken[${userId}]=> ${correctToken}`);
