@@ -117,8 +117,8 @@ module.exports = db => (req, resp, next) => {
           }).then(() => logger.debug('post_user_stats entry created for post: ', savedPost.id));
 
           // emit post creation event
-          // eslint-disable-next-line
           // converts the numeric userId to string to mimic exact behaviour of req/res cycle
+          // eslint-disable-next-line
           req.authUser = { userId: `${userId}` };
           req.app.emit(EVENT.POST_CREATED, { post: savedPost, topic, req });
           return resp.status(200).send('');
