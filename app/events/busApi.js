@@ -36,6 +36,7 @@ module.exports = (app, db, logger) => {
     if (topic && topic.reference.toLowerCase() === 'project') {
       createEvent(BUS_API_EVENT.POST_CREATED, {
         topicId: post.topicId,
+        topicTitle: topic.title,
         postId: post.id,
         postContent: post.raw,
         userId: req.authUser.userId,

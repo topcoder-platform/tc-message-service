@@ -94,7 +94,7 @@ const savePost = (db, req, resp, post, formatMessage) => {
               logger.debug(adaptedPost, 'adaptedPost');
               logger.debug(topic.totalPosts, 'totalPosts');
               // if topic has 0 posts before we added this one
-              if (topic.totalPosts && topic.totalPosts == 0) {
+              if (topic.totalPosts === 0) {
                 topic.posts = [adaptedPost];
                 req.app.emit(EVENT.TOPIC_CREATED, { topic, req: { authUser: { userId } } });
               } else {
