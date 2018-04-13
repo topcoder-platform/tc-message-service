@@ -14,12 +14,11 @@ module.exports = db => (req, resp, next) => {
   const logger = req.log;
   const helper = HelperService(logger, db);
   logger.info('Entered Sendgrid webhook handler');
-  logger.trace(req.fields);
+  logger.trace('Request fields', req.fields);
   const payload = req.fields;
   let rawText = payload.text;
-  logger.debug(rawText, 'rawText');
   rawText = rawText.replace(/On[\s\S.]*wrote:[\s\S.]*$/gm, '').trim();
-  logger.debug(rawText, 'rawText.cleaned');
+  logger.trace('rawText.cleaned', rawText);
   const subject = payload.subject;
   const ccAddresses = payload.cc || '';
   let envelope;
@@ -29,6 +28,7 @@ module.exports = db => (req, resp, next) => {
   if (payload.envelope) {
     envelope = JSON.parse(payload.envelope);
   }
+  logger.trace('Envelope parsed successfully');
   if (envelope) {
     fromAddress = envelope.from;
     toAddress = envelope.to[0];
@@ -36,7 +36,6 @@ module.exports = db => (req, resp, next) => {
   let emailInfo = null;
   let topicId = null;
   let token = null;
-  logger.trace('Envelope parsed successfully');
   try {
     emailInfo = toAddress.substring(toAddress.indexOf('+') + 1, toAddress.indexOf('@'));
     topicId = parseInt(emailInfo.substring(0, emailInfo.indexOf('/')), 10);
@@ -47,7 +46,7 @@ module.exports = db => (req, resp, next) => {
     // eslint-disable-next-line
 	  return Promise.resolve();
   }
-  logger.trace(`token=> ${token}`);
+  logger.trace(`token received=> ${token}`);
 
   logger.debug(`Processing email from ${fromAddress} to ${toAddress} with token ${token} and topic id ${topicId}`);
   return helper.lookupPossibleUsersFromEmail(fromAddress, true)
@@ -119,7 +118,8 @@ module.exports = db => (req, resp, next) => {
 
           // emit post creation event
           // eslint-disable-next-line
-          req.authUser = { userId };
+          // converts the numeric userId to string to mimic exact behaviour of req/res cycle
+          req.authUser = { new String(userId).valueOf() };
           req.app.emit(EVENT.POST_CREATED, { post: savedPost, topic, req });
           return resp.status(200).send('');
         });
