@@ -66,7 +66,7 @@ const savePost = (db, req, resp, post, formatMessage) => {
   const userId = post.username;
   logger.debug('savePost called');
   return new Promise((resolve, reject) => {
-    logger.debug('discourse topic id: '+post.topic_id);
+    logger.debug('discourse topic id: ' + post.topic_id);
     // get new topic id
     db.topics.findTopics(db, adapter, { filters: {discourseTopicId:post.topic_id}, numberOfPosts: -1, reqUserId: userId })
       .then((dbTopics) => {
