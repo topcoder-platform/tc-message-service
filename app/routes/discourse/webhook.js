@@ -92,6 +92,7 @@ const savePost = (db, req, resp, post, formatMessage) => {
           adapter.adaptPost(savedPost)
             .then((adaptedPost) => {
               logger.debug(adaptedPost, 'adaptedPost');
+              logger.debug(topic.totalPosts, 'totalPosts');
               // if topic has 0 posts before we added this one
               if (topic.totalPosts && topic.totalPosts == 0) {
                 topic.posts = [adaptedPost];
