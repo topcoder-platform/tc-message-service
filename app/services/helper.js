@@ -5,7 +5,6 @@ const config = require('config');
 const axios = require('axios');
 const errors = require('common-errors');
 const util = require('../util');
-const Promise = require('bluebird');
 const { USER_ROLE } = require('../constants');
 const { REFERENCE_LOOKUPS } = require('../constants');
 
@@ -257,40 +256,6 @@ module.exports = (logger, db) => {
     return match.slice(2);
   }
 
-  /**
-   * Returns converts mentions from discourse @userId to @handles
-   * match: converted string
-   */
-
-  function mentionUserIdToHandle(post) {
-    const userIdRex = />(@[^\<]+)/g; // eslint-disable-line
-    const htmlRex = /s\/([^\"]+)/g; // eslint-disable-line
-    const userIds = _.map(post.match(userIdRex), getContentFromMatch);
-    const handleMap = {};
-    return Promise.each(userIds, userId => this.lookupUserFromId(userId).then((data) => {
-      const handle = data.handle;
-      if (handle) {
-        handleMap[userId] = handle;
-      } else {
-        logger.error(`Cannot find user with userId ${userId}`);
-      }
-    }).catch(() => {
-      logger.info(`not valid mention ${userId}`);
-    })).then(() => post.replace(userIdRex, (match) => {
-      const handle = handleMap[getContentFromMatch(match)];
-      if (handle) {
-        return `>@${handle}`;
-      }
-      return match;
-    }).replace(htmlRex, (match) => {
-      const handle = handleMap[getContentFromMatch(match)];
-      if (handle) {
-        return `s/${handle}`;
-      }
-      return match;
-    }));
-  }
-
   function isAdmin(req) {
     return _.intersection([
       USER_ROLE.TOPCODER_ADMIN,
@@ -312,7 +277,6 @@ module.exports = (logger, db) => {
     callReferenceEndpoint,
     checkAccessAndProvision,
     getContentFromMatch,
-    mentionUserIdToHandle,
     isAdmin,
     s3KeyFromUrl,
     lookupTopic,

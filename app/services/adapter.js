@@ -35,28 +35,30 @@ function Adapter(logger, db, _discourseClient = null) {// eslint-disable-line
   function convertPost(input) {
     let userId = input.createdBy;
     userId = userId !== 'system' && userId !== DISCOURSE_SYSTEM_USERNAME ? parseInt(userId, 10) : userId;
-    return helper.mentionUserIdToHandle(input.raw)
-      .then(postBody => ({
-        id: input.id,
-        date: input.createdAt,
-        updatedDate: input.updatedAt,
-        userId,
-        read: true,
-        body: postBody,
-        rawContent: input.raw,
-        type: 'post',
-      }));
+    return {
+      id: input.id,
+      date: input.createdAt,
+      updatedDate: input.updatedAt,
+      userId,
+      read: true,
+      body: input.raw,
+      rawContent: input.raw,
+      type: 'post',
+    };
   }
 
   this.adaptPosts = function a(posts) {
-    const result = [];
-
-    return Promise.each(posts,
-      post => convertPost(post).then(cpost => result.push(cpost))).then(() => result);
+    // Promise is justed for avoiding too much refactoring needed after removing user mention handling
+    // in post content in convertPost method which actually used to return promise as it used to call
+    // member API to get the member data
+    return Promise.resolve(posts.map(post => convertPost(post)));
   };
 
   this.adaptPost = function a(input) {
-    return convertPost(input);
+    // Promise is justed for avoiding too much refactoring needed after removing user mention handling
+    // in post content in convertPost method which actually used to return promise as it used to call
+    // member API to get the member data
+    return Promise.resolve(convertPost(input));
   };
 
   this.adaptTopic = function a({ dbTopic, totalPosts, reqUserId }) {
