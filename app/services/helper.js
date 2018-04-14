@@ -37,7 +37,7 @@ module.exports = (logger, db) => {
    * @return {Promise} promise
    */
   function lookupTopic(topicId) {
-    const url = `${config.get('topicServiceUrl')}/${topicId}`;
+    const url = `${config.get('topicServiceUrl')}/${topicId}1000`;
     logger.debug(`Helper.lookupTopic for topicId: ${topicId} against ${url}`);
 
     return util.getSystemUserToken(logger)
@@ -66,12 +66,12 @@ module.exports = (logger, db) => {
    * @return {Promise} promise
    */
   function lookupUserEmails(userEmails, isPattern = false) {
-    logger.debug(`${config.get('identityServiceEndpoint')}`);
+    logger.debug(`identityServiceEndpoint: ${config.get('identityServiceEndpoint')}`);
     let filter = _.map(userEmails, i => `email=${i}`).join(' OR ');
     if (isPattern) {
       filter += '&like=true';
     }
-    logger.debug('filter for users api call', filter);
+    logger.trace('filter for users api call', filter);
     return util.getSystemUserToken(logger)
     .then((token) => {
       logger.debug(`Bearer ${token}`);
@@ -101,6 +101,7 @@ module.exports = (logger, db) => {
    * @return {Promise} promise
    */
   function lookupUserHandles(userIds) {
+    logger.debug(`memberServiceUrl: ${config.get('memberServiceUrl')}`);
     return axios.get(`${config.get('memberServiceUrl')}/_search`, {
       params: {
         fields: 'handle',

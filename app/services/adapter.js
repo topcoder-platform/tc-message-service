@@ -68,8 +68,7 @@ function Adapter(logger, db, _discourseClient = null) {// eslint-disable-line
   };
 
   this.adaptTopics = function a({ dbTopics, topicsPostsCount, reqUserId }) {
-    // console.log(topicsPostsCount, 'topicsPostsCount');
-    // console.log(dbTopics, 'dbTopics');
+    logger.info("adaptTopics - Enter");
     const topics = _.map(dbTopics, (dbTopic) => {
       let userId = dbTopic.createdBy;
       userId = userId !== 'system' && userId !== DISCOURSE_SYSTEM_USERNAME ? parseInt(userId, 10) : userId;
@@ -115,9 +114,9 @@ function Adapter(logger, db, _discourseClient = null) {// eslint-disable-line
         const lastPost = topic.posts[topic.posts.length - 1];
         topic.lastActivityAt = lastPost.updatedDate ? lastPost.updatedDate : lastPost.date;
       }
-      // console.log(topic, 'topic');
       return topic;
     });
+    logger.info("adaptTopics - Exit");
     return topics;
   };
 

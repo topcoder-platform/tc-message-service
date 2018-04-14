@@ -36,9 +36,6 @@ module.exports = (Sequelize, DataTypes) => {
     postNumber: {
       type: DataTypes.INTEGER,
     },
-    reads: {
-      type: DataTypes.INTEGER,
-    },
     viaEmail: {
       type: DataTypes.BOOLEAN,
     },
@@ -93,7 +90,6 @@ module.exports = (Sequelize, DataTypes) => {
       postNumber: topic.highestPostNumber + 1,
       viaEmail: false,
       hidden: false,
-      reads: 0,
       createdAt: now,
       createdBy: reqUserId,
       updatedAt: now,
@@ -173,25 +169,5 @@ module.exports = (Sequelize, DataTypes) => {
     });
   };
 
-  /**
-   * Increases the read count of the give post(s) for the given user.
-   *
-   * @param {Object} models Sequelize database models
-   * @param {Object} logger logger object used for logging
-   * @param{Array} posts array posts for which read count is to be increased
-   *
-   * @return {Promise} promise for update operation
-   */
-  Post.increaseReadCount = (models, logger, posts) => { /* eslint no-param-reassign: ["error", { "props": true, "ignorePropertyModificationsFor": ["posts"] }] */
-    if (!posts || posts.length === 0) return Promise.resolve();
-    for (let i = 0; i < posts.length; i++) {
-      posts[i].reads += 1;
-    }
-    const postIds = posts.map(p => p.id).join(',');
-    return Sequelize.query(`UPDATE posts set reads=reads+1 where id IN (${postIds})`)
-    .then((resp) => {
-      logger.debug(`Updated ${resp[1].rowCount} posts to increase the read count`);
-    });
-  };
   return Post;
 };

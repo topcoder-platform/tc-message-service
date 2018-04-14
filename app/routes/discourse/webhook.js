@@ -62,9 +62,9 @@ const generateId = (type, id) => `${type}_${id}`;
 */
 const savePost = (db, req, resp, post, formatMessage) => {
   const logger = req.log;
+  logger.debug('savePost - Enter');
   const adapter = new Adapter(logger, db);
   const userId = post.username;
-  logger.debug('savePost called');
   return new Promise((resolve, reject) => {
     logger.debug('discourse topic id: ' + post.topic_id);
     // get new topic id

@@ -56,19 +56,7 @@ module.exports = db =>
 
         return db.topics.createTopic(db, pgTopic, userId).then((savedTopic) => { /* eslint no-param-reassign: ["error", { "props": true, "ignorePropertyModificationsFor": ["savedTopic"] }] */
           logger.debug('topic saved in Postgres: ', savedTopic);
-          const pgPost = db.posts.build({
-            topicId: savedTopic.id,
-            raw: params.body,
-            postNumber: 1,
-            viaEmail: false,
-            hidden: false,
-            reads: 0,
-            createdAt: new Date(),
-            createdBy: userId,
-            updatedAt: new Date(),
-            updatedBy: userId,
-          });
-          return pgPost.save().then((savedPost) => {
+          return db.posts.createPost(db, params.body, savedTopic, userId).then((savedPost) => {
             logger.info('post saved in Postgres', savedPost);
             const topic = savedTopic.dataValues;
             const post = savedPost.dataValues;

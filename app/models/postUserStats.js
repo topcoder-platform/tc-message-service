@@ -53,7 +53,7 @@ module.exports = (Sequelize, DataTypes) => {
    *
    * @param {Object} models Sequelize database models
    * @param {Object} logger logger object used for logging
-   * @param {Array} posts array posts for which stats are to be updated
+   * @param {Array} posts array of posts for which stats are to be updated
    * @param {String} userId id of the user who performed action on these posts
    * @param {String} action action performed for which stats are to be updated
    *
@@ -68,6 +68,17 @@ module.exports = (Sequelize, DataTypes) => {
     });
   };
 
+  /**
+   * Finds the posts, from the given posts, for which the given action is not performed yet.
+   *
+   * @param {Object} models Sequelize database models
+   * @param {Object} logger logger object used for logging
+   * @param {Array} posts array of posts from which the specific posts are to be found
+   * @param {Integer} userId id of the user who should not have performed the action
+   * @param {String} action the concerned action e.g. 'READ', 'LIKE' etc
+   *
+   * @return {Promise} promise for search operation which resolves with array of post objects
+   */
   PostUserStats.findPostsWithoutUserAction = (models, logger, posts, userId, action) => {
     const postIds = posts.map(p => p.id).join(',');
     return Sequelize.query(`SELECT pus."postId" as id FROM post_user_stats pus

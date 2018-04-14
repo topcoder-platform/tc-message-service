@@ -49,9 +49,6 @@ module.exports = {
         postNumber: {
           type: Sequelize.INTEGER,
         },
-        reads: {
-          type: Sequelize.INTEGER,
-        },
         viaEmail: {
           type: Sequelize.BOOLEAN,
         },

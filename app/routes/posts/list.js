@@ -52,7 +52,6 @@ module.exports = db => (req, resp, next) => {
           // at once
           db.post_user_stats.updateUserStats(db, logger, posts, userId, 'READ');
         }
-        // posts.map(post => db.posts.increaseReadCount(db, logger, post, userId));
         return resp.status(200).send(util.wrapResponse(req.id, (posts || [])));
       });
     });
