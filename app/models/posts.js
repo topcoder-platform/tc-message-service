@@ -90,9 +90,9 @@ module.exports = (Sequelize, DataTypes) => {
       postNumber: topic.highestPostNumber + 1,
       viaEmail: false,
       hidden: false,
-      createdAt: now,
+      // createdAt: now,
       createdBy: reqUserId,
-      updatedAt: now,
+      // updatedAt: now,
       updatedBy: reqUserId,
     });
     return post.save();
