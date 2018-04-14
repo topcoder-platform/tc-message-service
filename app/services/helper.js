@@ -37,7 +37,7 @@ module.exports = (logger, db) => {
    * @return {Promise} promise
    */
   function lookupTopic(topicId) {
-    const url = `${config.get('topicServiceUrl')}/${topicId}1000`;
+    const url = `${config.get('topicServiceUrl')}/${topicId}`;
     logger.debug(`Helper.lookupTopic for topicId: ${topicId} against ${url}`);
 
     return util.getSystemUserToken(logger)
