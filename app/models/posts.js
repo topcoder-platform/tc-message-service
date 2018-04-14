@@ -82,7 +82,7 @@ module.exports = (Sequelize, DataTypes) => {
   };
 
   Post.createPost = (models, postBody, topic, reqUserId, discoursePostId = null) => {
-    const now = new Date();
+    // const now = new Date();
     const post = models.posts.build({
       topicId: topic.id,
       discoursePostId,
