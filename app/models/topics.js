@@ -93,6 +93,8 @@ module.exports = (Sequelize, DataTypes) => {
   };
 
   Topic.createTopic = (models, topic, reqUserId) => {
+    const now = new Date();
+
     const dbTopic = models.topics.build({
       reference: topic.reference,
       referenceId: topic.referenceId,
@@ -103,9 +105,9 @@ module.exports = (Sequelize, DataTypes) => {
       closed: false,
       archived: false,
       highestPostNumber: 1,
-      createdAt: new Date(),
+      createdAt: now,
       createdBy: reqUserId,
-      updatedAt: new Date(),
+      updatedAt: now,
       updatedBy: reqUserId,
     });
     return dbTopic.save();

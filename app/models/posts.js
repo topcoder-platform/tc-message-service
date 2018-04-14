@@ -85,6 +85,7 @@ module.exports = (Sequelize, DataTypes) => {
   };
 
   Post.createPost = (models, postBody, topic, reqUserId, discoursePostId = null) => {
+    const now = new Date();
     const post = models.posts.build({
       topicId: topic.id,
       discoursePostId,
@@ -93,9 +94,9 @@ module.exports = (Sequelize, DataTypes) => {
       viaEmail: false,
       hidden: false,
       reads: 0,
-      createdAt: new Date(),
+      createdAt: now,
       createdBy: reqUserId,
-      updatedAt: new Date(),
+      updatedAt: now,
       updatedBy: reqUserId,
     });
     return post.save();
