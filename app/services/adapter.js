@@ -3,13 +3,13 @@ const Helper = require('./helper.js');
 const Promise = require('bluebird');
 const config = require('config');
 
-const DISCOURSE_SYSTEM_USERNAME = config.get('discourseSystemUsername');
+const CODERBOT_USERNAME = config.get('coderBotUsername');
 
 // storing a reference to handle to userId lookup
 // FIXME: (parth) this map will grow eventually as more users are added,
 // consider using external cache instead
 const handleMap = { system: 'system' };
-handleMap[DISCOURSE_SYSTEM_USERNAME] = DISCOURSE_SYSTEM_USERNAME;
+handleMap[CODERBOT_USERNAME] = CODERBOT_USERNAME;
 
 function Adapter(logger, db, _discourseClient = null) {// eslint-disable-line
   const helper = Helper(logger);
@@ -34,7 +34,7 @@ function Adapter(logger, db, _discourseClient = null) {// eslint-disable-line
 
   function convertPost(input) {
     let userId = input.createdBy;
-    userId = userId !== 'system' && userId !== DISCOURSE_SYSTEM_USERNAME ? parseInt(userId, 10) : userId;
+    userId = userId !== 'system' && userId !== CODERBOT_USERNAME ? parseInt(userId, 10) : userId;
     return {
       id: input.id,
       date: input.createdAt,
@@ -71,7 +71,7 @@ function Adapter(logger, db, _discourseClient = null) {// eslint-disable-line
     logger.info('adaptTopics - Enter');
     const topics = _.map(dbTopics, (dbTopic) => {
       let userId = dbTopic.createdBy;
-      userId = userId !== 'system' && userId !== DISCOURSE_SYSTEM_USERNAME ? parseInt(userId, 10) : userId;
+      userId = userId !== 'system' && userId !== CODERBOT_USERNAME ? parseInt(userId, 10) : userId;
       const totalPosts = (_.find(topicsPostsCount, tpc => tpc.topicId === dbTopic.id) || { totalPosts: 0 }).totalPosts;
       const topic = {
         id: dbTopic.id,
@@ -93,7 +93,7 @@ function Adapter(logger, db, _discourseClient = null) {// eslint-disable-line
         const userStats = dbPost.userStats;
         const readStats = userStats ? _.find(userStats, s => s.action === 'READ') : null;
         let postUserId = dbPost.createdBy;
-        if (['system', DISCOURSE_SYSTEM_USERNAME].indexOf(postUserId) === -1) {
+        if (['system', CODERBOT_USERNAME].indexOf(postUserId) === -1) {
           postUserId = Number(postUserId);
         }
         topic.posts.push({

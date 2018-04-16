@@ -1,7 +1,6 @@
 {
   "authDomain": "topcoder-dev.com",
   "identityServiceEndpoint": "http://test1/",
-  "discourseURL": "http://test1",
   "dbConfig": {
     "masterUrl": "postgres://coder:mysecretpassword@local.topcoder-dev.com:5432/messages_test"
   },

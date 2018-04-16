@@ -164,7 +164,6 @@ module.exports = (Sequelize, DataTypes) => {
       })
     .then((result) => { // result is [x ,y] : x is number of rows affected, y is actual affected row
       console.log('post updated...');
-      // console.log(result);
       return adapter.adaptPost(result[1]);
     });
   };

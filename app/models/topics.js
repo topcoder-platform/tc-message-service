@@ -179,7 +179,6 @@ module.exports = (Sequelize, DataTypes) => {
       }],
     }).then((topic) => {
       if (!topic) return null;
-      // console.log(topic, 'topic');
       return models.posts.getTopicPostsCount(topicId)
       .then(totalPosts => adapter.adaptTopic({
         dbTopic: topic,
@@ -200,7 +199,6 @@ module.exports = (Sequelize, DataTypes) => {
       })
     .then((result) => {
       console.log('topic updated...');
-      // console.log(result);
       return adapter.adaptTopic({
         dbTopic: result[1], // result is [x ,y] : x is number of rows affected, y is actual affected row
         reqUserId,
