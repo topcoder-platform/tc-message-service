@@ -31,7 +31,7 @@ function assertTopicAndPost(topicId, assertCallback, done) {
 }
 
 describe('GET /v4/topics ', () => {
-  const apiPath = `/${config.apiVersion}/topics`;
+  const apiPath = `/${config.apiVersion}/topics/list`;
   const testQuery = {
     filter: 'tag=tag&reference=project&referenceId=referenceId',
   };

@@ -33,8 +33,8 @@ function assertTopicAndPost(topicId, assertCallback, done) {
 
 describe('GET /v4/topics/:topicId', () => {
   const apiPathPrefix = `/${config.apiVersion}/topics/`;
-  const apiPath = `${apiPathPrefix}1`;
-  const nonExistingTopicPath = `${apiPathPrefix}1000`;
+  const apiPath = `${apiPathPrefix}1/read`;
+  const nonExistingTopicPath = `${apiPathPrefix}1000/read`;
 
   const memberUser = {
     handle: getDecodedToken(jwts.member).handle,
@@ -116,7 +116,7 @@ describe('GET /v4/topics/:topicId', () => {
     });
 
     request(server)
-      .get(`${apiPathPrefix}1`)
+      .get(apiPath)
       .set({
         Authorization: `Bearer ${jwts.member}`,
       })
@@ -151,7 +151,7 @@ describe('GET /v4/topics/:topicId', () => {
     });
 
     request(server)
-      .get(`${apiPathPrefix}1`)
+      .get(apiPath)
       .set({
         Authorization: `Bearer ${jwts.admin}`,
       })

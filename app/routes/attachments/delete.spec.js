@@ -16,8 +16,8 @@ const db = models(server, server.logger);
 require('should-sinon');
 
 describe('DELETE /v4/topics/:topicId/posts/:postId/attachments/:attachmentId', () => {
-  const apiPath = `/${config.apiVersion}/topics/1/posts/1/attachments/1?referenceId=1`;
-  const nonExistingAttachmentPath = `/${config.apiVersion}/topics/1/posts/1/attachments/2?referenceId=1`;
+  const apiPath = `/${config.apiVersion}/topics/1/posts/1/attachments/1/remove?referenceId=1`;
+  const nonExistingAttachmentPath = `/${config.apiVersion}/topics/1/posts/1/attachments/2/remove?referenceId=1`;
   const memberUser = {
     handle: getDecodedToken(jwts.member).handle,
     userId: getDecodedToken(jwts.member).userId,

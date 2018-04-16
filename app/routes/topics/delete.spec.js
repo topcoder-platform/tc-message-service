@@ -15,8 +15,8 @@ const config = require('config');
 
 describe('DELETE /v4/topics/:topicId ', () => {
   const topicId = 1;
-  const apiPath = `/${config.apiVersion}/topics/${topicId}`;
-  const nonExistingTopicPath = `/${config.apiVersion}/topics/2000`;
+  const apiPath = `/${config.apiVersion}/topics/${topicId}/remove`;
+  const nonExistingTopicPath = `/${config.apiVersion}/topics/2000/remove`;
   // let expectedTopic = null;
   // let expectedTopicPosts = null;
 

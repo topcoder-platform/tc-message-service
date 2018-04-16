@@ -16,7 +16,7 @@ const server = require('../../app');
 const db = models(server, server.logger);
 
 xdescribe('POST /v4/webhooks/topics/sendgrid', () => {
-  const apiPath = `/${config.apiVersion}/webhooks/topics/sendgrid`;
+  const apiPath = `/${config.apiVersion}/topics/webhooks/sendgrid`;
 
   let sandbox;
 

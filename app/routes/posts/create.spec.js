@@ -15,8 +15,8 @@ require('should-sinon');
 
 describe('POST /v4/topics/:topicId/posts ', () => {
   const topicId = 1;
-  const apiPath = `/${config.apiVersion}/topics/${topicId}/posts`;
-  const nonExistingTopicPath = `/${config.apiVersion}/topics/1000/posts`;
+  const apiPath = `/${config.apiVersion}/topics/${topicId}/posts/create`;
+  const nonExistingTopicPath = `/${config.apiVersion}/topics/1000/posts/create`;
   const testBody = {
     post: 'test post',
   };

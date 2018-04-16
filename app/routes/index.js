@@ -36,7 +36,7 @@ const jwt = require('jsonwebtoken');
  */
 module.exports = (logger, db) => {
   // health check
-  router.get(`/_health`, (req, res, next) => { // eslint-disable-line
+  router.get(`/topics/_health`, (req, res, next) => { // eslint-disable-line
     // TODO check if database connection is alive
     res.status(200).send({ message: 'All-is-well' });
   });
@@ -49,7 +49,7 @@ module.exports = (logger, db) => {
   const jwtAuth = tcCoreLib.middleware.jwtAuthenticator;
 
   // discourse webhook with custom auth logic
-  router.route(`/${apiVersion}/webhooks/topics/discourse`).post((req, res, next) => {
+  router.route(`/${apiVersion}/topics/webhooks/discourse`).post((req, res, next) => {
     const markUnauthorized = (request, response, message) => {
       logger.warn(message);
       response.status(403).json(util.wrapErrorResponse(request.id, 403, 'Invalid token issuer.'));
@@ -76,7 +76,7 @@ module.exports = (logger, db) => {
     }
   });
 
-  router.all(`/${apiVersion}/topics*`, (req, res, next) => {
+  router.all(new RegExp(`\\/${apiVersion}\\/topics\\/(?!webhooks).*`), (req, res, next) => {
     if (`${process.env.TC_MESSAGE_SERVICE_AUTH_LOOSE}` !== 'true') {
       jwtAuth()(req, res, next);
       return;
@@ -111,37 +111,38 @@ module.exports = (logger, db) => {
   });
 
   // Register all the routes
-  router.route(`/${apiVersion}/topics/:topicId`)
-    .get(getTopicHandler(db))
-    .delete(topicDeleteHandler(db));
+  router.route(`/${apiVersion}/topics/list`)
+    .get(topicListHandler(db));
+  router.route(`/${apiVersion}/topics/create`)
+    .post(topicCreateHandler(db));
+  router.route(`/${apiVersion}/topics/:topicId/read`)
+    .get(getTopicHandler(db));
   router.route(`/${apiVersion}/topics/:topicId/edit`)
     .post(topicUpdateHandler(db));
-
-  router.route(`/${apiVersion}/topics`)
-    .post(topicCreateHandler(db))
-    .get(topicListHandler(db));
+  router.route(`/${apiVersion}/topics/:topicId/remove`)
+    .delete(topicDeleteHandler(db));
 
 
-  router.route(`/${apiVersion}/topics/:topicId/posts`)
-    .post(createPostHandler(db))
+  router.route(`/${apiVersion}/topics/:topicId/posts/list`)
     .get(listPostsHandler(db));
-
-  router.route(`/${apiVersion}/topics/:topicId/posts/:postId`)
-    .delete(deletePostHandler(db))
+  router.route(`/${apiVersion}/topics/:topicId/posts/create`)
+    .post(createPostHandler(db));
+  router.route(`/${apiVersion}/topics/:topicId/posts/:postId/read`)
     .get(getPostHandler(db));
-
-  router.route(`/${apiVersion}/topics/:topicId/posts/:postId/attachments/:attachmentId`)
-    .get(getAttachmentHandler(db))
-    .delete(deleteAttachmentHandler(db));
-
-  router.route(`/${apiVersion}/topics/:topicId/posts/:postId/attachments`)
-    .post(createAttachmentHandler(db));
-
   router.route(`/${apiVersion}/topics/:topicId/posts/:postId/edit`)
     .post(updatePostHandler(db));
+  router.route(`/${apiVersion}/topics/:topicId/posts/:postId/remove`)
+    .delete(deletePostHandler(db));
 
-  router.use(`/${apiVersion}/webhooks/topics/sendgrid`, formidable());
-  router.route(`/${apiVersion}/webhooks/topics/sendgrid`)
+  router.route(`/${apiVersion}/topics/:topicId/posts/:postId/attachments/create`)
+    .post(createAttachmentHandler(db));
+  router.route(`/${apiVersion}/topics/:topicId/posts/:postId/attachments/:attachmentId/read`)
+    .get(getAttachmentHandler(db));
+  router.route(`/${apiVersion}/topics/:topicId/posts/:postId/attachments/:attachmentId/remove`)
+    .delete(deleteAttachmentHandler(db));
+
+  router.use(`/${apiVersion}/topics/webhooks/sendgrid`, formidable());
+  router.route(`/${apiVersion}/topics/webhooks/sendgrid`)
     .post(webhookPostHandler(db));
 
   // register error handler

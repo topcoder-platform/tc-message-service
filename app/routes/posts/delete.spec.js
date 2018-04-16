@@ -15,8 +15,8 @@ require('should-sinon');
 describe('DELETE /v4/topics/:topicId/posts/:postId ', () => {
   const topicId = 1;
   const postId = 1;
-  const apiPath = `/${config.apiVersion}/topics/${topicId}/posts/${postId}`;
-  const nonExistingTopicPath = `/${config.apiVersion}/topics/1000/posts/${postId}`;
+  const apiPath = `/${config.apiVersion}/topics/${topicId}/posts/${postId}/remove`;
+  const nonExistingTopicPath = `/${config.apiVersion}/topics/1000/posts/${postId}/remove`;
 
   const memberUser = {
     handle: getDecodedToken(jwts.member).handle,

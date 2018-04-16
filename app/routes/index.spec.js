@@ -26,7 +26,7 @@ describe('index', () => {
       },
     });
     request(server)
-      .get('/_health')
+      .get('/topics/_health')
       .expect(200)
       .end((err, res) => {
         if (err) {
@@ -39,7 +39,7 @@ describe('index', () => {
 
   it('GET /notexist should return 404 response', (done) => {
     request(server)
-      .get('/notexist')
+      .get('/topics/notexist')
       .expect(404)
       .end((err) => {
         if (err) {

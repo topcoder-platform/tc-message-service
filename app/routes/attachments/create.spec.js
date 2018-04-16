@@ -16,7 +16,7 @@ const db = models(server, server.logger);
 require('should-sinon');
 
 describe('POST /v4/topics/:topicId/posts/:postId/attachments', () => {
-  const apiPath = `/${config.apiVersion}/topics/1/posts/1/attachments?referenceId=1`;
+  const apiPath = `/${config.apiVersion}/topics/1/posts/1/attachments/create?referenceId=1`;
   const memberUser = {
     handle: getDecodedToken(jwts.member).handle,
     userId: getDecodedToken(jwts.member).userId,

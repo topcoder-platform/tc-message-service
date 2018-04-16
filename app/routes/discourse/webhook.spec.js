@@ -24,7 +24,7 @@ const topicHash = 'sha256=8c63bf6e86694e10d23b3003e36afd4c229eaa970eba79949f4389
 const postHash = 'sha256=b04d2c86a6da3bd1b3c42ab99fb79c54caaea45985ccfddea85f87b42c6a40ec';
 
 describe('POST /v4/webhooks/topics/discourse', () => {
-  const apiPath = `/${config.apiVersion}/webhooks/topics/discourse`;
+  const apiPath = `/${config.apiVersion}/topics/webhooks/discourse`;
 
   let sandbox;
 
