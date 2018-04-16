@@ -20,7 +20,6 @@ const listPostsHandler = require('./posts/list');
 const getPostHandler = require('./posts/get');
 const updatePostHandler = require('./posts/update');
 const deletePostHandler = require('./posts/delete');
-const systemUserFilter = require('../middleware/system-user-filter.js');
 
 const webhookPostHandler = require('./sendgrid/webhook');
 const discourseWebhookPostHandler = require('./discourse/webhook');
@@ -110,8 +109,6 @@ module.exports = (logger, db) => {
     req.authToken = req.get('authorization').split(' ')[1]; // eslint-disable-line
     next();
   });
-
-  router.use(systemUserFilter(logger));
 
   // Register all the routes
   router.route(`/${apiVersion}/topics/:topicId`)
