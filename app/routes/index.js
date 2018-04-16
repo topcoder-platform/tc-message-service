@@ -35,16 +35,13 @@ const jwt = require('jsonwebtoken');
  * @return {Object} response
  */
 module.exports = (logger, db) => {
+  const apiVersion = config.apiVersion;
   // health check
-  router.get(`/topics/_health`, (req, res, next) => { // eslint-disable-line
+  router.get(`/${apiVersion}/topics/health`, (req, res, next) => { // eslint-disable-line
     // TODO check if database connection is alive
     res.status(200).send({ message: 'All-is-well' });
   });
 
-  // register discourse sso endpoint (no auth is needed)
-  // router.route('/sso').get(ssoHandler(logger));
-
-  const apiVersion = config.apiVersion;
   // all project service endpoints need authentication
   const jwtAuth = tcCoreLib.middleware.jwtAuthenticator;
 
@@ -76,7 +73,13 @@ module.exports = (logger, db) => {
     }
   });
 
-  router.all(new RegExp(`\\/${apiVersion}\\/topics\\/(?!webhooks).*`), (req, res, next) => {
+  router.all(RegExp(`\\/${apiVersion}\\/topics\\/(?!webhooks|!health).*`), (req, res, next) => {
+    // if (req.path === `/${apiVersion}/topics/webhooks/discourse`
+    //   || req.path === `/${apiVersion}/topics/webhooks/sendgrid`
+    //   || req.path === `/${apiVersion}/topics/health`) {
+    //   next();
+    //   return;
+    // }
     if (`${process.env.TC_MESSAGE_SERVICE_AUTH_LOOSE}` !== 'true') {
       jwtAuth()(req, res, next);
       return;
@@ -106,7 +109,11 @@ module.exports = (logger, db) => {
       res.send();
     }
   }, (req, res, next) => {
-    req.authToken = req.get('authorization').split(' ')[1]; // eslint-disable-line
+    // if (req.path !== `/${apiVersion}/topics/webhooks/discourse`
+    //   && req.path !== `/${apiVersion}/topics/webhooks/sendgrid`
+    //   && req.path !== `/${apiVersion}/topics/health`) {
+      req.authToken = req.get('authorization').split(' ')[1]; // eslint-disable-line
+    // }
     next();
   });
 
