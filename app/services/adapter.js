@@ -75,7 +75,6 @@ function Adapter(logger, db, _discourseClient = null) {// eslint-disable-line
       const totalPosts = (_.find(topicsPostsCount, tpc => tpc.topicId === dbTopic.id) || { totalPosts: 0 }).totalPosts;
       const topic = {
         id: dbTopic.id,
-        dbId: dbTopic.id,
         reference: dbTopic.reference,
         referenceId: dbTopic.referenceId,
         tag: dbTopic.tag,

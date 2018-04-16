@@ -55,11 +55,7 @@ describe('POST /v4/topics ', () => {
   });
 
   function validateSuccessfulCreation(res, expectedTopic, expTopicId, expPostId, userId, now, done) {
-    // id field would be null for new topics for now because it is populated from discourse topic id
-    // which no longer exists for new topics
-    res.body.should.have.propertyByPath('result', 'content', 'id').null;
-    // dbId is actually the primary key of the topic
-    res.body.should.have.propertyByPath('result', 'content', 'dbId').eql(expTopicId);
+    res.body.should.have.propertyByPath('result', 'content', 'id').eql(expTopicId);
     res.body.should.have.propertyByPath('result', 'content', 'reference').eql(expectedTopic.reference);
     res.body.should.have.propertyByPath('result', 'content', 'referenceId').eql(expectedTopic.referenceId);
     res.body.should.have.propertyByPath('result', 'content', 'tag').eql(expectedTopic.tag);
