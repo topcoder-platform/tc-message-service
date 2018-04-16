@@ -22,7 +22,6 @@
   "memberServiceUrl": "MEMBER_SERVICE_URL",
   "captureLogs": "CAPTURE_LOGS",
   "logentriesToken": "LOGENTRIES_TOKEN",
-  "systemUserIds": "SYSTEM_USER_ID",
   "dbConfig": {
     "masterUrl": "DB_MASTER_URL"
   },
