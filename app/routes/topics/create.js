@@ -43,8 +43,7 @@ module.exports = db =>
     return helper.callReferenceEndpoint(req.authToken, req.id, params.reference, params.referenceId)
       .then((hasAccessResp) => {
         const hasAccess = helper.userHasAccessToEntity(userId, hasAccessResp, params.reference);
-        // if (!hasAccess && !helper.isAdmin(req)) {
-        if (!hasAccess) { // even admins are not allowed to create a topic in a project where they are not member
+        if (!hasAccess && !helper.isAdmin(req)) {
           throw new errors.HttpStatusError(403, 'User doesn\'t have access to the entity');
         }
         const pgTopic = {

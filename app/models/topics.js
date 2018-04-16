@@ -13,7 +13,7 @@
 module.exports = (Sequelize, DataTypes) => {
   // Topics represents the data that links topcoder entities with topics
   const Topic = Sequelize.define('topics', {
-        // The primary key
+    // The primary key
     id: {
       type: DataTypes.BIGINT,
       primaryKey: true,
