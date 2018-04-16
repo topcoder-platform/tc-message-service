@@ -27,7 +27,7 @@ module.exports = db => (req, resp, next) => {
   const userId = req.authUser.userId.toString();
   const promises = [
     db.topics.findTopic(db, adapter, { topicId, raw: true }),
-    db.posts.findPost(db, adapter, { topicId, postId, raw: true }),
+    db.posts.findPost(db, adapter, { topicId, postId }, { raw: true }),
   ];
   return Promise.all(promises)
   .then(([topic, post]) => {

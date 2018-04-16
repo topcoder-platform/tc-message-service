@@ -1,6 +1,9 @@
+const server = require('../app');
 const models = require('../models');
 const jwt = require('jsonwebtoken');
 const Promise = require('bluebird');
+
+const db = models(server, server.logger);
 
 
 const jwts = {
@@ -24,24 +27,24 @@ function getDecodedToken(token) {
 }
 
 function clearDBPromise() {
-  return models.sequelize.sync()
-    .then(() => models.topics.truncate({
+  return db.sequelize.sync()
+    .then(() => db.topics.truncate({
       cascade: true,
       logging: false,
     }))
-    .then(() => models.posts.truncate({
+    .then(() => db.posts.truncate({
       cascade: true,
       logging: false,
     }))
-    .then(() => models.post_user_stats.truncate({
+    .then(() => db.post_user_stats.truncate({
       cascade: true,
       logging: false,
     }))
-    .then(() => models.post_attachments.truncate({
+    .then(() => db.post_attachments.truncate({
       cascade: true,
       logging: false,
     }))
-    .then(() => models.reference_lookups.truncate({
+    .then(() => db.reference_lookups.truncate({
       cascade: true,
       logging: false,
     }));
@@ -56,9 +59,9 @@ function prepareDB(done) {
   return clearDBPromise()
     .then(() => {
       const promises = [
-        models.sequelize.query('ALTER SEQUENCE topics_id_seq RESTART WITH 1;'),
-        models.sequelize.query('ALTER SEQUENCE posts_id_seq RESTART WITH 1;'),
-        models.topics.create({
+        db.sequelize.query('ALTER SEQUENCE topics_id_seq RESTART WITH 1;'),
+        db.sequelize.query('ALTER SEQUENCE posts_id_seq RESTART WITH 1;'),
+        db.topics.create({
           // id: 1,
           reference: 'project',
           referenceId: 'referenceId',
@@ -67,7 +70,7 @@ function prepareDB(done) {
           title: 'Mock topic title',
           createdBy: '123456789',
         }),
-        models.reference_lookups.create({
+        db.reference_lookups.create({
           id: 1,
           reference: 'project',
           endpoint: 'http://reftest/{id}', // eslint-disable-line
@@ -79,13 +82,13 @@ function prepareDB(done) {
           const topicId = topic.id;
           // console.log(responses[2], 'topicId');
           return Promise.mapSeries([
-            models.posts.create({
+            db.posts.create({
               raw: 'Mock topic body',
               topicId,
               createdBy: '123456789',
               postNumber: 1,
             }),
-            models.posts.create({
+            db.posts.create({
               raw: 'Mock topic post - logically first post',
               topicId,
               createdBy: '123456789',

@@ -31,7 +31,7 @@ module.exports = db => (req, resp, next) => {
 
   const promises = [
     db.topics.findTopic(db, adapter, { topicId, raw: true }),
-    db.posts.findPost(db, adapter, { topicId, postId, raw: true }),
+    db.posts.findPost(db, adapter, { topicId, postId }, { raw: true }),
   ];
   return Promise.all(promises)
   .then(([topic, post]) => {
@@ -50,7 +50,7 @@ module.exports = db => (req, resp, next) => {
         throw new errors.HttpStatusError(403, 'User doesn\'t have access to the entity');
       }
 
-      return db.posts.updatePost(db, adapter, { raw: content }, { postId, reqUserId: userId })
+      return db.posts.updatePost(db, adapter, { raw: content }, { postId }, userId)
       .then((updatedPost) => {
         req.app.emit(EVENT.POST_UPDATED, { post, req, topic });
         resp.status(200).send(util.wrapResponse(req.id, updatedPost));

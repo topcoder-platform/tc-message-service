@@ -93,8 +93,6 @@ module.exports = (Sequelize, DataTypes) => {
   };
 
   Topic.createTopic = (models, topic, reqUserId) => {
-    // const now = new Date();
-
     const dbTopic = models.topics.build({
       reference: topic.reference,
       referenceId: topic.referenceId,
@@ -105,9 +103,7 @@ module.exports = (Sequelize, DataTypes) => {
       closed: false,
       archived: false,
       highestPostNumber: 1,
-      // createdAt: now,
       createdBy: reqUserId,
-      // updatedAt: now,
       updatedBy: reqUserId,
     });
     return dbTopic.save();
@@ -148,11 +144,14 @@ module.exports = (Sequelize, DataTypes) => {
     }).then((topics) => {
       const topicIds = topics.map(t => t.id);
       return models.posts.getPostsCount(topicIds)
-      .then(topicsPostsCount => adapter.adaptTopics({
-        dbTopics: topics,
-        topicsPostsCount: topicsPostsCount.map(tpc => tpc.dataValues),
-        reqUserId,
-      }));
+      .then((topicsPostsCount) => {
+        models.logger.debug('topicsPostsCount', topicsPostsCount);
+        return adapter.adaptTopics({
+          dbTopics: topics,
+          topicsPostsCount: topicsPostsCount.map(tpc => tpc),
+          reqUserId,
+        });
+      });
     });
   };
 
@@ -198,7 +197,7 @@ module.exports = (Sequelize, DataTypes) => {
         plain: true,
       })
     .then((result) => {
-      console.log('topic updated...');
+      models.logger.debug('topic updated...');
       return adapter.adaptTopic({
         dbTopic: result[1], // result is [x ,y] : x is number of rows affected, y is actual affected row
         reqUserId,

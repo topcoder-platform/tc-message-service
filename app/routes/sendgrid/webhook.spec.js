@@ -13,6 +13,8 @@ require('should-sinon');
 const models = require('../../models');
 const server = require('../../app');
 
+const db = models(server, server.logger);
+
 xdescribe('POST /v4/webhooks/topics/sendgrid', () => {
   const apiPath = `/${config.apiVersion}/webhooks/topics/sendgrid`;
 
@@ -28,7 +30,7 @@ xdescribe('POST /v4/webhooks/topics/sendgrid', () => {
   });
 
   it('should be able to process status failure', (done) => {
-    models.email_logs.count().then((initialCount) => {
+    db.email_logs.count().then((initialCount) => {
       const getHttpClientStub = sandbox.stub(util, 'getHttpClient');
       getHttpClientStub.returns(axios);
 
@@ -73,9 +75,9 @@ xdescribe('POST /v4/webhooks/topics/sendgrid', () => {
           getHttpClientStub.calledOnce.should.be.true();
           getStub.calledOnce.should.be.true();
           postStub.calledOnce.should.be.true();
-          models.email_logs.count().then((afterCount) => {
+          db.email_logs.count().then((afterCount) => {
             afterCount.should.be.eql(initialCount + 1);
-            findLast(models.email_logs).then((emailLog) => {
+            findLast(db.email_logs).then((emailLog) => {
               emailLog.fromAddress.should.be.eql('jon@gmail.com');
               emailLog.status.should.be.eql('fail');
               done();
@@ -86,7 +88,7 @@ xdescribe('POST /v4/webhooks/topics/sendgrid', () => {
   });
 
   it('should be able to process status successfully', (done) => {
-    models.email_logs.count().then((initialCount) => {
+    db.email_logs.count().then((initialCount) => {
       const getHttpClientStub = sandbox.stub(util, 'getHttpClient');
       getHttpClientStub.returns(axios);
 
@@ -135,9 +137,9 @@ xdescribe('POST /v4/webhooks/topics/sendgrid', () => {
           getStub.calledOnce.should.be.true();
           postStub.calledOnce.should.be.true();
           jwtStub.calledOnce.should.be.true();
-          models.email_logs.count().then((afterCount) => {
+          db.email_logs.count().then((afterCount) => {
             afterCount.should.be.eql(initialCount + 1);
-            findLast(models.email_logs).then((emailLog) => {
+            findLast(db.email_logs).then((emailLog) => {
               emailLog.fromAddress.should.be.eql('jon@gmail.com');
               emailLog.status.should.be.eql('success');
               done();

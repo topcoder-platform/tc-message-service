@@ -6,8 +6,10 @@ const request = require('supertest');
 const server = require('../../app');
 const axios = require('axios');
 const sinon = require('sinon');
-const db = require('../../models');
-// const _ = require('lodash');
+const models = require('../../models');
+
+const db = models(server, server.logger);
+
 require('should-sinon');
 const config = require('config');
 

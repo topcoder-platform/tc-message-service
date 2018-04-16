@@ -3,7 +3,7 @@
 
 import { clearDB, prepareDB, jwts, getDecodedToken } from '../../tests';
 
-const db = require('../../models');
+const models = require('../../models');
 
 const request = require('supertest');
 // const postJson = require('../../tests/post.json');
@@ -12,6 +12,8 @@ const server = require('../../app');
 const axios = require('axios');
 const sinon = require('sinon');
 const config = require('config');
+
+const db = models(server, server.logger);
 
 require('should-sinon');
 

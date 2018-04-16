@@ -37,7 +37,7 @@ module.exports = db => (req, resp, next) => {
         throw new errors.HttpStatusError(403, 'User doesn\'t have access to the entity');
       }
 
-      return db.posts.createPost(db, postBody, topic, userId).then((savedPost) => {
+      return db.posts.createPost(db, postBody, topic, null, userId).then((savedPost) => {
         logger.info('post created');
         topic.highestPostNumber += 1;
         topic.save().then(() => logger.debug('topic updated async for post: ', savedPost.id));

@@ -44,7 +44,7 @@ module.exports = db => (req, resp, next) => {
       if (postIds) {
         filter.id = { [Op.in]: postIds.map(pid => Number(pid)) };
       }
-      return db.posts.findPosts(adapter, filter)
+      return db.posts.findPosts(db, adapter, filter)
       .then((posts) => {
         if (posts && posts.length > 0) {
           // marks each post a read for the request user, however, ideally they should be marked

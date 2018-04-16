@@ -12,7 +12,7 @@ import busApi from './events/busApi';
 
 const coreLib = require('tc-core-library-js');
 const Routes = require('./routes');
-const db = require('./models');
+const models = require('./models');
 // const rabbitMQService = require('./services/rabbitmq');
 
 // Define and configure app
@@ -50,6 +50,7 @@ const logger = coreLib.logger({
   logentriesToken: _.get(config, 'logentriesToken', null),
 });
 app.logger = logger;
+const db = models(app, logger);
 
 const routes = Routes(logger, db);
 

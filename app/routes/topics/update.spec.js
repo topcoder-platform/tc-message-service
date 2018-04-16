@@ -10,7 +10,9 @@ const config = require('config');
 
 require('should-sinon');
 const should = require('should');
-const db = require('../../models');
+const models = require('../../models');
+
+const db = models(server, server.logger);
 
 describe('POST /v4/topics/:topicId/edit ', () => {
   const topicId = 1;

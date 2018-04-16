@@ -8,12 +8,12 @@ const request = require('supertest');
 const server = require('../../app');
 const axios = require('axios');
 const sinon = require('sinon');
-// const _ = require('lodash');
 const Promise = require('bluebird');
 const config = require('config');
 
-const db = require('../../models');
-// const topicJson = require('../../tests/topic.json');
+const models = require('../../models');
+
+const db = models(server, server.logger);
 
 function assertTopicAndPost(topicId, assertCallback, done) {
   // test topic

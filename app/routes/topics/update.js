@@ -52,7 +52,7 @@ module.exports = db => (req, resp, next) => {
           logger.debug('Topic saved', updatedTopic);
           return updatedTopic;
         }),
-        db.posts.updatePost(db, adapter, { raw: content }, { postId, reqUserId: userId })
+        db.posts.updatePost(db, adapter, { raw: content }, { postId }, userId)
         .then((updatedPost) => {
           logger.info('Topic Post saved', updatedPost);
           return updatedPost;

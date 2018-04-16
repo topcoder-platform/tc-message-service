@@ -17,6 +17,7 @@ const existingTopicJson = require('../../tests/discourseReferenceLookup.json');
 const models = require('../../models');
 const server = require('../../app');
 const util = require('../../util');
+const db = models(server, server.logger);
 
 // hashes created using discourseWebhookSecret value from config
 const topicHash = 'sha256=8c63bf6e86694e10d23b3003e36afd4c229eaa970eba79949f4389b997a4db7f';
@@ -93,7 +94,7 @@ describe('POST /v4/webhooks/topics/discourse', () => {
   });
 
   it('should return 200 and process topic', (done) => {
-    models.topics.count().then((initialCount) => {
+    db.topics.count().then((initialCount) => {
 
       const getHttpClientStub = sandbox.stub(util, 'getHttpClient');
       getHttpClientStub.returns(axios);
@@ -139,9 +140,9 @@ describe('POST /v4/webhooks/topics/discourse', () => {
           stubPutItem.calledOnce.should.be.true();
           stubQuery.calledOnce.should.be.true();
           stubUpdateItem.calledOnce.should.be.true();
-          models.topics.count().then((afterCount) => {
+          db.topics.count().then((afterCount) => {
             afterCount.should.be.eql(initialCount + 1);
-            findLast(models.topics).then((topic) => {
+            findLast(db.topics).then((topic) => {
               topic.title.should.be.eql('New Topic');
               done();
             });
@@ -151,7 +152,7 @@ describe('POST /v4/webhooks/topics/discourse', () => {
   });
 
   it('should return 200 and process post', (done) => {
-    models.posts.count().then((initialCount) => {
+    db.posts.count().then((initialCount) => {
       const existingTopic = {
         Item: {
           NewId: {
@@ -188,9 +189,9 @@ describe('POST /v4/webhooks/topics/discourse', () => {
           stubGetItem.calledOnce.should.be.true();
           stubPutItem.calledOnce.should.be.true();
           stubUpdateItem.calledOnce.should.be.true();
-          models.posts.count().then((afterCount) => {
+          db.posts.count().then((afterCount) => {
             afterCount.should.be.eql(initialCount + 1);
-            findLast(models.posts).then((post) => {
+            findLast(db.posts).then((post) => {
               post.raw.should.be.eql('<p>Hi!</p>');
               done();
             });

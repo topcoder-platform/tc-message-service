@@ -6,10 +6,12 @@ const axios = require('axios');
 const expect = require('chai').expect;
 const request = require('supertest');
 const server = require('../../app');
-const db = require('../../models');
+const models = require('../../models');
 const aws = require('aws-sdk');
 const sinon = require('sinon');
 const config = require('config');
+
+const db = models(server, server.logger);
 
 require('should-sinon');
 

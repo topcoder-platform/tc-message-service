@@ -4,7 +4,7 @@
 import _ from 'lodash';
 import { clearDB, prepareDB, jwts, getDecodedToken } from '../../tests';
 
-const db = require('../../models');
+const models = require('../../models');
 require('should-sinon');
 
 const request = require('supertest');
@@ -13,6 +13,7 @@ const axios = require('axios');
 const sinon = require('sinon');
 const config = require('config');
 
+const db = models(server, server.logger);
 
 describe('POST /v4/topics ', () => {
   const apiPath = `/${config.apiVersion}/topics`;

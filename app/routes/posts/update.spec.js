@@ -8,8 +8,10 @@ const axios = require('axios');
 const sinon = require('sinon');
 require('should-sinon');
 const should = require('should');
-const db = require('../../models');
+const models = require('../../models');
 const config = require('config');
+
+const db = models(server, server.logger);
 
 describe('POST /v4/topics/:topicId/posts/:postId/edit ', () => {
   const topicId = 1;

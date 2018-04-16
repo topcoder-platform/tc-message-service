@@ -6,8 +6,10 @@ const request = require('supertest');
 const server = require('../../app');
 const axios = require('axios');
 const sinon = require('sinon');
-const db = require('../../models');
+const models = require('../../models');
 const config = require('config');
+
+const db = models(server, server.logger);
 require('should-sinon');
 
 describe('DELETE /v4/topics/:topicId/posts/:postId ', () => {

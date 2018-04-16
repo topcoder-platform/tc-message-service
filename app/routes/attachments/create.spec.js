@@ -5,11 +5,13 @@ import { clearDB, jwts, prepareDB, getDecodedToken } from '../../tests';
 const axios = require('axios');
 const request = require('supertest');
 const server = require('../../app');
-const db = require('../../models');
+const models = require('../../models');
 const aws = require('aws-sdk');
 const s3UploadMock = require('./create.s3.upload.mock');
 const sinon = require('sinon');
 const config = require('config');
+
+const db = models(server, server.logger);
 
 require('should-sinon');
 

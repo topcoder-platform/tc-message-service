@@ -78,7 +78,7 @@ const savePost = (db, req, resp, post, formatMessage) => {
         const topic = dbTopics[0];
         const topicId = topic.id;
         if (!topic.highestPostNumber) topic.highestPostNumber=1;
-        db.posts.createPost(db, post.cooked, topic, userId, post.id).then((savedPost) => {
+        db.posts.createPost(db, post.cooked, topic, post.id, userId).then((savedPost) => {
           logger.debug(formatMessage('Post created via discourse webhook.', post, savedPost));
 
           topic.highestPostNumber += 1;
@@ -132,7 +132,7 @@ const updatePost = (db, req, resp, post, formatMessage) => {
 
   return new Promise((resolve, reject) => {
 
-    db.posts.updatePost(db, adapter, { raw: post.cooked }, { discoursePostId: post.id, reqUserId: post.username })
+    db.posts.updatePost(db, adapter, { raw: post.cooked }, { discoursePostId: post.id }, userId)
       .then((updatedPost) => {
         logger.debug(formatMessage('Post updated via discourse webhook.', post));
         //find topic

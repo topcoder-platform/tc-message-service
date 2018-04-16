@@ -103,7 +103,7 @@ module.exports = db => (req, resp, next) => {
 
         logger.debug(`Topic ${topicId} found in the database. Creating post...`);
         // eslint-disable-next-line
-        return db.posts.createPost(db, rawText, topic, userId).then((savedPost) => {
+        return db.posts.createPost(db, rawText, topic, null, userId).then((savedPost) => {
           logger.info('post created');
           topic.highestPostNumber += 1;
           topic.save().then(() => logger.debug('topic updated async for post: ', savedPost.id));

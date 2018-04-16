@@ -2,13 +2,15 @@
 
 import { clearDB, prepareDB, jwts, getDecodedToken } from '../../tests';
 
-const db = require('../../models');
+const models = require('../../models');
 const request = require('supertest');
 const server = require('../../app');
 const axios = require('axios');
 const sinon = require('sinon');
 const config = require('config');
-// const postJson = require('../../tests/post.json');
+
+const db = models(server, server.logger);
+
 require('should-sinon');
 
 describe('POST /v4/topics/:topicId/posts ', () => {
