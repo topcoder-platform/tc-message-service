@@ -24,6 +24,7 @@ configure_aws_cli() {
   aws configure set default.output json
 }
 
+# deploys the app to the ecs cluster
 deploy_cluster() {
 
     make_task_def
