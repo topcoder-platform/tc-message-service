@@ -95,9 +95,6 @@ make_task_def(){
           "name": "AUTH_SECRET",
           "value": "%s"
         },
-          "name": "VALID_ISSUERS",
-          "value": "%s"
-        },
         {
           "name": "VALID_ISSUERS",
           "value": "%s"
