@@ -15,6 +15,7 @@ VALID_ISSUERS=$(eval "echo \$${ENV}_VALID_ISSUERS")
 PORT=3000
 family="tc-message-service"
 
+# configures aws cli for further usage
 configure_aws_cli() {
   export AWS_ACCESS_KEY_ID=$(eval "echo \$${ENV}_AWS_ACCESS_KEY_ID")
   export AWS_SECRET_ACCESS_KEY=$(eval "echo \$${ENV}_AWS_SECRET_ACCESS_KEY")
@@ -91,6 +92,9 @@ make_task_def(){
         },
         {
           "name": "AUTH_SECRET",
+          "value": "%s"
+        },
+          "name": "VALID_ISSUERS",
           "value": "%s"
         },
         {
