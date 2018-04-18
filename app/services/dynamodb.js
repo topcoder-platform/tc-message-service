@@ -125,8 +125,8 @@ const save = (id, topicId, type, payload) =>
  * @param {String} status to update on the dynamodb document
  * @returns {Object} promise from the update
  */
-const updateStatus = (id, status) =>
-  getAdapter().update(id, { Status: status });
+const updateStatus = (id, status, errorMessage) =>
+  getAdapter().update(id, { Status: status, ErrorMessage: errorMessage });
 
 /**
  * Update new id and status of the entry in dynamodb.

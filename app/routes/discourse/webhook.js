@@ -307,7 +307,7 @@ const process = (db, req, resp, topic, post, modelUpdateType) => {
       });
     }).catch((errorMessage) => {
       logger.error(errorMessage);
-      return DynamoService.updateStatus(id, DISCOURSE_WEBHOOK_STATUS.ERROR);
+      return DynamoService.updateStatus(id, DISCOURSE_WEBHOOK_STATUS.ERROR, errorMessage);
     });
   }).catch((e) => {
     logger.error(formatMessage(`Initial loading of ${type} from discourse webhook not successful.`, obj));
