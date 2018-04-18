@@ -123,6 +123,7 @@ const save = (id, topicId, type, payload) =>
  *
  * @param {String} id used to find records in dynamodb
  * @param {String} status to update on the dynamodb document
+ * @param {String} errorMessage error message if there was an error
  * @returns {Object} promise from the update
  */
 const updateStatus = (id, status, errorMessage) =>
