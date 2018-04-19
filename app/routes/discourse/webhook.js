@@ -67,6 +67,10 @@ const savePost = (db, req, resp, post, formatMessage) => {
   const userId = post.username;
   return new Promise((resolve, reject) => {
     logger.debug('discourse topic id: ' + post.topic_id);
+    if (post.post_type !== 1) {
+      reject(formatMessage(`Invalid post type ${post.post_type} to process`, post));
+      return;
+    }
     // get new topic id
     db.topics.findTopics(db, adapter, { filters: {discourseTopicId:post.topic_id}, numberOfPosts: -1, reqUserId: userId })
       .then((dbTopics) => {
@@ -131,6 +135,10 @@ const updatePost = (db, req, resp, post, formatMessage) => {
   const userId = post.username;
 
   return new Promise((resolve, reject) => {
+    if (post.post_type !== 1) {
+      reject(formatMessage(`Invalid post type ${post.post_type} to process`, post));
+      return;
+    }
 
     db.posts.updatePost(db, adapter, { raw: post.cooked }, { discoursePostId: post.id }, userId)
       .then((updatedPost) => {
