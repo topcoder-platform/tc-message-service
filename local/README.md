@@ -6,22 +6,12 @@ The purpose of this document is to describe how to run and test the messaging se
 
 The message service provides apis for members to be able to collaborate within the topcoder platform. It provides capabilities to create public and private threaded conversations associated with specific topcoder entities such as projects, challenges, submissions, etc. and general discussions not associated with any specific entity.
 
-The message service is a thin layer on top of Discourse (https://www.discourse.org). Discourse is an open source forum that provides rich features and a full feature API to handle users, threads, posts, attachments, etc.
-
-The message service provides the following additional services:
-
-* User provisioning: If a user doesn't exist in Discourse, it is automatically created by the service;
-* Thread and post creation: Creates threads and posts as needed in Discourse;
-* Security: Users may only access public discussions or discussions related to entities to which they have access, the message service handles permissions based on entity access;
-* Mapping: Between Discourse entities and topcoder entities;
-
 We will be using docker-compose to stand up all the real and mock up services required to run the messaging service:
 
-1. Discourse: the main backend of the messaging api;
-2. Member service mock-up: service to fetch user data in case we need to create a new user in Discourse;
-3. Submission service mock-up: service to fetch submissions, which we will use as an example entity to which we will tie threads;
-4. Postgres: the main database of the message service, this is used to (1) map between topcoder entities and discourse threads, and (2) to store the endpoint to be used to check if a member has access to a particular entity;
-5. Message service: the api that exposes Discourse functionality;
+1. Member service mock-up: service to fetch user data;
+2. Submission service mock-up: service to fetch submissions, which we will use as an example entity to which we will tie threads;
+3. Postgres: the main database of the message service;
+4. Message service: the api that exposes Discourse functionality; This is old discourse based message service which is needed only during transition period of discourse migration.
 
 # Pre-Requisites
 
@@ -90,87 +80,6 @@ git clone https://github.com/topcoder-platform/tc-message-service.git
 
 We will refer to this folder henceforth as tc-message-service.
 
-## Setup Discourse
-
-The following describes how to setup Discourse locally:
-
-```shell
-# Boot docker container, use 3002 port, you can change to suit your environment
-docker pull discourse/discourse_dev:1.4.0
-docker run -d -p 1080:1080 -p 3002:3002 --hostname=discourse --name=discourse_dev discourse/discourse_dev:1.4.0 /sbin/boot
-
-# Checkout Discourse source, stable branch
-git clone https://github.com/discourse/discourse.git
-cd discourse
-git checkout stable
-
-# Copy source files to container
-docker cp . discourse_dev:/src
-docker exec -it discourse_dev /bin/bash -c "chown -R discourse:discourse /src"
-
-# Install bundle and sso plugin
-./bin/docker/bundle install
-./bin/docker/rake plugin:install["https://github.com/FutureProofGames/discourse_sso_redirect.git"]
-
-# Migrate db
-./bin/docker/rake db:migrate
-
-# Create an admin account
-./bin/docker/rake admin:create
-# Answer the following questions:
-#   Email: admin@test.com
-#   Password: 1234
-#   Repeat password: 1234
-#
-#   Ensuring account is active!
-#
-#   Account created successfully with username example
-#   Do you want to grant Admin privileges to this account? (Y/n) Y
-#
-#   Your account now has Admin privileges!
-
-# Get api_key, this will be used later to set env
-./bin/docker/rake api_key:get
-
-# Use 3002 port, you can change to suit your environment
-./bin/docker/rails s -b 0.0.0.0 -p 3002
-```
-
-Note by default the Discourse starts on 3000 port in dev mode, which may conflict with our nodejs app when they both run locally, so we change Discourse to use 3002 port instead.
-
-## Configure Discourse
-
-By default Discourse has some strict validation rules and we can relax them for dev (For example by default Discourse does not allow **mailinator.com** email domain for user). Run following commands(replace  <docker_ip> and <api_key>) to configure Discourse settings:
-
-```shell
-curl -X PUT 'http://<docker_ip>:3002/admin/site_settings/email_domains_blacklist?api_key=<api_key>&api_username=system' -H 'content-type: application/x-www-form-urlencoded' -i -d email_domains_blacklist=''
-
-curl -X PUT 'http://<docker_ip>:3002/admin/site_settings/min_post_length?api_key=<api_key>&api_username=system' -H 'content-type: application/x-www-form-urlencoded' -i -d min_post_length=1
-
-curl -X PUT 'http://<docker_ip>:3002/admin/site_settings/min_first_post_length?api_key=<api_key>&api_username=system' -H 'content-type: application/x-www-form-urlencoded' -i -d min_first_post_length=1
-
-curl -X PUT 'http://<docker_ip>:3002/admin/site_settings/min_private_message_post_length?api_key=<api_key>&api_username=system' -H 'content-type: application/x-www-form-urlencoded' -i -d min_private_message_post_length=1
-
-curl -X PUT 'http://<docker_ip>:3002/admin/site_settings/body_min_entropy?api_key=<api_key>&api_username=system' -H 'content-type: application/x-www-form-urlencoded' -i -d body_min_entropy=1
-
-curl -X PUT 'http://<docker_ip>:3002/admin/site_settings/min_topic_title_length?api_key=<api_key>&api_username=system' -H 'content-type: application/x-www-form-urlencoded' -i -d min_topic_title_length=1
-
-curl -X PUT 'http://<docker_ip>:3002/admin/site_settings/title_min_entropy?api_key=<api_key>&api_username=system' -H 'content-type: application/x-www-form-urlencoded' -i -d title_min_entropy=1
-
-curl -X PUT 'http://<docker_ip>:3002/admin/site_settings/allow_uppercase_posts?api_key=<api_key>&api_username=system' -H 'content-type: application/x-www-form-urlencoded' -i -d allow_uppercase_posts=true
-
-curl -X PUT 'http://<docker_ip>:3002/admin/site_settings/min_private_message_title_length?api_key=<api_key>&api_username=system' -H 'content-type: application/x-www-form-urlencoded' -i -d min_private_message_title_length=1
-
-curl -X PUT 'http://<docker_ip>:3002/admin/site_settings/allow_duplicate_topic_titles?api_key=<api_key>&api_username=system' -H 'content-type: application/x-www-form-urlencoded' -i -d allow_duplicate_topic_titles=true
-
-curl -X PUT 'http://<docker_ip>:3002/admin/site_settings/min_title_similar_length?api_key=<api_key>&api_username=system' -H 'content-type: application/x-www-form-urlencoded' -i -d min_title_similar_length=1
-
-curl -X PUT 'http://<docker_ip>:3002/admin/site_settings/min_body_similar_length?api_key=<api_key>&api_username=system' -H 'content-type: application/x-www-form-urlencoded' -i -d min_body_similar_length=1
-
-curl -X PUT 'http://<docker_ip>:3002/admin/site_settings/enable_emoji?api_key=<api_key>&api_username=system' -H 'content-type: application/x-www-form-urlencoded' -i -d enable_emoji=false
-
-```
-
 ## Webhooks
 Discourse also needs webhooks enabled.  To do this, login to Discourse as an admin and go to
 
@@ -200,10 +109,6 @@ docker-compose up
 ## Setting up Environment Variables
 
 ```shell
-export DISCOURSE_API_KEY=<<api_key got from above>>
-export DEFAULT_DISCOURSE_PW=supersecretpw
-export DISCOURSE_URL=http://talk.topcoder-dev.com:3002
-export RABBITMQ_URL=amqp://local.topcoder-dev.com:5672
 export DB_MASTER_URL=postgres://coder:mysecretpassword@local.topcoder-dev.com:5432/messages
 export AWS_ACCESS_KEY_ID=<<AWS access key>>
 export AWS_REGION=<<AWS region>>
@@ -214,9 +119,7 @@ export DISCOURSE_WEBHOOK_SECRET=<<DISCOURSE_WEBHOOK_SECRET>>
 
 NOTE:
 
-- The Discourse system user's API key is obtained in the last step from Discourse setup
-- DEFAULT_DISCOURSE_PW defines the default password for users which will be created in Discourse automatically
-- You may need to change DISCOURSE_URL/RABBITMQ_URL/DB_MASTER_URL if running under differnt host or port
+- You may need to change DB_MASTER_URL if running under differnt host or port
 
 ## Install Dependent Packages
 
@@ -321,31 +224,3 @@ Then you can check coverage report in coverage folder.
 ## Postman
 
 You can also verify the service using Postman. For this load files from the local/postman directory into Postman.
-
-# Enable Discourse SSO
-
-Here are the steps that you can follow to enable the Discourse sso:
-
-The `config/default.json` file contains the following sso related properties:
-
-- discourseSSO
-  - secret - the discourse sso secret, need to be the same as the value on discouse settings page
-  - loginCookieName - the login cookie name to obtain the jwt token
-  - loginUrl - the login url to redirect to
-
-To enable sso in Discourse, login into Discourse with the admin account created above.
-Click on the menu icon (top right corner) and select Admin.
-Click on the Settings tab and then on the Login menu item
-Scroll down and do as below:
-
-- activate 'enable sso',
-- activate 'sso overrides email'
-- activate 'sso overrides username'
-- activate 'sso overrides name'
-- set 'sso url' to the sso endpoint of this message service. e.g. http://localhost:8001/sso
-- set 'sso secret' to the same value as the `discourseSSO.secret` in the `config/default.json` file, e.g. secret12345
-
-Still on the settings tab, click the 'Users' menu and set 'logout redirect' to a logout endpoint http://localhost:8001
-Still on the settings tab, click the 'SSO Redirect' menu and add host of sso-url to the 'sso redirect domain whitelist'
-
-Note that the 'SSO Redirect' menu appeared after restarting the docker container.

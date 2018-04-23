@@ -89,20 +89,9 @@ busApi(app, db, logger);
 // Queues
 app.services = {};
 if (process.env.NODE_ENV && process.env.NODE_ENV.toLowerCase() === 'test') {
-    // TODO add test mocks
+  // TODO add test mocks
 } else {
-  // app.services.pubSub = rabbitMQService(logger);
-  // app.services.pubSub.init(
-  //   config.get('rabbitmqUrl'),
-  //   config.get('pubSubExchangeName'),
-  //   config.get('pubSubQueueName'))
-  // .then(() => {
-  //   logger.info('RabbitMQ service initialized');
-  // })
-  // .catch((err) => {
-  //   logger.error(err);
-  //   logger.error('Error initializing services', err);
-  // });
+  // TODO add any required services like kafka consumer service etc.
 }
 
 module.exports = app;

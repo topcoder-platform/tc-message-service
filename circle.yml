@@ -3,7 +3,6 @@ machine:
     version: v6.9.4
   environment:
     DB_MASTER_URL: postgres://ubuntu:@127.0.0.1:5432/circle_test
-    #RABBITMQ_URL: amqp://localhost:5672
     AUTH_SECRET: secret
     AUTH_DOMAIN: topcoder-dev.com
     LOG_LEVEL: debug

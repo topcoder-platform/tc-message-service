@@ -41,7 +41,6 @@
   "defaultUserTrustLevel": 2,
   "pubSubExchangeName": "projects",
   "pubSubQueueName": "message.service",
-  "rabbitmqUrl": "",
   "validIssuers": "[\"https:\/\/topcoder-newauth.auth0.com\/\",\"https:\/\/api.topcoder-dev.com\"]",
   "jwksUri": "",
   "busApiUrl": "https://api.topcoder-dev.com",
