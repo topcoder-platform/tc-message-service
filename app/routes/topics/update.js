@@ -1,7 +1,8 @@
+import _ from 'lodash';
+import HelperService from '../../services/helper';
 
 const config = require('config');
 const util = require('tc-core-library-js').util(config);
-const Discourse = require('../../services/discourse');
 const errors = require('common-errors');
 const Adapter = require('../../services/adapter');
 const Joi = require('joi');
@@ -14,8 +15,8 @@ const Promise = require('bluebird');
  */
 module.exports = db => (req, resp, next) => {
   const logger = req.log;
-  const discourseClient = Discourse(logger);
   const adapter = new Adapter(logger, db);
+  const helper = HelperService(logger, db);
 
   // Validate request parameters
   Joi.assert(req.body, {
@@ -23,23 +24,53 @@ module.exports = db => (req, resp, next) => {
     postId: Joi.number().required(),
     content: Joi.string().required(),
   });
-  const promises = [
-    discourseClient.updateTopic(req.authUser.userId.toString(), req.params.topicId, req.body.title)
-    .then((topicRes) => {
-      logger.info('Topic saved', topicRes.data);
-      return topicRes.data.basic_topic;
-    }),
-    discourseClient.updatePost(req.authUser.userId.toString(), req.body.postId, req.body.content)
-    .then((postRes) => {
-      logger.info('Topic Post saved', postRes.data);
-      return adapter.adaptPost(postRes.data.post);
-    }),
-  ];
-  return Promise.all(promises)
-  .then(response => resp.status(200).send(util.wrapResponse(req.id, { topic: response[0], post: response[1] })))
+  const topicId = req.params.topicId;
+  const postId = req.body.postId;
+  const title = req.body.title;
+  const content = req.body.content;
+  const userId = req.authUser.userId.toString();
+
+  return db.topics.findTopic(db, adapter, { topicId, numberOfPosts: -1, reqUserId: userId })
+  .then((topic) => { /* eslint no-param-reassign: ["error", { "props": true, "ignorePropertyModificationsFor": ["topic"] }] */
+    if (!topic) {
+      const err = new errors.HttpStatusError(404, 'Topic does not exist');
+      return next(err);
+    }
+    return helper.callReferenceEndpoint(req.authToken, req.id, topic.reference, topic.referenceId)
+    .then((hasAccessResp) => {
+      const hasAccess = helper.userHasAccessToEntity(userId, hasAccessResp, topic.reference);
+      if (!hasAccess && !helper.isAdmin(req)) {
+        throw new errors.HttpStatusError(403, 'User doesn\'t have access to the entity');
+      }
+      const contentPost = _.get(topic, 'posts[0]', null);
+      if (!contentPost || contentPost.id !== Number(postId)) {
+        throw new errors.HttpStatusError(404, 'Post does not exist');
+      }
+      const promises = [
+        db.topics.updateTopic(db, adapter, { title }, { topicId, reqUserId: userId })
+        .then((updatedTopic) => {
+          logger.debug('Topic saved', updatedTopic);
+          return updatedTopic;
+        }),
+        db.posts.updatePost(db, adapter, { raw: content }, { postId }, userId)
+        .then((updatedPost) => {
+          logger.info('Topic Post saved', updatedPost);
+          return updatedPost;
+        }),
+      ];
+      return Promise.all(promises)
+      .then((response) => {
+        const t = response[0];
+        const p = response[1];
+        t.posts = topic.posts;
+
+        // TODO should get rid of post as seprate field in response
+        resp.status(200).send(util.wrapResponse(req.id, { topic: t, post: p }));
+      });
+    });
+  })
   .catch((error) => {
     logger.error(error);
-    next(new errors.HttpStatusError(
-      error.response && error.response.status ? error.response.status : 500, 'Error updating topic'));
+    next(error instanceof errors.HttpStatusError ? error : new errors.HttpStatusError(500, 'Error updating topic'));
   });
 };

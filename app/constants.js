@@ -1,4 +1,3 @@
-
 module.exports = {
   EVENT: {
     TOPIC_CREATED: 'topic.created',
@@ -24,5 +23,11 @@ module.exports = {
     POST_CREATED: 'notifications.connect.project.post.created',
     POST_UPDATED: 'notifications.connect.project.post.edited',
     POST_DELETED: 'notifications.connect.project.post.deleted',
+  },
+
+  DISCOURSE_WEBHOOK_STATUS: {
+    PENDING: 'pending',
+    COMPLETED: 'completed',
+    ERROR: 'error',
   },
 };

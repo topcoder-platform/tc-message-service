@@ -1,8 +1,22 @@
 {
+  "apiVersion": "v4",
+  "aws": {
+    "config": {
+      "accessKeyId": "xxxxxxxxxxxxxxxx",
+      "region": "us-east-1",
+      "secretAccessKey": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+    },
+    "dynamodb": {
+      "discourseWebhookLogsTable": "message-service-discourse-webhook-logs"
+    },
+    "S3": {
+      "bucket": "tc-message-service-attachments"
+    }
+  },
   "defaultDiscoursePw": "supersecretpw",
-  "discourseSystemUsername": "system",
+  "coderBotUsername": "system",
+  "discourseWebhookSecret": "discourse",
   "memberServiceUrl": "http://local.topcoder-dev.com:3001/members",
-  "discourseURL": "http://talk.topcoder-dev.com",
   "discourseApiKey": "9a4ba22aaea1def205b61d1bfddc58d7205be61ee3447b7525ce5a191b8daed7",
   "authSecret": "secret",
   "authDomain": "topcoder.com",
@@ -16,7 +30,6 @@
   "syncUsersRetryDelay": 2000,
   "syncUsersTimeout": 180000,
   "version": "v4",
-  "userServiceUrl": "http://local.topcoder-dev.com:3001/users",
   "identityServiceEndpoint": "http://local.topcoder-dev.com:3001/",
   "systemUserClientId": "",
   "systemUserClientSecret": "",
@@ -25,13 +38,12 @@
     "loginCookieName": "jwtToken",
     "loginUrl": "http://192.168.1.100:3000"
   },
-  "systemUserIds": "0",
   "defaultUserTrustLevel": 2,
   "pubSubExchangeName": "projects",
   "pubSubQueueName": "message.service",
-  "rabbitmqUrl": "",
   "validIssuers": "[\"https:\/\/topcoder-newauth.auth0.com\/\",\"https:\/\/api.topcoder-dev.com\"]",
   "jwksUri": "",
   "busApiUrl": "https://api.topcoder-dev.com",
-  "busApiToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoibWVzc2FnZS1zZXJ2aWNlIiwiaWF0IjoxNTEyNzQ3MDgyLCJleHAiOjE1MjEzODcwODJ9.yhdebtGrFWO_ltv0IycOosyU0WbQREtPSaiQyllX444"
+  "busApiToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoibWVzc2FnZS1zZXJ2aWNlIiwiaWF0IjoxNTEyNzQ3MDgyLCJleHAiOjE1MjEzODcwODJ9.yhdebtGrFWO_ltv0IycOosyU0WbQREtPSaiQyllX444",
+  "topicServiceUrl":"http://api.topcoder-dev.com/v4/topics"
 }

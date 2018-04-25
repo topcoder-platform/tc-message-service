@@ -1,24 +1,30 @@
+import formidable from 'express-formidable';
 
 const router = require('express').Router();
 const config = require('config');
 const util = require('tc-core-library-js').util(config);
-const axios = require('axios');
-const ssoHandler = require('./sso/sso.js');
 const tcCoreLib = require('tc-core-library-js');
+
+const createAttachmentHandler = require('./attachments/create');
+const getAttachmentHandler = require('./attachments/get');
+const deleteAttachmentHandler = require('./attachments/delete');
+
 const getTopicHandler = require('./topics/get');
 const topicListHandler = require('./topics/list');
 const topicCreateHandler = require('./topics/create');
 const topicUpdateHandler = require('./topics/update');
 const topicDeleteHandler = require('./topics/delete');
-const syncUsersHandler = require('./topics/syncUsers');
 
-const uploadImageHandler = require('./image/upload');
 const createPostHandler = require('./posts/create');
 const listPostsHandler = require('./posts/list');
 const getPostHandler = require('./posts/get');
 const updatePostHandler = require('./posts/update');
 const deletePostHandler = require('./posts/delete');
-const systemUserFilter = require('../middleware/system-user-filter.js');
+
+const webhookPostHandler = require('./sendgrid/webhook');
+const discourseWebhookPostHandler = require('./discourse/webhook');
+
+const SecurityHelper = require('../services/security');
 
 const jwt = require('jsonwebtoken');
 
@@ -29,31 +35,51 @@ const jwt = require('jsonwebtoken');
  * @return {Object} response
  */
 module.exports = (logger, db) => {
+  const apiVersion = config.apiVersion;
   // health check
-  router.get('/_health', (req, res, next) => { // eslint-disable-line
-    // check if we can connect to discourse
-    return axios.get(config.get('discourseURL'))
-      .then((resp) => {
-        if (resp.status === 200) {
-          res.status(200).send({ message: 'All-is-well' });
-        }
-      })
-      .catch((err) => {
-        const msg = `Uanble to ping discourse: ${config.get('discourseURL')}`;
-        logger.error(msg, err);
-        res.status(500).send({
-          message: msg,
-          error: JSON.stringify(err),
-        });
-      });
+  router.get(`/${apiVersion}/topics/health`, (req, res, next) => { // eslint-disable-line
+    // TODO check if database connection is alive
+    res.status(200).send({ message: 'All-is-well' });
   });
-
-  // register discourse sso endpoint (no auth is needed)
-  router.route('/sso').get(ssoHandler(logger));
 
   // all project service endpoints need authentication
   const jwtAuth = tcCoreLib.middleware.jwtAuthenticator;
-  router.all('/v4/topics*', (req, res, next) => {
+
+  // discourse webhook with custom auth logic
+  router.route(`/${apiVersion}/topics/webhooks/discourse`).post((req, res, next) => {
+    const markUnauthorized = (request, response, message) => {
+      logger.warn(message);
+      response.status(403).json(util.wrapErrorResponse(request.id, 403, 'Invalid token issuer.'));
+      response.send();
+    };
+    const discourseToken = req.header('x-discourse-event-signature');
+    const discourseEvent = req.header('x-discourse-event');
+    const allowedEvents = ['post_created', 'post_edited', 'topic_created', 'topic_edited'].indexOf(discourseEvent) >= 0;
+
+    if (discourseToken) {
+      const token = SecurityHelper.calculateHmac(req.rawBody || '', 'sha256=');
+      if (discourseToken === token) {
+        if (allowedEvents) {
+          discourseWebhookPostHandler(db)(req, res, next);
+        } else {
+          logger.info(`Discourse Webhook Event Ignored: { event: ${discourseEvent} }`);
+          res.status(200).send();
+        }
+      } else {
+        markUnauthorized(req, res, 'Invalid token.');
+      }
+    } else {
+      markUnauthorized(req, res, 'Missing token.');
+    }
+  });
+
+  router.all(RegExp(`\\/${apiVersion}\\/topics\\/(?!webhooks|!health).*`), (req, res, next) => {
+    // if (req.path === `/${apiVersion}/topics/webhooks/discourse`
+    //   || req.path === `/${apiVersion}/topics/webhooks/sendgrid`
+    //   || req.path === `/${apiVersion}/topics/health`) {
+    //   next();
+    //   return;
+    // }
     if (`${process.env.TC_MESSAGE_SERVICE_AUTH_LOOSE}` !== 'true') {
       jwtAuth()(req, res, next);
       return;
@@ -77,45 +103,54 @@ module.exports = (logger, db) => {
         next();
       }
     } catch (err) {
+      logger.error(err);
       res.status(403)
         .json(util.wrapErrorResponse(req.id, 403, 'Failed to authenticate token.'));
       res.send();
     }
   }, (req, res, next) => {
-    req.authToken = req.get('authorization').split(' ')[1]; // eslint-disable-line
+    // if (req.path !== `/${apiVersion}/topics/webhooks/discourse`
+    //   && req.path !== `/${apiVersion}/topics/webhooks/sendgrid`
+    //   && req.path !== `/${apiVersion}/topics/health`) {
+      req.authToken = req.get('authorization').split(' ')[1]; // eslint-disable-line
+    // }
     next();
   });
 
-  router.use(systemUserFilter(logger));
-
   // Register all the routes
-  router.route('/v4/topics/:topicId')
-    .get(getTopicHandler(db))
-    .delete(topicDeleteHandler(db));
-  router.route('/v4/topics/:topicId/edit')
-    .post(topicUpdateHandler(db));
-
-  router.route('/v4/topics')
-    .post(topicCreateHandler(db))
+  router.route(`/${apiVersion}/topics/list`)
     .get(topicListHandler(db));
+  router.route(`/${apiVersion}/topics/create`)
+    .post(topicCreateHandler(db));
+  router.route(`/${apiVersion}/topics/:topicId/read`)
+    .get(getTopicHandler(db));
+  router.route(`/${apiVersion}/topics/:topicId/edit`)
+    .post(topicUpdateHandler(db));
+  router.route(`/${apiVersion}/topics/:topicId/remove`)
+    .delete(topicDeleteHandler(db));
 
 
-  router.route('/v4/topics/:topicId/posts')
-    .post(createPostHandler(db))
+  router.route(`/${apiVersion}/topics/:topicId/posts/list`)
     .get(listPostsHandler(db));
-
-  router.route('/v4/topics/:topicId/posts/:postId')
-    .delete(deletePostHandler(db))
+  router.route(`/${apiVersion}/topics/:topicId/posts/create`)
+    .post(createPostHandler(db));
+  router.route(`/${apiVersion}/topics/:topicId/posts/:postId/read`)
     .get(getPostHandler(db));
-
-  router.route('/v4/topics/:topicId/posts/:postId/edit')
+  router.route(`/${apiVersion}/topics/:topicId/posts/:postId/edit`)
     .post(updatePostHandler(db));
+  router.route(`/${apiVersion}/topics/:topicId/posts/:postId/remove`)
+    .delete(deletePostHandler(db));
 
-  router.route('/v4/topics/image')
-    .post(uploadImageHandler());
+  router.route(`/${apiVersion}/topics/:topicId/posts/:postId/attachments/create`)
+    .post(createAttachmentHandler(db));
+  router.route(`/${apiVersion}/topics/:topicId/posts/:postId/attachments/:attachmentId/read`)
+    .get(getAttachmentHandler(db));
+  router.route(`/${apiVersion}/topics/:topicId/posts/:postId/attachments/:attachmentId/remove`)
+    .delete(deleteAttachmentHandler(db));
 
-  router.route('/v4/topics/syncUsers')
-    .put(syncUsersHandler(db));
+  router.use(`/${apiVersion}/topics/webhooks/sendgrid`, formidable());
+  router.route(`/${apiVersion}/topics/webhooks/sendgrid`)
+    .post(webhookPostHandler(db));
 
   // register error handler
   router.use((err, req, res, next) => { // eslint-disable-line

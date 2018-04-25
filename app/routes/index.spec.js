@@ -18,7 +18,7 @@ describe('index', () => {
     done();
   });
 
-  it('GET /_health should return 200 response', (done) => {
+  it('GET /health should return 200 response', (done) => {
     sandbox.stub(axios, 'get').resolves({
       status: 200,
       data: {
@@ -26,7 +26,7 @@ describe('index', () => {
       },
     });
     request(server)
-      .get('/_health')
+      .get(`/${config.apiVersion}/topics/health`)
       .expect(200)
       .end((err, res) => {
         if (err) {
@@ -37,19 +37,9 @@ describe('index', () => {
       });
   });
 
-
-  it('GET /_health should return 500 response when it discourseURL is unreachable', (done) => {
-    const stub = sandbox.stub(axios, 'get');
-    stub.withArgs(config.get('discourseURL'), sinon.match.any)
-      .rejects({ status: 404, data: { msg: 'unreachable' } });
-
-    request(server)
-      .get('/_health')
-      .expect(500, done);
-  });
   it('GET /notexist should return 404 response', (done) => {
     request(server)
-      .get('/notexist')
+      .get('/topics/notexist')
       .expect(404)
       .end((err) => {
         if (err) {
