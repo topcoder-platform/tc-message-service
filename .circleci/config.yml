@@ -81,4 +81,4 @@ workflows:
             - test
           filters:
             branches:
-              only: 'master-v5'
+              only: 'master'
