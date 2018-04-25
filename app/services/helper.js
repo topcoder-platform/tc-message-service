@@ -2,22 +2,98 @@
 
 const _ = require('lodash');
 const config = require('config');
-const Discourse = require('./discourse');
 const axios = require('axios');
 const errors = require('common-errors');
 const util = require('../util');
-const Promise = require('bluebird');
 const { USER_ROLE } = require('../constants');
+const { REFERENCE_LOOKUPS } = require('../constants');
 
 /**
  * Returns helper service containing common functions used in route handlers
  * @param {Object} logger the logger
  * @param {Object} db sequelize db with all models loaded
- * @param {Object} _discourseClient optional
  * @return {function} function
  */
-module.exports = (logger, db, _discourseClient = null) => {
-  const discourseClient = _discourseClient || new Discourse(logger);
+module.exports = (logger, db) => {
+  /**
+   * Helper method to clean up the provided email address for deducing the final address that matters for
+   * the delivery of the email i.e. removing any non standard parts in the email address e.g. getting rid
+   * of anything after + sign in the local part of the email.
+   *
+   * @param {String} email email address to be sanitized
+   *
+   * @returns {String} sanitized email
+   */
+  function sanitizeEmail(email) {
+    if (email) {
+      return email.substring(0, email.indexOf('+')) + email.substring(email.indexOf('@'));
+    }
+    return '';
+  }
+
+  /**
+   * Lookup topic from previous service.
+   * @param  {Number} topicId the id of the topic we want
+   * @return {Promise} promise
+   */
+  function lookupTopic(topicId) {
+    const url = `${config.get('topicServiceUrl')}/${topicId}`;
+    logger.debug(`Helper.lookupTopic for topicId: ${topicId} against ${url}`);
+
+    return util.getSystemUserToken(logger)
+    .then((token) => {
+      logger.debug(`Bearer ${token}`);
+      return axios.get(url, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+      })
+      .then((response) => {
+        const data = _.get(response, 'data.result.content', null);
+        if (!data) { throw new Error('Response does not have result.content'); }
+        logger.debug('Helper.lookupTopic response', data);
+        return data;
+      });
+    });
+  }
+
+  /**
+   * Lookup user handles from emails
+   * @param  {Array} userEmails user emails
+   * @param {Boolean} isPattern flag to indicate that pattern matching is required or not
+   * @return {Promise} promise
+   */
+  function lookupUserEmails(userEmails, isPattern = false) {
+    logger.debug(`identityServiceEndpoint: ${config.get('identityServiceEndpoint')}`);
+    let filter = _.map(userEmails, i => `email=${i}`).join(' OR ');
+    if (isPattern) {
+      filter += '&like=true';
+    }
+    logger.trace('filter for users api call', filter);
+    return util.getSystemUserToken(logger)
+    .then((token) => {
+      logger.debug(`Bearer ${token}`);
+      return axios.get(`${config.get('identityServiceEndpoint')}users`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+        params: {
+          fields: 'handle,id,email',
+          filter,
+        },
+      })
+      .then((response) => {
+        const data = _.get(response, 'data.result.content', null);
+        if (!data) { throw new Error('Response does not have result.content'); }
+        logger.debug('UserHandle response', data);
+        return data;
+      });
+    });
+  }
 
   /**
    * Lookup user handles from userIds
@@ -25,6 +101,7 @@ module.exports = (logger, db, _discourseClient = null) => {
    * @return {Promise} promise
    */
   function lookupUserHandles(userIds) {
+    logger.debug(`memberServiceUrl: ${config.get('memberServiceUrl')}`);
     return axios.get(`${config.get('memberServiceUrl')}/_search`, {
       params: {
         fields: 'handle',
@@ -74,6 +151,24 @@ module.exports = (logger, db, _discourseClient = null) => {
       .then(handles => getTopcoderUser(handles[0]));
   }
 
+    /**
+   * finds handle of user from email,
+   * @param {Number} userEmail email of user
+   * @return {Promise} promise
+   */
+  function lookupPossibleUsersFromEmail(userEmail) {
+    return lookupUserEmails([userEmail])
+      .then((users) => {
+        if (users && users.length > 0) {
+          return users[0];
+        }
+        const emailLocal = userEmail.substring(0, userEmail.indexOf('@'));
+        const emailLocalSanitized = sanitizeEmail(emailLocal);
+        return lookupUserEmails([`${emailLocalSanitized}*`], true)
+          .then(possibleUsers => possibleUsers);
+      });
+  }
+
   /**
    * Verifies if a user has access to a certain topcoder entity such as a project,
    * challenge, or submission, by making a call to the api configured in the referenceLookup table
@@ -83,8 +178,8 @@ module.exports = (logger, db, _discourseClient = null) => {
    * @param {String} referenceId identifier of the reference record
    * @return {Promise} promise
    */
-  function userHasAccessToEntity(authToken, requestId, reference, referenceId) {
-    return db.referenceLookups.findOne({ where: { reference } })
+  function callReferenceEndpoint(authToken, requestId, reference, referenceId) {
+    return db.reference_lookups.findOne({ where: { reference } })
     .then((result) => {
       if (!result) {
         logger.debug('no result');
@@ -101,7 +196,7 @@ module.exports = (logger, db, _discourseClient = null) => {
         },
         timeout: config.get('referenceLookupTimeout'),
       }).then((response) => {
-        logger.debug(response.data);
+        logger.debug(_.get(response, 'data.result.status', 'Reference endpoint status'));
         if (response.data && response.data.result &&
           response.data.result.status === 200 && response.data.result.content) {
           return [true, response.data.result.content];
@@ -111,58 +206,23 @@ module.exports = (logger, db, _discourseClient = null) => {
         logger.debug(error);
         return [false, null, error];
       });
+    }).catch((error) => {
+      logger.debug(error);
+      return [false, null, error];
     });
   }
 
-  /**
-   * Get user from discourse provision a user in Discourse if one doesn't exist
-   * @param {String} userId userId of the user to fetch
-   * @return {Promise} promise
-   */
-  function getUserOrProvision(userId) {
-    logger.debug('Verifying if user exsits in Discourse:', userId);
-    return discourseClient.getUser(userId).then((user) => {
-      logger.info('Successfully got the user from Discourse', userId);
-      return user;
-    }).catch(() => {
-      logger.info('Discourse user doesn\'t exist, creating one', userId);
-      // User doesn't exist, create
-      // Fetch user info from member service
-      return this.lookupUserFromId(userId)
-        .catch((error) => {
-          logger.error('Error retrieving topcoder user', error);
-          throw new errors.HttpStatusError(500, 'Failed to get topcoder user info');
-        }).then((user) => {
-          logger.info('Successfully got topcoder user', JSON.stringify(user));
-          // Create discourse user
-          return discourseClient.createUser(
-            `${encodeURIComponent(user.firstName)} ${encodeURIComponent(user.lastName)}`,
-            user.userId.toString(),
-            user.handle,
-            user.email,
-            config.defaultDiscoursePw);
-        }).then((result) => {
-          if (result.data.success) {
-            logger.info('Discourse user created');
-          } else {
-            logger.error('Unable to create discourse user', result.data);
-            throw new errors.HttpStatusError(500, 'Unable to create discourse user');
-          }
-          return discourseClient.changeTrustLevel(result.data.user_id, config.get('defaultUserTrustLevel'));
-        })
-        .then((result) => {
-          if (result.status === 200) {
-            logger.info('Discourse user trust level changed');
-            return result.data;
-          }
-          logger.error('Unable to change discourse user trust level', result);
-          throw new errors.HttpStatusError(500, 'Unable to change discourse user trust level');
-        })
-        .catch((error) => {
-          logger.error('Failed to create discourse user', error);
-          throw error;
-        });
-    });
+  function userHasAccessToEntity(userId, hasAccessResp, reference) {
+    logger.info('Checking if user has access to project');
+    const hasAccess = hasAccessResp[0];
+    if (hasAccess && reference.toLowerCase() === REFERENCE_LOOKUPS.PROJECT) {
+      const projectMembers = _.get(hasAccessResp[1], 'members', []);
+        // get users list
+      const isMember = _.filter(projectMembers, member => member.userId.toString() === userId).length > 0;
+      logger.debug(isMember, 'isMember');
+      return isMember;
+    }
+    return false;
   }
 
   /**
@@ -197,40 +257,6 @@ module.exports = (logger, db, _discourseClient = null) => {
     return match.slice(2);
   }
 
-  /**
-   * Returns converts mentions from discourse @userId to @handles
-   * match: converted string
-   */
-
-  function mentionUserIdToHandle(post) {
-    const userIdRex = />(@[^\<]+)/g; // eslint-disable-line
-    const htmlRex = /s\/([^\"]+)/g; // eslint-disable-line
-    const userIds = _.map(post.match(userIdRex), getContentFromMatch);
-    const handleMap = {};
-    return Promise.each(userIds, userId => this.lookupUserFromId(userId).then((data) => {
-      const handle = data.handle;
-      if (handle) {
-        handleMap[userId] = handle;
-      } else {
-        logger.error(`Cannot find user with userId ${userId}`);
-      }
-    }).catch(() => {
-      logger.info(`not valid mention ${userId}`);
-    })).then(() => post.replace(userIdRex, (match) => {
-      const handle = handleMap[getContentFromMatch(match)];
-      if (handle) {
-        return `>@${handle}`;
-      }
-      return match;
-    }).replace(htmlRex, (match) => {
-      const handle = handleMap[getContentFromMatch(match)];
-      if (handle) {
-        return `s/${handle}`;
-      }
-      return match;
-    }));
-  }
-
   function isAdmin(req) {
     return _.intersection([
       USER_ROLE.TOPCODER_ADMIN,
@@ -239,15 +265,22 @@ module.exports = (logger, db, _discourseClient = null) => {
     ], req.authUser.roles).length > 0;
   }
 
+  function s3KeyFromUrl(url) {
+    return (url && url.replace(/http[s]?:\/\//, '').split('/').slice(1).join('/')) || '';
+  }
+
   return {
     getTopcoderUser,
     lookupUserHandles,
     lookupUserFromId,
+    lookupPossibleUsersFromEmail,
     userHasAccessToEntity,
-    getUserOrProvision,
+    callReferenceEndpoint,
     checkAccessAndProvision,
     getContentFromMatch,
-    mentionUserIdToHandle,
     isAdmin,
+    s3KeyFromUrl,
+    lookupTopic,
+    sanitizeEmail,
   };
 };

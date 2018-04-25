@@ -1,73 +1,179 @@
 /* eslint-disable no-unused-expressions, newline-per-chained-call */
 
-import { jwts } from '../../tests';
+import { prepareDB, clearDB, jwts, getDecodedToken } from '../../tests';
 
 const request = require('supertest');
 const server = require('../../app');
 const axios = require('axios');
 const sinon = require('sinon');
+const models = require('../../models');
+const config = require('config');
+
+const db = models(server, server.logger);
 require('should-sinon');
 
 describe('DELETE /v4/topics/:topicId/posts/:postId ', () => {
-  const apiPath = '/v4/topics/1/posts/1';
+  const topicId = 1;
+  const postId = 1;
+  const apiPath = `/${config.apiVersion}/topics/${topicId}/posts/${postId}/remove`;
+  const nonExistingTopicPath = `/${config.apiVersion}/topics/1000/posts/${postId}/remove`;
+
+  const memberUser = {
+    handle: getDecodedToken(jwts.member).handle,
+    userId: getDecodedToken(jwts.member).userId,
+    firstName: 'fname',
+    lastName: 'lName',
+    email: 'some@abc.com',
+  };
+
   let sandbox;
-  beforeEach(() => {
+  beforeEach((done) => {
     sandbox = sinon.sandbox.create();
+    prepareDB()
+    .then(() => {
+      // expectedTopic = topic;
+      // expectedTopicPosts = posts;
+      // console.log(expectedTopic, expectedTopicPosts);
+      done();
+    });
   });
-  afterEach(() => {
+  afterEach((done) => {
     sandbox.restore();
+    clearDB(done);
   });
   it('should return 403 response without a jwt token', (done) => {
     request(server)
-            .delete(apiPath)
-            .expect(403, done);
+      .delete(apiPath)
+      .expect(403, done);
   });
 
   it('should return 403 response with invalid jwt token', (done) => {
     request(server)
-            .delete(apiPath)
-            .set({
-              Authorization: 'Bearer wrong',
-            })
-            .expect(403, done);
+      .delete(apiPath)
+      .set({
+        Authorization: 'Bearer wrong',
+      })
+      .expect(403, done);
+  });
+
+  it('should return 403 response when user is not member of the project', (done) => {
+    const getStub = sandbox.stub(axios, 'get');
+    // resolves call (with 200) to reference endpoint in helper.callReferenceEndpoint
+    getStub.withArgs('http://reftest/referenceId').resolves({
+      data: { result: { status: 200, content: { members: [] } } },
+    });
+    request(server)
+      .delete(apiPath)
+      .set({
+        Authorization: `Bearer ${jwts.member}`,
+      })
+      .expect(403, done);
+  });
+
+  it('should return 404 response if no matching topic', (done) => {
+    request(server)
+      .delete(nonExistingTopicPath)
+      .set({
+        Authorization: `Bearer ${jwts.admin}`,
+      })
+      .expect(404)
+      .end((err) => {
+        if (err) {
+          return done(err);
+        }
+        return done();
+      });
   });
 
   it('should return 200 response with valid jwt token and payload', (done) => {
-    sandbox.stub(axios, 'delete').resolves({});
-    request(server)
-            .delete(apiPath)
-            .set({
-              Authorization: `Bearer ${jwts.admin}`,
-            })
-            .expect(200)
-            .end((err, res) => {
-              if (err) {
-                return done(err);
-              }
-              res.body.result.success.should.eql(true);
-              return done();
-            });
-  });
-
-  it('should return 500 response with error response', (done) => {
-    sandbox.stub(axios, 'delete').rejects({
-      response: {
-        status: 500,
-      },
+    const getStub = sandbox.stub(axios, 'get');
+    // resolves call (with 200) to reference endpoint in helper.callReferenceEndpoint
+    getStub.withArgs('http://reftest/referenceId').resolves({
+      data: { result: { status: 200, content: { members: [{ userId: memberUser.userId }] } } },
     });
     request(server)
-            .delete(apiPath)
-            .set({
-              Authorization: `Bearer ${jwts.admin}`,
-            })
-            .expect(500)
-            .end((err, res) => {
-              if (err) {
-                return done(err);
-              }
-              res.body.should.have.propertyByPath('result', 'content', 'message')
-                        .eql('Error deleting post');
-              return done();
-            });
+      .delete(apiPath)
+      .set({
+        Authorization: `Bearer ${jwts.member}`,
+      })
+      .expect(200)
+      .end((err, res) => {
+        if (err) {
+          return done(err);
+        }
+        res.body.result.success.should.eql(true);
+        return done();
+      });
+  });
+
+  it('should return 200 response with valid jwt token and payload (admin access)', (done) => {
+    const getStub = sandbox.stub(axios, 'get');
+    // resolves call (with 200) to reference endpoint in helper.callReferenceEndpoint
+    getStub.withArgs('http://reftest/referenceId').resolves({
+      data: { result: { status: 200, content: { members: [] } } },
+    });
+    request(server)
+      .delete(apiPath)
+      .set({
+        Authorization: `Bearer ${jwts.admin}`,
+      })
+      .expect(200)
+      .end((err, res) => {
+        if (err) {
+          return done(err);
+        }
+        res.body.result.success.should.eql(true);
+        return done();
+      });
+  });
+
+  it('should return 500 response with error in fetching topic', (done) => {
+    const getStub = sandbox.stub(axios, 'get');
+    // resolves call (with 200) to reference endpoint in helper.callReferenceEndpoint
+    getStub.withArgs('http://reftest/referenceId').resolves({
+      data: { result: { status: 200, content: { members: [{ userId: memberUser.userId }] } } },
+    });
+    const findTopicStub = sandbox.stub(db.topics, 'findTopic').rejects();
+    request(server)
+      .delete(apiPath)
+      .set({
+        Authorization: `Bearer ${jwts.member}`,
+      })
+      .expect(500)
+      .end((err, res) => {
+        if (err) {
+          return done(err);
+        }
+        // should call findTopic on topics model
+        findTopicStub.should.have.be.calledOnce;
+        res.body.should.have.propertyByPath('result', 'content', 'message')
+          .eql('Error deleting post');
+        return done();
+      });
+  });
+
+  it('should return 500 response with error in fetching post', (done) => {
+    const getStub = sandbox.stub(axios, 'get');
+    // resolves call (with 200) to reference endpoint in helper.callReferenceEndpoint
+    getStub.withArgs('http://reftest/referenceId').resolves({
+      data: { result: { status: 200, content: { members: [{ userId: memberUser.userId }] } } },
+    });
+    const findPostStub = sandbox.stub(db.posts, 'findPost').rejects();
+    request(server)
+      .delete(apiPath)
+      .set({
+        Authorization: `Bearer ${jwts.member}`,
+      })
+      .expect(500)
+      .end((err, res) => {
+        if (err) {
+          return done(err);
+        }
+        // should call findPost on topics model
+        findPostStub.should.have.be.calledOnce;
+        res.body.should.have.propertyByPath('result', 'content', 'message')
+          .eql('Error deleting post');
+        return done();
+      });
   });
 });

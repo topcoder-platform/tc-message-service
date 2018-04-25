@@ -1,15 +1,12 @@
-import { retrieveTopics } from './util';
 import HelperService from '../../services/helper';
 
 const _ = require('lodash');
 const config = require('config');
 const util = require('tc-core-library-js').util(config);
 const Promise = require('bluebird');
-const Discourse = require('../../services/discourse');
 const errors = require('common-errors');
 const Joi = require('joi');
 const Adapter = require('../../services/adapter');
-const { REFERENCE_LOOKUPS } = require('../../constants');
 
 
 /**
@@ -28,7 +25,6 @@ module.exports = db =>
    */
   (req, resp, next) => { // eslint-disable-line
     const logger = req.log;
-    const discourseClient = Discourse(logger);
     const helper = HelperService(logger, db);
     const adapter = new Adapter(logger, db);
 
@@ -54,68 +50,38 @@ module.exports = db =>
       return next(new errors.HttpStatusError(400, 'Please provide reference and referenceId filter parameters'));
     }
 
-    // Get topics from the Postgres database
-    db.topics.findAll({ where: filter })
-    .then((dbTopics) => {
-      if (dbTopics.length === 0) {
-        // returning empty list
-        return resp.status(200).send(util.wrapResponse(req.id, []));
+    const userId = req.authUser.userId.toString();
+    return helper.callReferenceEndpoint(req.authToken, req.id, filter.reference, filter.referenceId)
+    .then((hasAccessResp) => {
+      const hasAccess = helper.userHasAccessToEntity(userId, hasAccessResp, filter.reference);
+      if (!hasAccess && !helper.isAdmin(req)) {
+        throw new errors.HttpStatusError(403, 'User doesn\'t have access to the entity');
       }
-
-      logger.info(`${dbTopics.length} topics exist in pg, fetching from discourse`);
-      let userId = req.authUser.userId.toString();
-      return helper.userHasAccessToEntity(req.authToken, req.id, filter.reference, filter.referenceId)
-      .then((hasAccessResp) => {
-        logger.info('Checking if user has access to identity');
-        let hasAccess = hasAccessResp[0];
-        if (filter.reference.toLowerCase() === REFERENCE_LOOKUPS.PROJECT) {
-          const projectMembers = _.get(hasAccessResp[1], 'members', []);
-            // get users list
-          const isMember = _.filter(projectMembers, member => member.userId.toString() === userId).length > 0;
-          logger.debug(isMember, 'isMember');
-          hasAccess = isMember;
-        }
-        if (!hasAccess && !helper.isAdmin(req)) {
-          throw new errors.HttpStatusError(403, 'User doesn\'t have access to the entity');
+      // Get topics from the Postgres database
+      return db.topics.findTopics(db, adapter, { filters: filter, numberOfPosts: -1, reqUserId: userId })
+      .then((dbTopics) => {
+        if (!dbTopics || dbTopics.length === 0) {
+          // returning empty list
+          return [];
         }
 
-        // if user does not have access but if user is admin or manager, use discourse system user to make API calls
-        // - they can view topics without being a part of the team
-        const usingAdminAccess = !hasAccess && helper.isAdmin(req);
-        if (usingAdminAccess) {
-          userId = config.get('discourseSystemUsername');
-        }
-
-
-        return retrieveTopics(logger, dbTopics, userId, discourseClient)
-        .then((topics) => {
-          logger.info(`${topics.length} topics fetched from discourse`);
-
-          const topicsFiltered = _.chain(topics)
-            .filter(topic => topic != null)
-            .orderBy(['last_posted_at'], ['desc'])
-            .value();
-
-          logger.info(`${topicsFiltered.length} topics after filter`);
-          if (!usingAdminAccess) {
-            // Mark all unread topics as read.
-            Promise.all(topicsFiltered.filter(topic => !topic.read).map((topic) => {
-              if (topic.posts && topic.posts.length > 0) {
-                const postIds = topic.posts.map(post => post.post_number);
-                return discourseClient.markTopicPostsRead(req.authUser.userId.toString(), topic.id, postIds);
-              }
-              return Promise.resolve();
-            })).catch((error) => {
-              logger.error('error marking topic posts read', error);
-            });
+        // Mark all unread topics as read.
+        Promise.all(dbTopics.filter(topic => !topic.read).map((topic) => {
+          if (topic.posts && topic.posts.length > 0) {
+            // marks first post as read for the request user
+            db.post_user_stats.updateUserStats(db, logger, [topic.posts[0]], userId, 'READ');
           }
-          logger.debug('adapting topics', topicsFiltered);
-          const adaptedTopics = adapter.adaptTopics({ topics: topicsFiltered, dbTopics });
-          return _.orderBy(adaptedTopics, ['lastActivityAt'], ['desc']);
-        })
-        .then(result => resp.status(200).send(util.wrapResponse(req.id, result)));
-      });
-    }).catch((error) => {
-      next(error);
+          return Promise.resolve();
+        }));
+        // logger.debug('adapting topics', dbTopics);
+        const adaptedTopics = dbTopics;
+        // const adaptedTopics = adapter.adaptTopics({ topics : dbTopics });
+        return adaptedTopics;
+      })
+      .then(result => resp.status(200).send(util.wrapResponse(req.id, result)));
+    })
+    .catch((error) => {
+      logger.error(error);
+      next(error instanceof errors.HttpStatusError ? error : new errors.HttpStatusError(500, 'Error fetching topics'));
     });
   };

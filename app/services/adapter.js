@@ -3,13 +3,13 @@ const Helper = require('./helper.js');
 const Promise = require('bluebird');
 const config = require('config');
 
-const DISCOURSE_SYSTEM_USERNAME = config.get('discourseSystemUsername');
+const CODERBOT_USERNAME = config.get('coderBotUsername');
 
 // storing a reference to handle to userId lookup
 // FIXME: (parth) this map will grow eventually as more users are added,
 // consider using external cache instead
 const handleMap = { system: 'system' };
-handleMap[DISCOURSE_SYSTEM_USERNAME] = DISCOURSE_SYSTEM_USERNAME;
+handleMap[CODERBOT_USERNAME] = CODERBOT_USERNAME;
 
 function Adapter(logger, db, _discourseClient = null) {// eslint-disable-line
   const helper = Helper(logger);
@@ -33,93 +33,89 @@ function Adapter(logger, db, _discourseClient = null) {// eslint-disable-line
   };
 
   function convertPost(input) {
-    let userId = input.username;
-    userId = userId !== 'system' && userId !== DISCOURSE_SYSTEM_USERNAME ? parseInt(userId, 10) : userId;
-    return helper.mentionUserIdToHandle(input.cooked)
-      .then(postBody => ({
-        id: input.id,
-        date: input.created_at,
-        updatedDate: input.updated_at,
-        userId,
-        read: true,
-        body: postBody,
-        rawContent: input.raw,
-        type: 'post',
-      }));
+    let userId = input.createdBy;
+    userId = userId !== 'system' && userId !== CODERBOT_USERNAME ? parseInt(userId, 10) : userId;
+    return {
+      id: input.id,
+      date: input.createdAt,
+      updatedDate: input.updatedAt,
+      userId,
+      read: true,
+      body: input.raw,
+      rawContent: input.raw,
+      type: 'post',
+    };
   }
 
-  this.adaptPosts = function a(input) {
-    const result = [];
-
-    return Promise.each(input.post_stream.posts,
-      post => convertPost(post).then(cpost => result.push(cpost))).then(() => result);
+  this.adaptPosts = function a(posts) {
+    // Promise is justed for avoiding too much refactoring needed after removing user mention handling
+    // in post content in convertPost method which actually used to return promise as it used to call
+    // member API to get the member data
+    return Promise.resolve(posts.map(post => convertPost(post)));
   };
 
   this.adaptPost = function a(input) {
-    return convertPost(input);
+    // Promise is justed for avoiding too much refactoring needed after removing user mention handling
+    // in post content in convertPost method which actually used to return promise as it used to call
+    // member API to get the member data
+    return Promise.resolve(convertPost(input));
   };
 
-  this.adaptTopic = function a(input) {
-    const { topic, dbTopic } = input;
-    const topics = this.adaptTopics({ topics: [topic], dbTopics: [dbTopic] });
-    return topics && topics.length > 0 ? topics[0] : topic;
+  this.adaptTopic = function a({ dbTopic, totalPosts, reqUserId }) {
+    const topicsPostsCount = [{ topicId: dbTopic.id, totalPosts }];
+    const topics = this.adaptTopics({ dbTopics: [dbTopic], topicsPostsCount, reqUserId });
+    return topics && topics.length > 0 ? topics[0] : dbTopic;
   };
 
-  this.adaptTopics = function a(input) {
-    let { topics: discourseTopics } = input;
-    const pgTopics = input.dbTopics;
-    if (!(discourseTopics instanceof Array)) {
-      discourseTopics = [discourseTopics];
-    }
-
-    const topics = _.map(discourseTopics, (discourseTopic) => {
-      let userId = discourseTopic.user_id;
-      userId = userId !== 'system' && userId !== DISCOURSE_SYSTEM_USERNAME ? parseInt(userId, 10) : userId;
-
-      const pgTopic = _.find(pgTopics, pt => pt.discourseTopicId === discourseTopic.id);
+  this.adaptTopics = function a({ dbTopics, topicsPostsCount, reqUserId }) {
+    logger.info('adaptTopics - Enter');
+    const topics = _.map(dbTopics, (dbTopic) => {
+      let userId = dbTopic.createdBy;
+      userId = userId !== 'system' && userId !== CODERBOT_USERNAME ? parseInt(userId, 10) : userId;
+      const totalPosts = (_.find(topicsPostsCount, tpc => tpc.topicId === dbTopic.id) || { totalPosts: 0 }).totalPosts;
       const topic = {
-        id: discourseTopic.id,
-        dbId: pgTopic ? pgTopic.id : undefined,
-        reference: pgTopic ? pgTopic.reference : undefined,
-        referenceId: pgTopic ? pgTopic.referenceId : undefined,
-        date: discourseTopic.created_at,
-        updatedDate: discourseTopic.updated_at,
-        lastActivityAt: discourseTopic.last_posted_at,
-        title: discourseTopic.title,
-        read: discourseTopic.posts[0].read,
+        id: dbTopic.id,
+        reference: dbTopic.reference,
+        referenceId: dbTopic.referenceId,
+        tag: dbTopic.tag,
+        date: dbTopic.createdAt,
+        updatedDate: dbTopic.updatedAt,
+        lastActivityAt: dbTopic.updatedAt,
+        title: dbTopic.title,
         userId,
-        tag: discourseTopic.tag,
-        totalPosts: discourseTopic.posts.length,
-        retrievedPosts: discourseTopic.posts.length,
-        postIds: _.map(discourseTopic.posts, p => p.id),
+        totalPosts,
+        retrievedPosts: dbTopic.posts ? dbTopic.posts.length : 0,
+        postIds: _.map(dbTopic.posts, p => p.id),
         posts: [],
       };
-      _.each(discourseTopic.posts, (discoursePost) => {
+      _.each(dbTopic.posts, (dbPost) => {
+        const userStats = dbPost.userStats;
+        const readStats = userStats ? _.find(userStats, s => s.action === 'READ') : null;
+        let postUserId = dbPost.createdBy;
+        if (['system', CODERBOT_USERNAME].indexOf(postUserId) === -1) {
+          postUserId = Number(postUserId);
+        }
         topic.posts.push({
-          id: discoursePost.id,
-          date: discoursePost.created_at,
-          updatedDate: discoursePost.updated_at,
-          userId: discoursePost.user_id,
-          read: discoursePost.read,
-          body: discoursePost.cooked,
-          rawContent: discoursePost.raw,
+          id: dbPost.id,
+          date: dbPost.createdAt,
+          updatedDate: dbPost.updatedAt,
+          userId: postUserId,
+          read: readStats ? readStats.userIds.indexOf(reqUserId) !== -1 : false,
+          body: dbPost.raw,
+          rawContent: dbPost.raw,
           type: 'post',
         });
       });
-      topic.posts = _.orderBy(topic.posts, ['date'], ['asc']);
-      const lastPost = topic.posts[topic.posts.length - 1];
-      topic.lastActivityAt = lastPost.updatedDate ? lastPost.updatedDate : lastPost.date;
-
-      // add utc timezone to timestamp fields
-      topic.date = topic.date ? `${topic.date}Z` : null;
-      topic.updatedDate = topic.updatedDate ? `${topic.updatedDate}Z` : null;
-      topic.lastActivityAt = topic.lastActivityAt ? `${topic.lastActivityAt}Z` : null;
-      _.each(topic.posts, (post) => {
-        post.date = post.date ? `${post.date}Z` : null;// eslint-disable-line
-        post.updatedDate = post.updatedDate ? `${post.updatedDate}Z` : null;// eslint-disable-line
-      });
+      logger.debug(topic.posts, 'topic.posts');
+      if (topic.posts && topic.posts.length > 0) {
+        topic.posts = _.orderBy(topic.posts, ['date', 'id'], ['asc', 'asc']);
+        topic.read = topic.posts[0].read;
+        const lastPost = topic.posts[topic.posts.length - 1];
+        topic.lastActivityAt = lastPost.updatedDate ? lastPost.updatedDate : lastPost.date;
+      }
       return topic;
     });
+    logger.info('adaptTopics - Exit');
     return topics;
   };
 

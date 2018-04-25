@@ -15,7 +15,9 @@ const config = require('config');
 const basename = path.basename(module.filename);
 const db = {};
 
-const sequelize = new Sequelize(config.get('dbConfig.masterUrl'));
+const sequelize = new Sequelize(config.get('dbConfig.masterUrl'), {
+  logging: false,
+});
 
 fs
   .readdirSync(__dirname)
@@ -34,4 +36,7 @@ Object.keys(db).forEach((modelName) => {
 db.sequelize = sequelize;
 db.Sequelize = Sequelize;
 
-module.exports = db;
+module.exports = (app, logger) => {
+  db.logger = logger;
+  return db;
+};
