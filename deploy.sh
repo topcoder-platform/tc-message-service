@@ -201,6 +201,26 @@ register_definition() {
     fi
 }
 
+check_service_status() {
+        counter=0
+  sleep 60
+        servicestatus=`aws ecs describe-services --service $AWS_ECS_SERVICE --cluster $AWS_ECS_CLUSTER | $JQ '.services[].events[0].message'`
+        while [[ $servicestatus != *"steady state"* ]]
+        do
+           echo "Current event message : $servicestatus"
+           echo "Waiting for 30 seconds to check the service status...."
+           sleep 30
+           servicestatus=`aws ecs describe-services --service $AWS_ECS_SERVICE --cluster $AWS_ECS_CLUSTER | $JQ '.services[].events[0].message'`
+           counter=`expr $counter + 1`
+           if [[ $counter -gt $COUNTER_LIMIT ]] ; then
+                echo "Service does not reach steady state within 10 minutes. Please check"
+                exit 1
+           fi
+        done
+        echo "$servicestatus"
+}
+
 configure_aws_cli
 push_ecr_image
 deploy_cluster
+check_service_status
