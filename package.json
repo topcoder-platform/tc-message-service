@@ -60,7 +60,7 @@
     "pg-hstore": "^2.3.2",
     "querystring": "^0.2.0",
     "sequelize": "^4.13.5",
-    "tc-core-library-js": "git+https://github.com/appirio-tech/tc-core-library-js.git#v2.1"
+    "tc-core-library-js": "appirio-tech/tc-core-library-js.git#v2.2"
   },
   "devDependencies": {
     "aws-sdk-mock": "^1.7.0",
