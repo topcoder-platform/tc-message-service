@@ -61,6 +61,7 @@ module.exports = db => (req, resp, next) => {
         topicId,
         userEmail: helper.sanitizeEmail(usr.email),
       };
+      logger.debug('body', body);
       const correctToken = jwt.sign(body, config.authSecret, { noTimestamp: true }).split('.')[2];
       logger.trace(`correctToken[${userId}]=> ${correctToken}`);
 
