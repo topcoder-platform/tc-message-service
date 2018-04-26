@@ -152,22 +152,16 @@ module.exports = (logger, db) => {
       .then(handles => getTopcoderUser(handles[0]));
   }
 
-    /**
+  /**
    * finds handle of user from email,
    * @param {Number} userEmail email of user
    * @return {Promise} promise
    */
   function lookupPossibleUsersFromEmail(userEmail) {
-    return lookupUserEmails([userEmail])
-      .then((users) => {
-        if (users && users.length > 0) {
-          return users;
-        }
-        const emailLocal = userEmail.substring(0, userEmail.indexOf('@'));
-        const emailLocalSanitized = sanitizeEmail(emailLocal);
-        return lookupUserEmails([`${emailLocalSanitized}*`], true)
-          .then(possibleUsers => possibleUsers);
-      });
+    const emailSanitized = sanitizeEmail(userEmail);
+    const emailLocal = emailSanitized.substring(0, emailSanitized.indexOf('@'));
+    return lookupUserEmails([`${emailLocal}*`], true)
+      .then(possibleUsers => possibleUsers);
   }
 
   /**
