@@ -161,7 +161,7 @@ module.exports = (logger, db) => {
     return lookupUserEmails([userEmail])
       .then((users) => {
         if (users && users.length > 0) {
-          return users[0];
+          return users;
         }
         const emailLocal = userEmail.substring(0, userEmail.indexOf('@'));
         const emailLocalSanitized = sanitizeEmail(emailLocal);
