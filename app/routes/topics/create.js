@@ -61,6 +61,14 @@ module.exports = db =>
             const post = savedPost.dataValues;
             topic.posts = [post];
             req.app.emit(EVENT.TOPIC_CREATED, { topic, req });
+            // creates an entry in post_user_stats table for tracking user actions against this post
+            // right now it only creates entry for 'READ' action, in future we may create more entries
+            // when we support more actions e.g. 'LIKE', 'BOOKMARK', 'FAVORITE' etc
+            db.post_user_stats.createStats(db, logger, {
+              post: savedPost,
+              userId,
+              action: 'READ',
+            }).then(() => logger.debug('post_user_stats entry created for post: ', savedPost.id));
             return resp.status(200).send(util.wrapResponse(
               req.id,
               adapter.adaptTopic({ dbTopic: topic, totalPosts: 1 })));
