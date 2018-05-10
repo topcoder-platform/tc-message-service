@@ -18,7 +18,7 @@
   "coderBotUsername": "CODERBOT_USERNAME",
   "discourseWebhookSecret": "DISCOURSE_WEBHOOK_SECRET",
   "authDomain": "AUTH_DOMAIN",
-  "authSecret": "AUTH_SECRET",
+  "AUTH_SECRET": "AUTH_SECRET",
   "memberServiceUrl": "MEMBER_SERVICE_URL",
   "captureLogs": "CAPTURE_LOGS",
   "dbConfig": {
@@ -30,7 +30,7 @@
   "identityServiceEndpoint": "IDENTITY_SERVICE_ENDPOINT",
   "systemUserClientId": "SYSTEM_USER_CLIENT_ID",
   "systemUserClientSecret": "SYSTEM_USER_CLIENT_SECRET",
-  "validIssuers": "VALID_ISSUERS",
+  "VALID_ISSUERS": "VALID_ISSUERS",
   "jwksUri": "JWKS_URI",
   "busApiUrl": "BUS_API_URL",
   "busApiToken": "BUS_API_TOKEN",

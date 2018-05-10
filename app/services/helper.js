@@ -253,6 +253,8 @@ module.exports = (logger, db) => {
   }
 
   function isAdmin(req) {
+    const isMachineToken = _.get(req, 'authUser.isMachine', false);
+    if (isMachineToken) return true;
     return _.intersection([
       USER_ROLE.TOPCODER_ADMIN,
       USER_ROLE.CONNECT_ADMIN,
