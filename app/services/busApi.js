@@ -3,6 +3,7 @@ import config from 'config';
 const Promise = require('bluebird');
 const axios = require('axios');
 const tcCoreLibAuth = require('tc-core-library-js').auth;
+
 const m2m = tcCoreLibAuth.m2m(config);
 
 let client = null;
@@ -15,7 +16,7 @@ async function getClient() {
   if (client) return client;
   const apiBusUrl = config.get('busApiUrl');
   try {
-    const token = await m2m.getMachineToken(config.AUTH0_CLIENT_ID, config.AUTH0_CLIENT_SECRET)
+    const token = await m2m.getMachineToken(config.AUTH0_CLIENT_ID, config.AUTH0_CLIENT_SECRET);
     client = axios.create({ baseURL: apiBusUrl });
 
     // Alter defaults after instance has been created
@@ -46,9 +47,9 @@ async function getClient() {
 function createEvent(type, message, logger) {
   const body = JSON.stringify(message);
   logger.debug(`Sending message: ${JSON.stringify(message)}`);
-  return getClient().then((client) => {
+  return getClient().then((busClient) => {
     logger.debug('calling bus-api');
-    client.post('/bus/events', {
+    busClient.post('/bus/events', {
       type,
       message: body,
     })
@@ -78,7 +79,7 @@ function createEvent(type, message, logger) {
         Promise.resolve();     // eslint-disable-line
       });
   }).catch((errMessage) => {
-    logger.debug(errMessage)
+    logger.debug(errMessage);
   });
 }
 
