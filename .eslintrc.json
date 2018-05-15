@@ -22,7 +22,8 @@
             "requireReturnType": true,
             "requireParamDescription": true,
             "requireReturnDescription": true
-        }]
+        }],
+        "no-underscore-dangle" : [2, { "allow": ["_source"] }]
     },
     "parserOptions": {
         "ecmaVersion": 6

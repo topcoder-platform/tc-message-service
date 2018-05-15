@@ -6,7 +6,7 @@ const util = require('tc-core-library-js').util(config);
 const Promise = require('bluebird');
 const errors = require('common-errors');
 const Joi = require('joi');
-const Adapter = require('../../services/adapter');
+const esClient = require('./../../elasticSearchConnection');
 
 
 /**
@@ -16,26 +16,29 @@ const Adapter = require('../../services/adapter');
  */
 module.exports = db =>
   /**
-   * Gets topics from Discourse for the specified entity, and in the process it does:
+   * Gets topics from elasticsearch for the specified entity, and in the process it does:
    *  - Checks if the user has access to the referred entity
-   *  - Checks if a user exists in Discourse, if not, it creates one
-   *  - Checks if a topic associated with this entity exists in Discourse, if not creates one
+   *  - Checks if a user exists in elasticsearch, if not, it creates one
+   *  - Checks if a topic associated with this entity exists in elasticsearch, if not creates one
    *  - If the topic already exists, checks if the user has access, if not gives access
    * params: standard express parameters
    */
   (req, resp, next) => { // eslint-disable-line
     const logger = req.log;
     const helper = HelperService(logger, db);
-    const adapter = new Adapter(logger, db);
 
     // Validate request parameters
     Joi.assert(req.query, {
       filter: Joi.string().required(),
     });
-
     // Parse filter
     const parsedFilter = (req.query.filter || '').split('&');
-    let filter = {};
+    const esFilter = {};
+    const filter = {};
+    esFilter.query = {};
+    esFilter.query.bool = {};
+    esFilter.query.bool.filter = [];
+
     _(parsedFilter).each((value) => {
       const parts = value.split('=');
       if (parts.length === 2) {
@@ -43,9 +46,14 @@ module.exports = db =>
       }
     });
     // allowed filters
-    filter = _.pick(filter, ['reference', 'referenceId', 'tag']);
+    const filterTerm = _.pick(filter, ['reference', 'referenceId', 'tag']);
+    _.forEach(filterTerm, (singleValue, singleKey) => {
+      const term = {};
+      term.term = {};
+      term.term[singleKey] = singleValue.toLowerCase();
+      esFilter.query.bool.filter.push(term);
+    });
 
-    // Verify required filters are present
     if (!filter.reference || !filter.referenceId) {
       return next(new errors.HttpStatusError(400, 'Please provide reference and referenceId filter parameters'));
     }
@@ -57,9 +65,18 @@ module.exports = db =>
       if (!hasAccess && !helper.isAdmin(req)) {
         throw new errors.HttpStatusError(403, 'User doesn\'t have access to the entity');
       }
-      // Get topics from the Postgres database
-      return db.topics.findTopics(db, adapter, { filters: filter, numberOfPosts: -1, reqUserId: userId })
-      .then((dbTopics) => {
+      // Get topics from the Elastic Search
+      return esClient.search({
+        index: config.get('elasticIndexName'),
+        type: 'topic',
+        body: esFilter,
+      })
+      .then((dbTopicElastic) => {
+        const dbTopics = [];
+        _.forEach(dbTopicElastic.hits.hits, (source) => {
+          dbTopics.push(source._source);
+        });
+
         if (!dbTopics || dbTopics.length === 0) {
           // returning empty list
           return [];
@@ -73,9 +90,7 @@ module.exports = db =>
           }
           return Promise.resolve();
         }));
-        // logger.debug('adapting topics', dbTopics);
         const adaptedTopics = dbTopics;
-        // const adaptedTopics = adapter.adaptTopics({ topics : dbTopics });
         return adaptedTopics;
       })
       .then(result => resp.status(200).send(util.wrapResponse(req.id, result)));

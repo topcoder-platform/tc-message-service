@@ -7,9 +7,10 @@ const errors = require('common-errors');
 const Adapter = require('../../services/adapter');
 const Joi = require('joi');
 const Promise = require('bluebird');
+const esIndex = require('./../indexing/indexing');
 
 /**
- * Save a topic in Discourse
+ * Save a topic in database and update elasticsearch index.
  * @param {Object} db sequelize db with models loaded
  * @return {object} response
  */
@@ -63,7 +64,8 @@ module.exports = db => (req, resp, next) => {
         const t = response[0];
         const p = response[1];
         t.posts = topic.posts;
-
+        // update elastic search index
+        esIndex.updateElasticSearchIndex(db, adapter, topicId, topicId);
         // TODO should get rid of post as seprate field in response
         resp.status(200).send(util.wrapResponse(req.id, { topic: t, post: p }));
       });

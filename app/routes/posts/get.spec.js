@@ -17,7 +17,7 @@ const db = models(server, server.logger);
 
 require('should-sinon');
 
-describe('GET /v4/topics/:topicId/posts/:postId', () => {
+describe('GET /v5/topics/:topicId/posts/:postId', () => {
   const apiPath = `/${config.apiVersion}/topics/1/posts/1/read`;
   const nonExistingTopicPath = `/${config.apiVersion}/topics/1000/posts/1/read`;
   const nonExistingPostPath = `/${config.apiVersion}/topics/1/posts/1000/read`;

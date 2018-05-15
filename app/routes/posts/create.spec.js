@@ -13,7 +13,7 @@ const db = models(server, server.logger);
 
 require('should-sinon');
 
-describe('POST /v4/topics/:topicId/posts ', () => {
+describe('POST /v5/topics/:topicId/posts ', () => {
   const topicId = 1;
   const apiPath = `/${config.apiVersion}/topics/${topicId}/posts/create`;
   const nonExistingTopicPath = `/${config.apiVersion}/topics/1000/posts/create`;
