@@ -31,7 +31,7 @@ module.exports = {
     ERROR: 'error',
   },
 
-  TOKEN_SCOPES = {
+  TOKEN_SCOPES: {
     CONNECT_PROJECT_ADMIN: 'all:connect_project',
   },
 };
