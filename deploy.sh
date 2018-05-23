@@ -117,10 +117,6 @@ make_task_def(){
           "value": "%s"
         },
         {
-          "name": "BUS_API_TOKEN",
-          "value": "%s"
-        },
-        {
           "name": "TOPIC_SERVICE_V4_URL",
           "value": "%s"
         },
@@ -142,6 +138,26 @@ make_task_def(){
         },
         {
           "name": "CODERBOT_USERNAME",
+          "value": "%s"
+        },
+        {
+          "name": "AUTH0_URL",
+          "value": "%s"
+        },
+        {
+          "name": "AUTH0_AUDIENCE",
+          "value": "%s"
+        },
+        {
+          "name": "AUTH0_CLIENT_ID",
+          "value": "%s"
+        },
+        {
+          "name": "AUTH0_CLIENT_SECRET",
+          "value": "%s"
+        },
+        {
+          "name": "TOKEN_CACHE_TIME",
           "value": "%s"
         }
       ],
@@ -167,7 +183,6 @@ make_task_def(){
   MEMBER_SERVICE_URL=$(eval "echo \$${ENV}_MEMBER_SERVICE_URL")
   IDENTITY_SERVICE_ENDPOINT=$(eval "echo \$${ENV}_IDENTITY_SERVICE_ENDPOINT")
   BUS_API_URL=$(eval "echo \$${ENV}_BUS_API_URL")
-  BUS_API_TOKEN=$(eval "echo \$${ENV}_BUS_API_TOKEN")
   TOPIC_SERVICE_V4_URL=$(eval "echo \$${ENV}_TOPIC_SERVICE_V4_URL")
   SYSTEM_USER_CLIENT_ID=$(eval "echo \$${ENV}_SYSTEM_USER_CLIENT_ID")
   SYSTEM_USER_CLIENT_SECRET=$(eval "echo \$${ENV}_SYSTEM_USER_CLIENT_SECRET")
@@ -185,7 +200,14 @@ make_task_def(){
   echo "NODE_ENV"
   echo $NODE_ENV
 
-  task_def=$(printf "$task_template" $family $ACCOUNT_ID $AWS_ECS_CONTAINER_NAME $ACCOUNT_ID $AWS_REGION $AWS_REPOSITORY $CIRCLE_SHA1 $NODE_ENV $LOG_LEVEL $CAPTURE_LOGS $LOGENTRIES_TOKEN $API_VERSION $AWS_REGION $AWS_ACCESS_KEY_ID $AWS_SECRET_ACCESS_KEY $AUTH_DOMAIN $AUTH_SECRET $VALID_ISSUERS $DB_MASTER_URL $MEMBER_SERVICE_URL $IDENTITY_SERVICE_ENDPOINT $BUS_API_URL $BUS_API_TOKEN $TOPIC_SERVICE_V4_URL $SYSTEM_USER_CLIENT_ID $SYSTEM_USER_CLIENT_SECRET $DDB_DISCOURSE_WEBHOOK_LOGS_TABLE $DISCOURSE_WEBHOOK_SECRET $CODERBOT_USERNAME $PORT $PORT $AWS_ECS_CLUSTER $AWS_REGION $NODE_ENV)
+AUTH0_URL=$(eval "echo \$${ENV}_AUTH0_URL")
+AUTH0_AUDIENCE=$(eval "echo \$${ENV}_AUTH0_AUDIENCE")
+AUTH0_CLIENT_ID=$(eval "echo \$${ENV}_AUTH0_CLIENT_ID")
+AUTH0_CLIENT_SECRET=$(eval "echo \$${ENV}_AUTH0_CLIENT_SECRET")
+TOKEN_CACHE_TIME=$(eval "echo \$${ENV}_TOKEN_CACHE_TIME")
+
+
+  task_def=$(printf "$task_template" $family $ACCOUNT_ID $AWS_ECS_CONTAINER_NAME $ACCOUNT_ID $AWS_REGION $AWS_REPOSITORY $CIRCLE_SHA1 $NODE_ENV $LOG_LEVEL $CAPTURE_LOGS $LOGENTRIES_TOKEN $API_VERSION $AWS_REGION $AWS_ACCESS_KEY_ID $AWS_SECRET_ACCESS_KEY $AUTH_DOMAIN $AUTH_SECRET $VALID_ISSUERS $DB_MASTER_URL $MEMBER_SERVICE_URL $IDENTITY_SERVICE_ENDPOINT $BUS_API_URL $TOPIC_SERVICE_V4_URL $SYSTEM_USER_CLIENT_ID $SYSTEM_USER_CLIENT_SECRET $DDB_DISCOURSE_WEBHOOK_LOGS_TABLE $DISCOURSE_WEBHOOK_SECRET $CODERBOT_USERNAME "$AUTH0_URL" "$AUTH0_AUDIENCE" $AUTH0_CLIENT_ID "$AUTH0_CLIENT_SECRET" $TOKEN_CACHE_TIME $PORT $PORT $AWS_ECS_CLUSTER $AWS_REGION $NODE_ENV)
 }
 
 push_ecr_image(){

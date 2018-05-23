@@ -18,7 +18,7 @@
   "discourseWebhookSecret": "discourse",
   "memberServiceUrl": "http://local.topcoder-dev.com:3001/members",
   "discourseApiKey": "9a4ba22aaea1def205b61d1bfddc58d7205be61ee3447b7525ce5a191b8daed7",
-  "authSecret": "secret",
+  "AUTH_SECRET": "secret",
   "authDomain": "topcoder.com",
   "captureLogs": "false",
   "dbConfig": {
@@ -41,9 +41,14 @@
   "defaultUserTrustLevel": 2,
   "pubSubExchangeName": "projects",
   "pubSubQueueName": "message.service",
-  "validIssuers": "[\"https:\/\/topcoder-newauth.auth0.com\/\",\"https:\/\/api.topcoder-dev.com\"]",
+  "VALID_ISSUERS": "[\"https:\/\/topcoder-newauth.auth0.com\/\",\"https:\/\/api.topcoder-dev.com\"]",
   "jwksUri": "",
   "busApiUrl": "https://api.topcoder-dev.com",
-  "busApiToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoibWVzc2FnZS1zZXJ2aWNlIiwiaWF0IjoxNTEyNzQ3MDgyLCJleHAiOjE1MjEzODcwODJ9.yhdebtGrFWO_ltv0IycOosyU0WbQREtPSaiQyllX444",
-  "topicServiceUrl":"http://api.topcoder-dev.com/v4/topics"
+  "topicServiceUrl":"http://api.topcoder-dev.com/v4/topics",
+  "HEALTH_CHECK_URL": "_health",
+  "AUTH0_CLIENT_ID": "",
+  "AUTH0_CLIENT_SECRET": "",
+  "AUTH0_AUDIENCE": "",
+  "AUTH0_URL": "",
+  "TOKEN_CACHE_TIME": ""
 }
