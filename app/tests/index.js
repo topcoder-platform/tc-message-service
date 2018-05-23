@@ -1,3 +1,6 @@
+import _ from 'lodash';
+import sleep from 'sleep'; // eslint-disable-line import/no-extraneous-dependencies
+
 const server = require('../app');
 const models = require('../models');
 const jwt = require('jsonwebtoken');
@@ -53,15 +56,30 @@ function clearDBPromise() {
       logging: false,
     }))
     .then(() => {
-      esClient.deleteByQuery(
-        {
-          index: config.get('elasticIndexName'),
-          type: 'topic',
-          body: { query: {
-            match_all: {},
-          } },
-        }).then(() => {}).then(() => {
-        });
+      console.log('cleaning ES index');
+      return esClient.search({
+        index: config.elasticIndexName,
+        type: 'topic',
+        body: {},
+        // we would want to ignore no such index error
+        ignore: [404],
+      })
+      .then((dbTopicElastic) => {
+        if (!dbTopicElastic.error) {
+          const body = [];
+          _.forEach(dbTopicElastic.hits.hits, (source) => {
+            body.push({ delete: { _index: config.elasticIndexName, _type: 'topic', _id: source._source.id } });
+          });
+          if (body.length > 0) {
+            return esClient.bulk({
+              body,
+            });
+          }
+          return Promise.resolve();
+        }
+        return Promise.resolve();
+      })
+      .catch(() => Promise.resolve());
     });
 }
 
@@ -71,6 +89,7 @@ function clearDB(done) {
 }
 
 function prepareDB(done) {
+  console.log('Preparing DB');
   return clearDBPromise()
     .then(() => {
       const promises = [
@@ -116,16 +135,20 @@ function prepareDB(done) {
       });
     })
     .then((responses) => {
+      console.log('Preparing ES Index');
       if (responses) {
-        esClient.index({
-          index: config.get('elasticIndexName'),
+        return esClient.index({
+          index: config.elasticIndexName,
           id: responses.topic.id,
           type: 'topic',
           body: responses.topic,
-        }, () => {
+        }).then(() => {
+          // sleep for some time, let elasticsearch indices be settled
+          sleep.msleep(1000);
           if (done && typeof done === 'function') {
-            done();
+            return done();
           }
+          return responses;
         });
       }
 
