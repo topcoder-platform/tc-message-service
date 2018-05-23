@@ -155,7 +155,7 @@ module.exports = (Sequelize, DataTypes) => {
     });
   };
 
-  Topic.findTopic = (models, adapter, { topicId, numberOfPosts = 4, fetchDeleted = false, raw = false, reqUserId }) => {
+  Topic.findTopic = (models, adapter, { topicId, numberOfPosts = 4, fetchDeleted = false, raw, reqUserId }) => {
     const where = { id: topicId };
     const postsWhere = {};
     if (!fetchDeleted) {
@@ -179,11 +179,14 @@ module.exports = (Sequelize, DataTypes) => {
     }).then((topic) => {
       if (!topic) return null;
       return models.posts.getTopicPostsCount(topicId)
-      .then(totalPosts => adapter.adaptTopic({
-        dbTopic: topic,
-        totalPosts,
-        reqUserId,
-      }));
+        .then((totalPosts) => {
+          const newTopic = {
+            dbTopic: topic,
+            totalPosts,
+            reqUserId,
+          };
+          return raw ? topic : adapter.adaptTopic(newTopic);
+        });
     });
   };
 

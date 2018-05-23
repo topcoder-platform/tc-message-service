@@ -31,46 +31,46 @@ module.exports = db => (req, resp, next) => {
   const userId = req.authUser.userId.toString();
 
   return db.topics.findTopic(db, adapter, { topicId, numberOfPosts: -1, reqUserId: userId })
-  .then((topic) => { /* eslint no-param-reassign: ["error", { "props": true, "ignorePropertyModificationsFor": ["topic"] }] */
-    if (!topic) {
-      const err = new errors.HttpStatusError(404, 'Topic does not exist');
-      return next(err);
-    }
-    return helper.callReferenceEndpoint(req.authToken, req.id, topic.reference, topic.referenceId)
-    .then((hasAccessResp) => {
-      const hasAccess = helper.userHasAccessToEntity(userId, hasAccessResp, topic.reference);
-      if (!hasAccess && !helper.isAdmin(req)) {
-        throw new errors.HttpStatusError(403, 'User doesn\'t have access to the entity');
+    .then((topic) => { /* eslint no-param-reassign: ["error", { "props": true, "ignorePropertyModificationsFor": ["topic"] }] */
+      if (!topic) {
+        const err = new errors.HttpStatusError(404, 'Topic does not exist');
+        return next(err);
       }
-      const contentPost = _.get(topic, 'posts[0]', null);
-      if (!contentPost || contentPost.id !== Number(postId)) {
-        throw new errors.HttpStatusError(404, 'Post does not exist');
-      }
-      const promises = [
-        db.topics.updateTopic(db, adapter, { title }, { topicId, reqUserId: userId })
-        .then((updatedTopic) => {
-          logger.debug('Topic saved', updatedTopic);
-          return updatedTopic;
-        }),
-        db.posts.updatePost(db, adapter, { raw: content }, { postId }, userId)
-        .then((updatedPost) => {
-          logger.info('Topic Post saved', updatedPost);
-          return updatedPost;
-        }),
-      ];
-      return Promise.all(promises)
-      .then((response) => {
-        const t = response[0];
-        const p = response[1];
-        t.posts = topic.posts;
+      return helper.callReferenceEndpoint(req.authToken, req.id, topic.reference, topic.referenceId)
+        .then((hasAccessResp) => {
+          const hasAccess = helper.userHasAccessToEntity(userId, hasAccessResp, topic.reference);
+          if (!hasAccess && !helper.isAdmin(req)) {
+            throw new errors.HttpStatusError(403, 'User doesn\'t have access to the entity');
+          }
+          const contentPost = _.get(topic, 'posts[0]', null);
+          if (!contentPost || contentPost.id !== Number(postId)) {
+            throw new errors.HttpStatusError(404, 'Post does not exist');
+          }
+          const promises = [
+            db.topics.updateTopic(db, adapter, { title }, { topicId, reqUserId: userId })
+              .then((updatedTopic) => {
+                logger.debug('Topic saved', updatedTopic);
+                return updatedTopic;
+              }),
+            db.posts.updatePost(db, adapter, { raw: content }, { postId }, userId)
+              .then((updatedPost) => {
+                logger.info('Topic Post saved', updatedPost);
+                return updatedPost;
+              }),
+          ];
+          return Promise.all(promises)
+            .then((response) => {
+              const t = response[0];
+              const p = response[1];
+              t.posts = topic.posts;
 
-        // TODO should get rid of post as seprate field in response
-        resp.status(200).send(util.wrapResponse(req.id, { topic: t, post: p }));
-      });
+              // TODO should get rid of post as seprate field in response
+              resp.status(200).send(util.wrapResponse(req.id, { topic: t, post: p }));
+            });
+        });
+    })
+    .catch((error) => {
+      logger.error(error);
+      next(error instanceof errors.HttpStatusError ? error : new errors.HttpStatusError(500, 'Error updating topic'));
     });
-  })
-  .catch((error) => {
-    logger.error(error);
-    next(error instanceof errors.HttpStatusError ? error : new errors.HttpStatusError(500, 'Error updating topic'));
-  });
 };

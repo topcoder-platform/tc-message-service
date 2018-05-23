@@ -38,11 +38,11 @@ describe('POST /v4/topics/:topicId/edit ', () => {
   beforeEach((done) => {
     sandbox = sinon.sandbox.create();
     prepareDB()
-    .then(({ topic, posts }) => {
-      expectedTopic = topic;
-      expectedTopicPosts = posts;
-      done();
-    });
+      .then(({ topic, posts }) => {
+        expectedTopic = topic;
+        expectedTopicPosts = posts;
+        done();
+      });
   });
   afterEach((done) => {
     sandbox.restore();
@@ -107,7 +107,7 @@ describe('POST /v4/topics/:topicId/edit ', () => {
         }
         // should call findById on posts model
         res.body.should.have.propertyByPath('result', 'content', 'message')
-                  .eql('Topic does not exist');
+          .eql('Topic does not exist');
         return done();
       });
   });
@@ -180,7 +180,7 @@ describe('POST /v4/topics/:topicId/edit ', () => {
         // should call updateTopic on topics model
         updateTopicStub.should.have.be.calledOnce;
         res.body.should.have.propertyByPath('result', 'content', 'message')
-                  .eql('Error updating topic');
+          .eql('Error updating topic');
         return done();
       });
   });
@@ -206,7 +206,7 @@ describe('POST /v4/topics/:topicId/edit ', () => {
         // should call updatePost on posts model
         updatePostStub.should.have.be.calledOnce;
         res.body.should.have.propertyByPath('result', 'content', 'message')
-                  .eql('Error updating topic');
+          .eql('Error updating topic');
         return done();
       });
   });
@@ -232,7 +232,7 @@ describe('POST /v4/topics/:topicId/edit ', () => {
         // should call updatePost on posts model
         updatePostStub.should.have.be.calledOnce;
         res.body.should.have.propertyByPath('result', 'content', 'message')
-                  .eql('Error updating topic');
+          .eql('Error updating topic');
         return done();
       });
   });

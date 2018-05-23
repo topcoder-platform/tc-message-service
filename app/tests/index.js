@@ -70,6 +70,15 @@ function prepareDB(done) {
           title: 'Mock topic title',
           createdBy: '123456789',
         }),
+        db.topics.create({
+          // id: 1,
+          reference: 'project',
+          referenceId: 'referenceId1',
+          discourseTopicId: 100,
+          tag: 'tag',
+          title: 'Mock topic title2',
+          createdBy: '12345678910',
+        }),
         db.reference_lookups.create({
           id: 1,
           reference: 'project',
@@ -80,7 +89,6 @@ function prepareDB(done) {
         if (responses && responses.length > 1) {
           const topic = responses[2];
           const topicId = topic.id;
-          // console.log(responses[2], 'topicId');
           return Promise.mapSeries([
             db.posts.create({
               raw: 'Mock topic body',
@@ -93,6 +101,12 @@ function prepareDB(done) {
               topicId,
               createdBy: '123456789',
               postNumber: 2,
+            }),
+            db.posts.create({
+              raw: 'Mock topic post2',
+              topicId: 2,
+              createdBy: '123456789',
+              postNumber: 3,
             }),
           ], t => t)
           .then(posts => ({ topic, posts }));

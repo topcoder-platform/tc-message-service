@@ -33,7 +33,6 @@ describe('DELETE /v4/topics/:topicId/posts/:postId ', () => {
     .then(() => {
       // expectedTopic = topic;
       // expectedTopicPosts = posts;
-      // console.log(expectedTopic, expectedTopicPosts);
       done();
     });
   });

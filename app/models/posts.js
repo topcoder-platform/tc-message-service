@@ -187,7 +187,7 @@ module.exports = (Sequelize, DataTypes) => {
    *
    * @return {Promise} promise which resolves to logical model of the found post
    */
-  Post.findPost = (models, adapter, { topicId, postId }, { raw = false, fetchDeleted = false } = { }) => {
+  Post.findPost = (models, adapter, { topicId, postId }, { raw, fetchDeleted = false } = { }) => {
     const where = { id: postId, topicId };
     if (!fetchDeleted) {
       where.deletedAt = { [Sequelize.Op.eq]: null };
@@ -197,7 +197,7 @@ module.exports = (Sequelize, DataTypes) => {
       raw,
     }).then((post) => {
       if (!post) return null;
-      return adapter.adaptPost(post);
+      return raw ? post : adapter.adaptPost(post);
     });
   };
 

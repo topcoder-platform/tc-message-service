@@ -1,0 +1,829 @@
+{
+	"variables": [],
+	"info": {
+		"name": "Message Service",
+		"_postman_id": "5c748de1-28ec-f140-e4ac-4caa1f064833",
+		"description": "",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Create Topic (magrathean, submission 455, PRIMARY)",
+			"request": {
+				"url": "{{URL}}/{{api_version}}/topics/create",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{magratheanToken}}",
+						"description": ""
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"reference\": \"submission\",\n    \"referenceId\": \"455\",\n    \"tag\": \"PRIMARY\",\n    \"title\": \"Discussion for submission 455\",\n    \"body\": \"Discussion body for submission 455\"\n}"
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Create Topic (test_user1, submission 455, PRIMARY) copy",
+			"request": {
+				"url": "{{URL}}/{{api_version}}/topics/create",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{test_user1Token}}",
+						"description": ""
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"reference\": \"submission\",\n    \"referenceId\": \"455\",\n    \"tag\": \"PRIMARY\",\n    \"title\": \"Discussion for submission 455 2\",\n    \"body\": \"Discussion body for submission 455\"\n}"
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Get Topics (magrathean, submission 455, PRIMARY)",
+			"request": {
+				"url": {
+					"raw": "{{URL}}/{{api_version}}/topics/list?filter=reference%3Dsubmission%26referenceId%3D455%26tag%3DPRIMARY",
+					"host": [
+						"{{URL}}"
+					],
+					"path": [
+						"{{api_version}}",
+						"topics",
+						"list"
+					],
+					"query": [
+						{
+							"key": "filter",
+							"value": "reference%3Dsubmission%26referenceId%3D455%26tag%3DPRIMARY",
+							"equals": true,
+							"description": ""
+						}
+					],
+					"variable": []
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{magratheanToken}}",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Get Topics (test_user1, submission 455, PRIMARY) copy",
+			"request": {
+				"url": {
+					"raw": "{{URL}}/{{api_version}}/topics/list?filter=reference%3Dsubmission%26referenceId%3D455%26tag%3DPRIMARY",
+					"host": [
+						"{{URL}}"
+					],
+					"path": [
+						"{{api_version}}",
+						"topics",
+						"list"
+					],
+					"query": [
+						{
+							"key": "filter",
+							"value": "reference%3Dsubmission%26referenceId%3D455%26tag%3DPRIMARY",
+							"equals": true,
+							"description": ""
+						}
+					],
+					"variable": []
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{test_user1Token}}",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Get Topic (magrathean, submission 455, PRIMARY)",
+			"request": {
+				"url": "{{URL}}/{{api_version}}/topics/1",
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{magratheanToken}}",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Get Topic (test_user1, submission 455, PRIMARY)",
+			"request": {
+				"url": "{{URL}}/{{api_version}}/topics/1",
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{test_user1Token}}",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Update Topic (magrathean, submission 455, PRIMARY)",
+			"request": {
+				"url": "{{URL}}/{{api_version}}/topics/21/edit",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{magratheanToken}}",
+						"description": ""
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"title\": \"new title\",\n  \"postId\": 22,\n    \"content\": \"new content\"\n}"
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Update Topic (test_user1, submission 455, PRIMARY)",
+			"request": {
+				"url": "{{URL}}/{{api_version}}/topics/22/edit",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{test_user1Token}}",
+						"description": ""
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"title\": \"new title\",\n  \"postId\": 23,\n    \"content\": \"new content\"\n}"
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Delete topic (magrathean, submission 455, PRIMARY)",
+			"request": {
+				"url": "{{URL}}/{{api_version}}/topics/21",
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{magratheanToken}}",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Delete topic (test_user1, submission 455, PRIMARY)",
+			"request": {
+				"url": "{{URL}}/{{api_version}}/topics/23",
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{test_user1Token}}",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Create Post (magrathean, submission 455, PRIMARY)",
+			"request": {
+				"url": "{{URL}}/{{api_version}}/topics/38/posts",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{magratheanToken}}",
+						"description": ""
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"post\": \"submission @test_user1 @magrathean hello\"\n}"
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "List posts (magrathean, submission 455, PRIMARY)",
+			"request": {
+				"url": {
+					"raw": "{{URL}}/{{api_version}}/topics/12/posts?postIds=20",
+					"host": [
+						"{{URL}}"
+					],
+					"path": [
+						"{{api_version}}",
+						"topics",
+						"12",
+						"posts"
+					],
+					"query": [
+						{
+							"key": "postIds",
+							"value": "20",
+							"equals": true,
+							"description": ""
+						}
+					],
+					"variable": []
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{magratheanToken}}",
+						"description": ""
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"post\": \"submission @test_user1 @magrathean hello\"\n}"
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Get post (magrathean, submission 455, PRIMARY) copy",
+			"request": {
+				"url": "{{URL}}/{{api_version}}/topics/12/posts/20",
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{magratheanToken}}",
+						"description": ""
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"post\": \"submission @test_user1 @magrathean hello\"\n}"
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Update Post (magrathean, submission 455, PRIMARY)",
+			"request": {
+				"url": "{{URL}}/{{api_version}}/topics/21/posts/26/edit",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{magratheanToken}}",
+						"description": ""
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"post\": \"submission @test_user1 @magrathean hello\"\n}"
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Delete Post (magrathean, submission 455, PRIMARY) copy",
+			"request": {
+				"url": "{{URL}}/{{api_version}}/topics/27/posts/36/",
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{magratheanToken}}",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Upload attachment (magrathean)",
+			"request": {
+				"url": {
+					"raw": "{{URL}}/{{api_version}}/topics/1/posts/1/attachments?referenceId=1",
+					"host": [
+						"{{URL}}"
+					],
+					"path": [
+						"{{api_version}}",
+						"topics",
+						"1",
+						"posts",
+						"1",
+						"attachments"
+					],
+					"query": [
+						{
+							"key": "referenceId",
+							"value": "1",
+							"equals": true,
+							"description": ""
+						}
+					],
+					"variable": []
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{magratheanToken}}",
+						"description": ""
+					},
+					{
+						"key": "Content-Type",
+						"value": "multipart/form-data",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "file",
+							"type": "file",
+							"src": "0-weu-d1-4373bd180b68617cb3704b58e6add86c.jpg",
+							"value": ""
+						}
+					]
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Delete attachment (magrathean)",
+			"request": {
+				"url": {
+					"raw": "{{URL}}/{{api_version}}/topics/1/posts/1/attachments/1?referenceId=1",
+					"host": [
+						"{{URL}}"
+					],
+					"path": [
+						"{{api_version}}",
+						"topics",
+						"1",
+						"posts",
+						"1",
+						"attachments",
+						"1"
+					],
+					"query": [
+						{
+							"key": "referenceId",
+							"value": "1",
+							"equals": true,
+							"description": ""
+						}
+					],
+					"variable": []
+				},
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{magratheanToken}}",
+						"description": ""
+					}
+				],
+				"body": {},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Delete attachment (magrathean) (hardDelete)",
+			"request": {
+				"url": {
+					"raw": "{{URL}}/{{api_version}}/topics/1/posts/1/attachments/7?referenceId=1&hardDelete=true",
+					"host": [
+						"{{URL}}"
+					],
+					"path": [
+						"{{api_version}}",
+						"topics",
+						"1",
+						"posts",
+						"1",
+						"attachments",
+						"7"
+					],
+					"query": [
+						{
+							"key": "referenceId",
+							"value": "1",
+							"equals": true,
+							"description": ""
+						},
+						{
+							"key": "hardDelete",
+							"value": "true",
+							"equals": true,
+							"description": ""
+						}
+					],
+					"variable": []
+				},
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{magratheanTokenAdmin}}",
+						"description": ""
+					}
+				],
+				"body": {},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Get attachment (magrathean)",
+			"request": {
+				"url": {
+					"raw": "{{URL}}/{{api_version}}/topics/1/posts/1/attachments/6?referenceId=1",
+					"host": [
+						"{{URL}}"
+					],
+					"path": [
+						"{{api_version}}",
+						"topics",
+						"1",
+						"posts",
+						"1",
+						"attachments",
+						"6"
+					],
+					"query": [
+						{
+							"key": "referenceId",
+							"value": "1",
+							"equals": true,
+							"description": ""
+						}
+					],
+					"variable": []
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{magratheanToken}}",
+						"description": ""
+					}
+				],
+				"body": {},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Sync users",
+			"request": {
+				"url": "{{URL}}/{{api_version}}/topics/syncUsers",
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{pshah_managerToken}}",
+						"description": ""
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"reference\": \"project\",\n    \"referenceId\": 1111\n}"
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Create Topic (magrathean, project 2, PRIMARY)",
+			"request": {
+				"url": "{{URL}}/{{api_version}}/topics",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{magratheanToken}}",
+						"description": ""
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"reference\": \"project\",\n    \"referenceId\": \"2\",\n    \"tag\": \"PRIMARY\",\n    \"title\": \"Discussion for project 2\",\n    \"body\": \"Discussion body for project 2\"\n}"
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Delete topic (magrathean, project 2, PRIMARY)",
+			"request": {
+				"url": "{{URL}}/{{api_version}}/topics/26",
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{magratheanToken}}",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Create Post (magrathean, project 2, PRIMARY)",
+			"request": {
+				"url": "{{URL}}/{{api_version}}/topics/27/posts",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{magratheanToken}}",
+						"description": ""
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"post\": \"submission @test_user1 @magrathean 222\"\n}"
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Delete Post (magrathean, project 2, PRIMARY)",
+			"request": {
+				"url": "{{URL}}/{{api_version}}/topics/27/posts/36/",
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{magratheanToken}}",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Update Post (magrathean, project 2, PRIMARY)",
+			"request": {
+				"url": "{{URL}}/{{api_version}}/topics/21/posts/26/edit",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{magratheanToken}}",
+						"description": ""
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"post\": \"submission @test_user1 @magrathean hello\"\n}"
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Update Topic & Post owner (admin)",
+			"request": {
+				"url": "{{URL}}/{{api_version}}/topics/admin/ownership/edit",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{magratheanTokenAdmin}}",
+						"description": ""
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"topicId\": 7,\n\t\"userId\": 40011578\n}"
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Update userstats (admin)",
+			"request": {
+				"url": "{{URL}}/{{api_version}}/topics/admin/posts/6/stats/create",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{magratheanTokenAdmin}}",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"postId\": 7,\n \t\"action\": \"post.user\",\n \t\"userId\": 40011578,\n \t\"topicId\": 6\n}"
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Update topic (admin)",
+			"request": {
+				"url": "{{URL}}/{{api_version}}/topics/admin/topics/8/edit",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{magratheanTokenAdmin}}",
+						"description": ""
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"topic\": {\n\t\t\"title\": \"new topic title\"\n\t}\n}"
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Update Post (admin)",
+			"request": {
+				"url": "{{URL}}/{{api_version}}/topics/admin/posts/10/edit",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{magratheanTokenAdmin}}",
+						"description": ""
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"topicId\": 8,\n\t\"post\": {\n\t\t\"raw\": \"Updated post body\"\n\t}\n}"
+				},
+				"description": ""
+			},
+			"response": []
+		}
+	]
+}

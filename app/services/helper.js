@@ -27,7 +27,7 @@ module.exports = (logger, db) => {
   function sanitizeEmail(email) {
     if (email) {
       return email.substring(0, email.indexOf('+') !== -1 ? email.indexOf('+') : email.indexOf('@'))
-      + email.substring(email.indexOf('@'));
+        + email.substring(email.indexOf('@'));
     }
     return '';
   }
@@ -42,22 +42,22 @@ module.exports = (logger, db) => {
     logger.debug(`Helper.lookupTopic for topicId: ${topicId} against ${url}`);
 
     return util.getSystemUserToken(logger)
-    .then((token) => {
-      logger.debug(`Bearer ${token}`);
-      return axios.get(url, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-        },
-      })
-      .then((response) => {
-        const data = _.get(response, 'data.result.content', null);
-        if (!data) { throw new Error('Response does not have result.content'); }
-        logger.debug('Helper.lookupTopic response', data);
-        return data;
+      .then((token) => {
+        logger.debug(`Bearer ${token}`);
+        return axios.get(url, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+          },
+        })
+          .then((response) => {
+            const data = _.get(response, 'data.result.content', null);
+            if (!data) { throw new Error('Response does not have result.content'); }
+            logger.debug('Helper.lookupTopic response', data);
+            return data;
+          });
       });
-    });
   }
 
   /**
@@ -74,26 +74,26 @@ module.exports = (logger, db) => {
     }
     logger.trace('filter for users api call', filter);
     return util.getSystemUserToken(logger)
-    .then((token) => {
-      logger.debug(`Bearer ${token}`);
-      return axios.get(`${config.get('identityServiceEndpoint')}users`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-        },
-        params: {
-          fields: 'handle,id,email',
-          filter,
-        },
-      })
-      .then((response) => {
-        const data = _.get(response, 'data.result.content', null);
-        if (!data) { throw new Error('Response does not have result.content'); }
-        logger.debug('UserHandle response', data);
-        return data;
+      .then((token) => {
+        logger.debug(`Bearer ${token}`);
+        return axios.get(`${config.get('identityServiceEndpoint')}users`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+          },
+          params: {
+            fields: 'handle,id,email',
+            filter,
+          },
+        })
+          .then((response) => {
+            const data = _.get(response, 'data.result.content', null);
+            if (!data) { throw new Error('Response does not have result.content'); }
+            logger.debug('UserHandle response', data);
+            return data;
+          });
       });
-    });
   }
 
   /**
@@ -175,36 +175,36 @@ module.exports = (logger, db) => {
    */
   function callReferenceEndpoint(authToken, requestId, reference, referenceId) {
     return db.reference_lookups.findOne({ where: { reference } })
-    .then((result) => {
-      if (!result) {
-        logger.debug('no result');
-        return [true, null]; // if nothing exists in the referenceLookup table, the entity should be open,
-        // and anyone should be able to see the threads
-      }
-      const referenceLookup = result;
-      return axios.get(referenceLookup.endpoint.replace('{id}', referenceId), {
-        headers: {
-          'X-Request-Id': requestId,
-          Authorization: `Bearer ${authToken}`,
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-        },
-        timeout: config.get('referenceLookupTimeout'),
-      }).then((response) => {
-        logger.debug(_.get(response, 'data.result.status', 'Reference endpoint status'));
-        if (response.data && response.data.result &&
-          response.data.result.status === 200 && response.data.result.content) {
-          return [true, response.data.result.content];
+      .then((result) => {
+        if (!result) {
+          logger.debug('no result');
+          return [true, null]; // if nothing exists in the referenceLookup table, the entity should be open,
+          // and anyone should be able to see the threads
         }
-        return [false, null];
+        const referenceLookup = result;
+        return axios.get(referenceLookup.endpoint.replace('{id}', referenceId), {
+          headers: {
+            'X-Request-Id': requestId,
+            Authorization: `Bearer ${authToken}`,
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+          },
+          timeout: config.get('referenceLookupTimeout'),
+        }).then((response) => {
+          logger.debug(_.get(response, 'data.result.status', 'Reference endpoint status'));
+          if (response.data && response.data.result &&
+            response.data.result.status === 200 && response.data.result.content) {
+            return [true, response.data.result.content];
+          }
+          return [false, null];
+        }).catch((error) => {
+          logger.debug(error);
+          return [false, null, error];
+        });
       }).catch((error) => {
         logger.debug(error);
         return [false, null, error];
       });
-    }).catch((error) => {
-      logger.debug(error);
-      return [false, null, error];
-    });
   }
 
   function userHasAccessToEntity(userId, hasAccessResp, reference) {
@@ -212,7 +212,7 @@ module.exports = (logger, db) => {
     const hasAccess = hasAccessResp[0];
     if (hasAccess && reference.toLowerCase() === REFERENCE_LOOKUPS.PROJECT) {
       const projectMembers = _.get(hasAccessResp[1], 'members', []);
-        // get users list
+      // get users list
       const isMember = _.filter(projectMembers, member => member.userId.toString() === userId).length > 0;
       logger.debug(isMember, 'isMember');
       return isMember;

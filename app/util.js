@@ -47,7 +47,6 @@ _.assign(util, {
       })
     .then((res) => {
       token = res.data.result.content.token;
-      // console.log('\n\n\nTOKEN:', token)
       return token;
     });
   },

@@ -5,6 +5,11 @@ const config = require('config');
 const util = require('tc-core-library-js').util(config);
 const tcCoreLib = require('tc-core-library-js');
 
+const adminUpdateTopicPostHandler = require('./admin/update');
+const adminCreateUserStatsHandler = require('./admin/user-stats');
+const adminUpdatePostHandler = require('./admin/post-update');
+const adminUpdateTopicHandler = require('./admin/topic-update');
+
 const createAttachmentHandler = require('./attachments/create');
 const getAttachmentHandler = require('./attachments/get');
 const deleteAttachmentHandler = require('./attachments/delete');
@@ -26,6 +31,7 @@ const discourseWebhookPostHandler = require('./discourse/webhook');
 
 const SecurityHelper = require('../services/security');
 
+
 const jwt = require('jsonwebtoken');
 
 /**
@@ -36,6 +42,7 @@ const jwt = require('jsonwebtoken');
  */
 module.exports = (logger, db) => {
   const apiVersion = config.apiVersion;
+  const adminPrefix = config.adminPrefix;
   // health check
   router.get(`/${apiVersion}/topics/health`, (req, res, next) => { // eslint-disable-line
     // TODO check if database connection is alive
@@ -73,7 +80,8 @@ module.exports = (logger, db) => {
     }
   });
 
-  router.all(RegExp(`\\/${apiVersion}\\/topics\\/(?!webhooks|!health).*`), (req, res, next) => {
+  router.all(RegExp(`\\/${apiVersion}\\/topics\\/|\\/topics\\/admin\\/(?!webhooks|!health).*`), (req, res, next) => {
+  // router.all(RegExp(`\\/${apiVersion}\\/topics\\/(?!webhooks|!health).*`), (req, res, next) => {
     // if (req.path === `/${apiVersion}/topics/webhooks/discourse`
     //   || req.path === `/${apiVersion}/topics/webhooks/sendgrid`
     //   || req.path === `/${apiVersion}/topics/health`) {
@@ -116,6 +124,16 @@ module.exports = (logger, db) => {
     // }
     next();
   });
+
+  // Admin routes
+  router.route(`${adminPrefix}/ownership/edit`)
+    .post(adminUpdateTopicPostHandler(db));
+  router.route(`${adminPrefix}/posts/:postId/stats/create`)
+    .post(adminCreateUserStatsHandler(db));
+  router.route(`${adminPrefix}/posts/:postId/edit`)
+    .post(adminUpdatePostHandler(db));
+  router.route(`${adminPrefix}/topics/:topicId/edit`)
+    .post(adminUpdateTopicHandler(db));
 
   // Register all the routes
   router.route(`/${apiVersion}/topics/list`)
