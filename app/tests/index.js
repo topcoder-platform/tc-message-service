@@ -1,5 +1,5 @@
 import _ from 'lodash';
-// import sleep from 'sleep'; // eslint-disable-line import/no-extraneous-dependencies
+import sleep from 'sleep'; // eslint-disable-line import/no-extraneous-dependencies
 
 const server = require('../app');
 const models = require('../models');
@@ -144,7 +144,7 @@ function prepareDB(done) {
           body: responses.topic,
         }).then(() => {
           // sleep for some time, let elasticsearch indices be settled
-          // sleep.msleep(1000);
+          sleep.msleep(1200);
           if (done && typeof done === 'function') {
             return done();
           }
