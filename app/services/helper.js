@@ -6,7 +6,7 @@ const axios = require('axios');
 const errors = require('common-errors');
 const util = require('../util');
 const { USER_ROLE } = require('../constants');
-const { REFERENCE_LOOKUPS } = require('../constants');
+const { REFERENCE_LOOKUPS, TOKEN_SCOPES } = require('../constants');
 
 /**
  * Returns helper service containing common functions used in route handlers
@@ -253,6 +253,13 @@ module.exports = (logger, db) => {
   }
 
   function isAdmin(req) {
+    // machine token checking
+    const isMachineToken = _.get(req, 'authUser.isMachine', false);
+    const tokenScopes = _.get(req, 'authUser.scopes', []);
+    if (isMachineToken) {
+      if (_.indexOf(tokenScopes, TOKEN_SCOPES.CONNECT_PROJECT_ADMIN) >= 0) return true;
+      return false;
+    }
     return _.intersection([
       USER_ROLE.TOPCODER_ADMIN,
       USER_ROLE.CONNECT_ADMIN,

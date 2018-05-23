@@ -26,6 +26,6 @@
         "no-underscore-dangle" : [2, { "allow": ["_source"] }]
     },
     "parserOptions": {
-        "ecmaVersion": 6
+        "ecmaVersion": 8
     }
 }
