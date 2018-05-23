@@ -6,9 +6,12 @@ const util = require('tc-core-library-js').util(config);
 const errors = require('common-errors');
 const Joi = require('joi');
 const { EVENT } = require('../../constants');
+const esClient = require('./../../elasticSearchConnection');
+const uuidv1 = require('uuid/v1');
+const DynamoService = require('../../services/dynamodbErrorLog');
 
 /**
- * Delete a topic from Discourse and Postgresql
+ * Delete a topic from database and update the elasticsearch index
  * @param {Object} db sequelize db with all models loaded
  * @return {object} response
  */
@@ -42,6 +45,16 @@ module.exports = db => (req, resp, next) => {
         topic.deletedAt = new Date();
         topic.deletedBy = userId;
         topic.save().then(() => {
+          // update elastic search index
+          esClient.delete({
+            index: config.get('elasticIndexName'),
+            type: 'topic',
+            id: topic.id,
+          }, (err) => {
+            if (err) {
+              DynamoService.save(uuidv1(), topic.id, 'topic', topic, JSON.stringify(err));
+            }
+          });
           req.app.emit(EVENT.TOPIC_DELETED, { topic, req });
           resp.status(200).send(util.wrapResponse(req.id));
         });

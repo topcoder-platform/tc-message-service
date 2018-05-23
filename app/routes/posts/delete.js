@@ -6,9 +6,10 @@ const Joi = require('joi');
 const { EVENT } = require('../../constants');
 const Adapter = require('../../services/adapter');
 const HelperService = require('../../services/helper');
+const esIndex = require('./../indexing/indexing');
 
 /**
- * Delete a post in Discourse
+ * Delete a post from database and update the elasticsearch index
  * @param {Object} db sequelize db with models loaded
  * @return {Object} response
  */
@@ -16,6 +17,7 @@ module.exports = db => (req, resp, next) => {
   const logger = req.log;
   const adapter = new Adapter(logger, db);
   const helper = HelperService(logger, db);
+
 
   // Validate request parameters
   Joi.assert(req.params, {
@@ -50,6 +52,8 @@ module.exports = db => (req, resp, next) => {
         deletedBy: userId,
       }, { where: { id: postId } })
       .then(() => {
+        // update elastic search index
+        esIndex.updateElasticSearchIndex(db, adapter, topicId, topicId);
         logger.info('Post deleted');
         req.app.emit(EVENT.POST_DELETED, { req, topic });
         resp.status(200).send(util.wrapResponse(req.id));

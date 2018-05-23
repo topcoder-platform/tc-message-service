@@ -57,9 +57,10 @@ describe('DELETE /v4/topics/:topicId/posts/:postId/attachments/:attachmentId', (
     const s3ServicePrototype = aws.S3.services[Object.keys(aws.S3.services)[0]].prototype;
     deleteObjectStub = sandbox.stub(s3ServicePrototype, 'deleteObject');
     deleteObjectStub.returns({ promise: () => Promise.resolve({}) });
-    prepareDB((err) => {
-      if (err) {
-        return done(err);
+    prepareDB()
+    .then((responses) => {
+      if (!responses) {
+        return done(responses);
       }
       const auth = getDecodedToken(jwts.member);
       return db.post_attachments.create({

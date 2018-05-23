@@ -7,6 +7,8 @@ jobs:
         environment:
         - POSTGRES_USER: circle_test
         - POSTGRES_DB: circle_test
+      # - image: docker.elastic.co/elasticsearch/elasticsearch:6.2.4
+      - image: elasticsearch:2.3
     environment:
       DB_MASTER_URL: postgres://circle_test:@127.0.0.1:5432/circle_test
       AUTH_SECRET: secret

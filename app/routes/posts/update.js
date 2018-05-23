@@ -8,9 +8,10 @@ const Adapter = require('../../services/adapter');
 const Joi = require('joi');
 const { EVENT } = require('../../constants');
 const Promise = require('bluebird');
+const esIndex = require('./../indexing/indexing');
 
 /**
- * Save a post to a topic
+ * Save a post to a topic and update the elasticsearch index
  * @param {Object} db sequelize db with models loaded
  * @return {object} response
  */
@@ -52,6 +53,8 @@ module.exports = db => (req, resp, next) => {
 
       return db.posts.updatePost(db, adapter, { raw: content }, { postId }, userId)
       .then((updatedPost) => {
+        // update elastic search index
+        esIndex.updateElasticSearchIndex(db, adapter, topicId, topicId);
         req.app.emit(EVENT.POST_UPDATED, { post, req, topic });
         resp.status(200).send(util.wrapResponse(req.id, updatedPost));
       });

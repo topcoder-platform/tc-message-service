@@ -1,9 +1,16 @@
+import _ from 'lodash';
+import sleep from 'sleep'; // eslint-disable-line import/no-extraneous-dependencies
+
 const server = require('../app');
 const models = require('../models');
 const jwt = require('jsonwebtoken');
 const Promise = require('bluebird');
 
 const db = models(server, server.logger);
+
+const esClient = require('./../elasticSearchConnection');
+
+const config = require('config');
 
 
 const jwts = {
@@ -47,7 +54,33 @@ function clearDBPromise() {
     .then(() => db.reference_lookups.truncate({
       cascade: true,
       logging: false,
-    }));
+    }))
+    .then(() => {
+      console.log('cleaning ES index');
+      return esClient.search({
+        index: config.elasticIndexName,
+        type: 'topic',
+        body: {},
+        // we would want to ignore no such index error
+        ignore: [404],
+      })
+      .then((dbTopicElastic) => {
+        if (!dbTopicElastic.error) {
+          const body = [];
+          _.forEach(dbTopicElastic.hits.hits, (source) => {
+            body.push({ delete: { _index: config.elasticIndexName, _type: 'topic', _id: source._source.id } });
+          });
+          if (body.length > 0) {
+            return esClient.bulk({
+              body,
+            });
+          }
+          return Promise.resolve();
+        }
+        return Promise.resolve();
+      })
+      .catch(() => Promise.resolve());
+    });
 }
 
 function clearDB(done) {
@@ -56,6 +89,7 @@ function clearDB(done) {
 }
 
 function prepareDB(done) {
+  console.log('Preparing DB');
   return clearDBPromise()
     .then(() => {
       const promises = [
@@ -101,9 +135,23 @@ function prepareDB(done) {
       });
     })
     .then((responses) => {
-      if (done && typeof done === 'function') {
-        done();
+      console.log('Preparing ES Index');
+      if (responses) {
+        return esClient.index({
+          index: config.elasticIndexName,
+          id: responses.topic.id,
+          type: 'topic',
+          body: responses.topic,
+        }).then(() => {
+          // sleep for some time, let elasticsearch indices be settled
+          sleep.msleep(1200);
+          if (done && typeof done === 'function') {
+            return done();
+          }
+          return responses;
+        });
       }
+
       return responses;
     });
 }

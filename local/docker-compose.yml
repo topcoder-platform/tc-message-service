@@ -12,3 +12,12 @@ services:
             POSTGRES_USER: 'coder'
             POSTGRES_PASSWORD: 'mysecretpassword'
             POSTGRES_DB: 'messages'
+    esearch:
+      image: "elasticsearch:2.3"
+      # image: docker.elastic.co/elasticsearch/elasticsearch:6.2.4
+      ports:
+        - "9200:9200"
+        - "9300:9300"
+volumes:
+  esdata:
+    driver: local

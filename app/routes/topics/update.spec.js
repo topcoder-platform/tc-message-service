@@ -14,7 +14,7 @@ const models = require('../../models');
 
 const db = models(server, server.logger);
 
-describe('POST /v4/topics/:topicId/edit ', () => {
+describe('POST /v5/topics/:topicId/edit ', () => {
   const topicId = 1;
   const postId = 1;
   const apiPath = `/${config.apiVersion}/topics/${topicId}/edit`;
