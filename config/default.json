@@ -14,9 +14,13 @@
       "bucket": "tc-message-service-attachments"
     }
   },
+  "elasticsearchConfig": {
+    "host": "http://localhost:9200",
+    "apiVersion": "6.2",
+    "indexName": "messages",
+    "docType": "messages"
+  },
   "defaultDiscoursePw": "supersecretpw",
-  "elasticSearchUrls": "http://localhost:9200",
-  "elasticIndexName": "elastic_search_index",
   "coderBotUsername": "system",
   "discourseWebhookSecret": "discourse",
   "memberServiceUrl": "http://local.topcoder-dev.com:3001/members",

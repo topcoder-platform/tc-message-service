@@ -1,11 +1,8 @@
 const elasticsearch = require('elasticsearch');
 const config = require('config');
+const util = require('./util');
 
-const client = new elasticsearch.Client({
-  hosts:
-    config.get('elasticSearchUrls').split(',')
-  ,
-});
+const client = util.getElasticSearchClient();
 
 module.exports = client;
 

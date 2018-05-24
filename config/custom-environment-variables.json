@@ -13,6 +13,12 @@
       "bucket": "AWS_S3_BUCKET"
     }
   },
+  "elasticsearchConfig": {
+    "host": "MESSAGES_ES_URL",
+    "apiVersion": "6.2",
+    "indexName": "MESSAGES_ES_INDEX_NAME",
+    "docType": "messages"
+  },
   "defaultDiscoursePw": "DEFAULT_DISCOURSE_PW",
   "discourseApiKey": "DISCOURSE_API_KEY",
   "coderBotUsername": "CODERBOT_USERNAME",
@@ -38,7 +44,5 @@
   "AUTH0_CLIENT_ID": "AUTH0_CLIENT_ID",
   "AUTH0_CLIENT_SECRET": "AUTH0_CLIENT_SECRET",
   "AUTH0_AUDIENCE": "AUTH0_AUDIENCE",
-  "TOKEN_CACHE_TIME" : "TOKEN_CACHE_TIME",
-  "elasticSearchUrls": "MESSAGES_ES_URL",
-  "elasticIndexName": "MESSAGES_ES_INDEX_NAME"
+  "TOKEN_CACHE_TIME" : "TOKEN_CACHE_TIME"
 }

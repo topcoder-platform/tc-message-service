@@ -52,6 +52,7 @@
     "express-request-id": "^1.1.0",
     "express-validation": "^1.0.0",
     "form-data": "^2.2.0",
+    "http-aws-es": "^6.0.0",
     "joi": "^8.0.5",
     "jsonwebtoken": "^7.1.9",
     "lodash": "~4.13.1",

@@ -1,4 +1,5 @@
-
+import elasticsearch from 'elasticsearch';
+import AWS from 'aws-sdk';
 
 const _ = require('lodash');
 const config = require('config');
@@ -21,6 +22,8 @@ function isValid(_token) {
 }
 
 const util = _.cloneDeep(require('tc-core-library-js').util(config));
+// the client modifies the config object, so always passed the cloned object
+let esClient = null;
 
 _.assign(util, {
   /**
@@ -50,6 +53,29 @@ _.assign(util, {
       // console.log('\n\n\nTOKEN:', token)
       return token;
     });
+  },
+
+  /**
+   * Return the initialized elastic search client
+   * @return {Object}           the elasticsearch client instance
+   */
+  getElasticSearchClient: () => {
+    if (esClient) return esClient;
+    const esHost = config.get('elasticsearchConfig.host');
+    if (/.*amazonaws.*/.test(esHost)) {
+      esClient = elasticsearch.Client({
+        apiVersion: config.get('elasticsearchConfig.apiVersion'),
+        hosts: esHost,
+        connectionClass: require('http-aws-es'), // eslint-disable-line global-require
+        amazonES: {
+          region: 'us-east-1',
+          credentials: new AWS.EnvironmentCredentials('AWS'),
+        },
+      });
+    } else {
+      esClient = new elasticsearch.Client(_.cloneDeep(config.elasticsearchConfig));
+    }
+    return esClient;
   },
 });
 
