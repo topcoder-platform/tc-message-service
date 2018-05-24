@@ -1,22 +1,19 @@
 {
-  "apiVersion": "v5",
+  "apiVersion": "v4",
   "aws": {
     "config": {
-      "accessKeyId": "xxxxxxxxxxxxxxxxxxxxx",
+      "accessKeyId": "xxxxxxxxxxxxxxxx",
       "region": "us-east-1",
-      "secretAccessKey": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+      "secretAccessKey": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
     },
     "dynamodb": {
-      "discourseWebhookLogsTable": "message-service-discourse-webhook-logs",
-      "elasticSearchIndexingLogsTable": "message-service-elastic-search-indexing-logs"
+      "discourseWebhookLogsTable": "message-service-discourse-webhook-logs"
     },
     "S3": {
       "bucket": "tc-message-service-attachments"
     }
   },
   "defaultDiscoursePw": "supersecretpw",
-  "elasticSearchUrls": "http://localhost:9200",
-  "elasticIndexName": "elastic_search_index",
   "coderBotUsername": "system",
   "discourseWebhookSecret": "discourse",
   "memberServiceUrl": "http://local.topcoder-dev.com:3001/members",

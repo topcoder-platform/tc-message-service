@@ -5,6 +5,5 @@
     "masterUrl": "postgres://coder:mysecretpassword@local.topcoder-dev.com:5432/messages_test"
   },
   "syncUsersRetryDelay": 500,
-  "syncUsersTimeout": 1000,
-  "elasticIndexName": "elastic_search_index_test"
+  "syncUsersTimeout": 1000
 }

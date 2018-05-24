@@ -17,7 +17,7 @@ const db = models(server, server.logger);
 
 require('should-sinon');
 
-describe('GET /v5/topics/:topicId/posts', () => {
+describe('GET /v4/topics/:topicId/posts', () => {
   const apiPath = `/${config.apiVersion}/topics/1/posts/list?postIds=1,2`;
   const missingPostsIdsPath = `/${config.apiVersion}/topics/1/posts/list`;
   const noMatchingPostsPath = `/${config.apiVersion}/topics/1/posts/list?postIds=3,4`;

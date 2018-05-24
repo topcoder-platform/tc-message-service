@@ -6,10 +6,9 @@ const Adapter = require('../../services/adapter');
 const HelperService = require('../../services/helper');
 const Joi = require('joi');
 const { EVENT } = require('../../constants');
-const esIndex = require('./../indexing/indexing');
 
 /**
- * Creates a new post to a topic in database and update elasticsearch index
+ * Creates a new post to a topic in Discourse
  * @param {Object} db sequelize db with models loaded
  * @return {object} response
  */
@@ -52,8 +51,6 @@ module.exports = db => (req, resp, next) => {
         }).then(() => logger.debug('post_user_stats entry created for post: ', savedPost.id));
         return adapter.adaptPost(savedPost)
         .then((post) => {
-          // update elastic search index
-          esIndex.updateElasticSearchIndex(db, adapter, topicId, topicId);
           // emit post creation event
           req.app.emit(EVENT.POST_CREATED, { post: savedPost, topic, req });
           return resp.status(200).send(util.wrapResponse(req.id, post));

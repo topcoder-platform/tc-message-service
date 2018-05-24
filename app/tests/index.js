@@ -5,10 +5,6 @@ const Promise = require('bluebird');
 
 const db = models(server, server.logger);
 
-const esClient = require('./../elasticSearchConnection');
-
-const config = require('config');
-
 
 const jwts = {
   // userId = 40051331
@@ -51,18 +47,7 @@ function clearDBPromise() {
     .then(() => db.reference_lookups.truncate({
       cascade: true,
       logging: false,
-    }))
-    .then(() => {
-      esClient.deleteByQuery(
-        {
-          index: config.get('elasticIndexName'),
-          type: 'topic',
-          body: { query: {
-            match_all: {},
-          } },
-        }).then(() => {}).then(() => {
-        });
-    });
+    }));
 }
 
 function clearDB(done) {
@@ -116,19 +101,9 @@ function prepareDB(done) {
       });
     })
     .then((responses) => {
-      if (responses) {
-        esClient.index({
-          index: config.get('elasticIndexName'),
-          id: responses.topic.id,
-          type: 'topic',
-          body: responses.topic,
-        }, () => {
-          if (done && typeof done === 'function') {
-            done();
-          }
-        });
+      if (done && typeof done === 'function') {
+        done();
       }
-
       return responses;
     });
 }

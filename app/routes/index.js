@@ -11,10 +11,6 @@ const deleteAttachmentHandler = require('./attachments/delete');
 
 const getTopicHandler = require('./topics/get');
 const topicListHandler = require('./topics/list');
-
-const getTopicDbHandler = require('./topics/getDb');
-const topicListDbHandler = require('./topics/listDb');
-
 const topicCreateHandler = require('./topics/create');
 const topicUpdateHandler = require('./topics/update');
 const topicDeleteHandler = require('./topics/delete');
@@ -27,8 +23,6 @@ const deletePostHandler = require('./posts/delete');
 
 const webhookPostHandler = require('./sendgrid/webhook');
 const discourseWebhookPostHandler = require('./discourse/webhook');
-
-const elasticSearchIndexHandler = require('./indexing/indexing');
 
 const SecurityHelper = require('../services/security');
 
@@ -126,14 +120,10 @@ module.exports = (logger, db) => {
   // Register all the routes
   router.route(`/${apiVersion}/topics/list`)
     .get(topicListHandler(db));
-  router.route(`/${apiVersion}/topics/list/db`)
-    .get(topicListDbHandler(db));
   router.route(`/${apiVersion}/topics/create`)
     .post(topicCreateHandler(db));
   router.route(`/${apiVersion}/topics/:topicId/read`)
     .get(getTopicHandler(db));
-  router.route(`/${apiVersion}/topics/:topicId/read/db`)
-    .get(getTopicDbHandler(db));
   router.route(`/${apiVersion}/topics/:topicId/edit`)
     .post(topicUpdateHandler(db));
   router.route(`/${apiVersion}/topics/:topicId/remove`)
@@ -161,8 +151,6 @@ module.exports = (logger, db) => {
   router.use(`/${apiVersion}/topics/webhooks/sendgrid`, formidable());
   router.route(`/${apiVersion}/topics/webhooks/sendgrid`)
     .post(webhookPostHandler(db));
-  router.route(`/${apiVersion}/topics/esindex`)
-    .post(elasticSearchIndexHandler(db));
 
   // register error handler
   router.use((err, req, res, next) => { // eslint-disable-line
