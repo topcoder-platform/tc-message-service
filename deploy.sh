@@ -159,6 +159,14 @@ make_task_def(){
         {
           "name": "TOKEN_CACHE_TIME",
           "value": "%s"
+        },
+        {
+          "name": "MESSAGES_ES_URL",
+          "value": "%s"
+        },
+        {
+          "name": "MESSAGES_ES_INDEX_NAME",
+          "value": "%s"
         }
       ],
       "portMappings": [
@@ -192,6 +200,8 @@ make_task_def(){
   DDB_DISCOURSE_WEBHOOK_LOGS_TABLE=$(eval "echo \$${ENV}_DDB_DISCOURSE_WEBHOOK_LOGS_TABLE")
   DISCOURSE_WEBHOOK_SECRET=$(eval "echo \$${ENV}_DISCOURSE_WEBHOOK_SECRET")
   CODERBOT_USERNAME=$(eval "echo \$${ENV}_CODERBOT_USERNAME")
+  MESSAGES_ES_URL=$(eval "echo \$${ENV}_MESSAGES_ES_URL")
+  MESSAGES_ES_INDEX_NAME=$(eval "echo \$${ENV}_MESSAGES_ES_INDEX_NAME")
   if [ "$ENV" = "PROD" ]; then
     NODE_ENV=production
   elif [ "$ENV" = "DEV" ]; then
