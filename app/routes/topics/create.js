@@ -6,10 +6,9 @@ const errors = require('common-errors');
 const Joi = require('joi');
 const Adapter = require('../../services/adapter');
 const { EVENT } = require('../../constants');
-const esIndex = require('./../indexing/indexing');
 
 /**
- * Handles creation of topics and update elasticsearch index
+ * Handles creation of topics
  * @param {Object} db sequelize db with all models loaded
  * @return {Object} response object
  */
@@ -21,7 +20,6 @@ module.exports = db =>
    *  - Try to create a private message in Discourse (createPrivatePost in discourse.js);
    *  - If it fails, check if the user exists in Discourse, if the user doesn't exist, provision it, and try to create the private message again;
    *  - Set system, and the current user as the users in the post;
-   *  - update the elastic search index
    *  - Return the newly created topic.
    * params: standard express parameters
    */
@@ -71,8 +69,6 @@ module.exports = db =>
               userId,
               action: 'READ',
             }).then(() => logger.debug('post_user_stats entry created for post: ', savedPost.id));
-            // update elastic search index
-            esIndex.updateElasticSearchIndex(db, adapter, savedTopic.id, savedTopic.id);
             return resp.status(200).send(util.wrapResponse(
               req.id,
               adapter.adaptTopic({ dbTopic: topic, totalPosts: 1 })));

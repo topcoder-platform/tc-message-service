@@ -31,7 +31,7 @@ function assertTopicAndPost(topicId, assertCallback, done) {
   .catch(() => done());
 }
 
-describe('GET /v5/topics/:topicId', () => {
+describe('GET /v4/topics/:topicId', () => {
   const apiPathPrefix = `/${config.apiVersion}/topics/`;
   const apiPath = `${apiPathPrefix}1/read`;
   const nonExistingTopicPath = `${apiPathPrefix}1000/read`;
@@ -172,6 +172,25 @@ describe('GET /v5/topics/:topicId', () => {
           res.body.should.have.propertyByPath('result', 'content', '0', 'lastActivityAt')
           .eql(topicPost.updatedAt);
         }, done);
+      });
+  });
+
+
+  it('should return 500 response if error to get topic', (done) => {
+    const findTopicStub = sandbox.stub(db.topics, 'findTopic').rejects();
+    request(server)
+      .get(apiPath)
+      .set({
+        Authorization: `Bearer ${jwts.admin}`,
+      })
+      .expect(500)
+      .end((err) => {
+        if (err) {
+          return done(err);
+        }
+        // should call findTopic on posts model
+        findTopicStub.should.have.be.calledOnce;
+        return done();
       });
   });
 });

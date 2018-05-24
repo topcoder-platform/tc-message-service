@@ -106,36 +106,6 @@ Go into the tc-message-service/local folder of this repository and start the doc
 docker-compose up
 ```
 
-## Create index for elastic search
-
-Need to make a PUT request to 
-http://localhost:9200/elastic_search_index
-and 
-http://localhost:9200/elastic_search_index_test
-with body
-```json
-{
-"settings": {
-   "index": {
-         "number_of_shards": 1,
-         "number_of_replicas": 1
-   },
-   "analysis": {
-     "analyzer": {
-       "analyzer-name": {
-             "type": "custom",
-             "tokenizer": "keyword",
-             "filter": "lowercase"
-       }
-     }
-   }
-   }
- }  
-
-```
-
-The above index is used for normal instance and other for testing purpose.
-
 ## Setting up Environment Variables
 
 ```shell
@@ -177,14 +147,10 @@ NODE_ENV=development sequelize db:migrate
 NODE_ENV=test sequelize db:migrate
 ```
 
-We will also need to create the dynamodb log table for the discourse webhooks and elastic search db sync error.  To create this table, make sure you are at the project root and run:
+We will also need to create the dynamodb log table for the discourse webhooks.  To create this table, make sure you are at the project root and run:
 
 ```shell
 node ./scripts/createDiscourseWebhookLogTable.js
-```
-
-```shell
-node ./scripts/createElastingSearchIndexLogTable.js
 ```
 
 ## Running the Service

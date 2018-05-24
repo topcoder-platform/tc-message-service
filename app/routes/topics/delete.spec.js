@@ -13,7 +13,7 @@ const db = models(server, server.logger);
 require('should-sinon');
 const config = require('config');
 
-describe('DELETE /v5/topics/:topicId ', () => {
+describe('DELETE /v4/topics/:topicId ', () => {
   const topicId = 1;
   const apiPath = `/${config.apiVersion}/topics/${topicId}/remove`;
   const nonExistingTopicPath = `/${config.apiVersion}/topics/2000/remove`;
