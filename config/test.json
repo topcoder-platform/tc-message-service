@@ -8,6 +8,6 @@
   "syncUsersTimeout": 1000,
   "elasticsearchConfig": {
     "host": "http://localhost:9200",
-    "indexName": "elastic_search_index_test",
+    "indexName": "elastic_search_index_test"
   }
 }
