@@ -76,7 +76,7 @@ workflows:
             - test
           filters:
             branches:
-              only: ['dev','feature/m2m-support']
+              only: ['dev','feature/elastic_search_indexing_6.3']
       - deployProd:
           requires:
             - test
