@@ -5,7 +5,7 @@ const config = require('config');
 const util = require('tc-core-library-js').util(config);
 const tcCoreLib = require('tc-core-library-js');
 
-const adminUpdateTopicPostHandler = require('./admin/update');
+const adminUpdateOwnershipHandler = require('./admin/update-ownership');
 const adminCreateUserStatsHandler = require('./admin/user-stats');
 const adminUpdatePostHandler = require('./admin/post-update');
 const adminUpdateTopicHandler = require('./admin/topic-update');
@@ -80,14 +80,8 @@ module.exports = (logger, db) => {
     }
   });
 
-  router.all(RegExp(`\\/${apiVersion}\\/topics\\/|\\/topics\\/admin\\/(?!webhooks|!health).*`), (req, res, next) => {
-  // router.all(RegExp(`\\/${apiVersion}\\/topics\\/(?!webhooks|!health).*`), (req, res, next) => {
-    // if (req.path === `/${apiVersion}/topics/webhooks/discourse`
-    //   || req.path === `/${apiVersion}/topics/webhooks/sendgrid`
-    //   || req.path === `/${apiVersion}/topics/health`) {
-    //   next();
-    //   return;
-    // }
+  router.all(RegExp(`\\/${apiVersion}\\/topics\\/(?!webhooks|!health).*`), (req, res, next) => {
+  // router.all(RegExp(`\\/${apiVersion}\\/topics\\/|\\/topics\\/admin\\/(?!webhooks|!health).*`), (req, res, next) => {
     if (`${process.env.TC_MESSAGE_SERVICE_AUTH_LOOSE}` !== 'true') {
       jwtAuth()(req, res, next);
       return;
@@ -117,17 +111,13 @@ module.exports = (logger, db) => {
       res.send();
     }
   }, (req, res, next) => {
-    // if (req.path !== `/${apiVersion}/topics/webhooks/discourse`
-    //   && req.path !== `/${apiVersion}/topics/webhooks/sendgrid`
-    //   && req.path !== `/${apiVersion}/topics/health`) {
-      req.authToken = req.get('authorization').split(' ')[1]; // eslint-disable-line
-    // }
+    req.authToken = req.get('authorization').split(' ')[1]; // eslint-disable-line
     next();
   });
 
   // Admin routes
   router.route(`${adminPrefix}/ownership/edit`)
-    .post(adminUpdateTopicPostHandler(db));
+    .post(adminUpdateOwnershipHandler(db));
   router.route(`${adminPrefix}/posts/:postId/stats/create`)
     .post(adminCreateUserStatsHandler(db));
   router.route(`${adminPrefix}/posts/:postId/edit`)
