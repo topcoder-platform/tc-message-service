@@ -67,7 +67,7 @@ module.exports = db =>
       }
       // Get topics from the Elastic Search
       return esClient.search({
-        index: config.get('elasticIndexName'),
+        index: config.get('elasticsearchConfig.indexName'),
         type: 'topic',
         body: esFilter,
       })

@@ -55,7 +55,7 @@ function clearDBPromise() {
     .then(() => {
       esClient.deleteByQuery(
         {
-          index: config.get('elasticIndexName'),
+          index: config.get('elasticsearchConfig.indexName'),
           type: 'topic',
           body: { query: {
             match_all: {},
@@ -118,7 +118,7 @@ function prepareDB(done) {
     .then((responses) => {
       if (responses) {
         esClient.index({
-          index: config.get('elasticIndexName'),
+          index: config.get('elasticsearchConfig.indexName'),
           id: responses.topic.id,
           type: 'topic',
           body: responses.topic,

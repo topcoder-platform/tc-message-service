@@ -31,7 +31,7 @@ function updateElasticSearchIndex(db, adapter, from, to) {
       // const adaptedTopics = adapter.adaptTopics({ topics : dbTopics });
       _.each(dbTopics, (dbTopic) => {
         esClient.index({
-          index: config.get('elasticIndexName'),
+          index: config.get('elasticsearchConfig.indexName'),
           id: dbTopic.id,
           type: 'topic',
           body: dbTopic,

@@ -27,7 +27,7 @@ module.exports = db =>
     const userId = req.authUser.userId.toString();
 
     return esClient.search({
-      index: config.get('elasticIndexName'),
+      index: config.get('elasticsearchConfig.indexName'),
       type: 'topic',
       body: { query: { match: { id: topicId } } },
     }).then((dbTopicElastic) => {

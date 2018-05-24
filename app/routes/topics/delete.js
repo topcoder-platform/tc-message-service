@@ -47,7 +47,7 @@ module.exports = db => (req, resp, next) => {
         topic.save().then(() => {
           // update elastic search index
           esClient.delete({
-            index: config.get('elasticIndexName'),
+            index: config.get('elasticsearchConfig.indexName'),
             type: 'topic',
             id: topic.id,
           }, (err) => {
