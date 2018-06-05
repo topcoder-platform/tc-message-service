@@ -23,7 +23,8 @@
             "requireParamDescription": true,
             "requireReturnDescription": true
         }],
-        "no-underscore-dangle" : [2, { "allow": ["_source"] }]
+        "no-underscore-dangle" : [2, { "allow": ["_source"] }],
+        "no-param-reassign": [2, { "props": false }]
     },
     "parserOptions": {
         "ecmaVersion": 8

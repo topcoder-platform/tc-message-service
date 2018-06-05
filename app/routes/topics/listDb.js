@@ -5,9 +5,12 @@ const config = require('config');
 const util = require('tc-core-library-js').util(config);
 const Promise = require('bluebird');
 const errors = require('common-errors');
+const Sequelize = require('sequelize');
 const Joi = require('joi');
 const Adapter = require('../../services/adapter');
+const esIndex = require('./../indexing/indexing');
 
+const Op = Sequelize.Op;
 
 /**
  * Handles listing of topics
@@ -39,7 +42,11 @@ module.exports = db =>
     _(parsedFilter).each((value) => {
       const parts = value.split('=');
       if (parts.length === 2) {
-        filter[parts[0]] = parts[1];
+        if (parts[0] === 'tag') {
+          filter[parts[0]] = { [Op.regexp]: parts[1] };
+        } else {
+          filter[parts[0]] = parts[1];
+        }
       }
     });
     // allowed filters
@@ -52,34 +59,38 @@ module.exports = db =>
 
     const userId = req.authUser.userId.toString();
     return helper.callReferenceEndpoint(req.authToken, req.id, filter.reference, filter.referenceId)
-    .then((hasAccessResp) => {
-      const hasAccess = helper.userHasAccessToEntity(userId, hasAccessResp, filter.reference);
-      if (!hasAccess && !helper.isAdmin(req)) {
-        throw new errors.HttpStatusError(403, 'User doesn\'t have access to the entity');
-      }
-      // Get topics from the Postgres database
-      return db.topics.findTopics(db, adapter, { filters: filter, numberOfPosts: -1, reqUserId: userId })
-      .then((dbTopics) => {
-        if (!dbTopics || dbTopics.length === 0) {
-          // returning empty list
-          return [];
+      .then((hasAccessResp) => {
+        const hasAccess = helper.userHasAccessToEntity(userId, hasAccessResp, filter.reference);
+        if (!hasAccess && !helper.isAdmin(req)) {
+          throw new errors.HttpStatusError(403, 'User doesn\'t have access to the entity');
         }
+        // Get topics from the Postgres database
+        return db.topics.findTopics(db, adapter, { filters: filter, numberOfPosts: -1, reqUserId: userId })
+          .then((dbTopics) => {
+            if (!dbTopics || dbTopics.length === 0) {
+              // returning empty list
+              return [];
+            }
 
-        // Mark all unread topics as read.
-        Promise.all(dbTopics.filter(topic => !topic.read).map((topic) => {
-          if (topic.posts && topic.posts.length > 0) {
-            // marks first post as read for the request user
-            db.post_user_stats.updateUserStats(db, logger, [topic.posts[0]], userId, 'READ');
-          }
-          return Promise.resolve();
-        }));
-        const adaptedTopics = dbTopics;
-        return adaptedTopics;
+            // Mark all unread topics as read.
+            Promise.all(dbTopics.filter(topic => !topic.read).map((topic) => {
+              const unreadPosts = _.filter(topic.posts, post => !post.read);
+              if (unreadPosts.length > 0) {
+                // marks unread posts as read for the requested user
+                db.post_user_stats.updateUserStats(db, logger, unreadPosts, userId, 'READ');
+                // update elastic search index only if user read is changed
+                esIndex.updateElasticSearchIndex(db, adapter, topic.id, topic.id);
+              }
+              return Promise.resolve();
+            }));
+            const adaptedTopics = dbTopics;
+            return adaptedTopics;
+          })
+          .then(result => resp.status(200).send(util.wrapResponse(req.id, result)));
       })
-      .then(result => resp.status(200).send(util.wrapResponse(req.id, result)));
-    })
-    .catch((error) => {
-      logger.error(error);
-      next(error instanceof errors.HttpStatusError ? error : new errors.HttpStatusError(500, 'Error fetching topics'));
-    });
+      .catch((error) => {
+        logger.error(error);
+        next(error instanceof errors.HttpStatusError ?
+          error : new errors.HttpStatusError(500, 'Error fetching topics'));
+      });
   };
