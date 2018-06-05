@@ -115,6 +115,7 @@ module.exports = (Sequelize, DataTypes) => {
     fetchDeleted = false,
     raw = false,
     reqUserId,
+    includeReadUserIds = false,
   }) => {
     const where = filters;
     const postsWhere = {};
@@ -144,14 +145,15 @@ module.exports = (Sequelize, DataTypes) => {
     }).then((topics) => {
       const topicIds = topics.map(t => t.id);
       return models.posts.getPostsCount(topicIds)
-      .then((topicsPostsCount) => {
-        models.logger.debug('topicsPostsCount', topicsPostsCount);
-        return adapter.adaptTopics({
-          dbTopics: topics,
-          topicsPostsCount: topicsPostsCount.map(tpc => tpc),
-          reqUserId,
+        .then((topicsPostsCount) => {
+          models.logger.debug('topicsPostsCount', topicsPostsCount);
+          return adapter.adaptTopics({
+            dbTopics: topics,
+            topicsPostsCount: topicsPostsCount.map(tpc => tpc),
+            reqUserId,
+            includeReadUserIds,
+          });
         });
-      });
     });
   };
 
@@ -179,11 +181,11 @@ module.exports = (Sequelize, DataTypes) => {
     }).then((topic) => {
       if (!topic) return null;
       return models.posts.getTopicPostsCount(topicId)
-      .then(totalPosts => adapter.adaptTopic({
-        dbTopic: topic,
-        totalPosts,
-        reqUserId,
-      }));
+        .then(totalPosts => adapter.adaptTopic({
+          dbTopic: topic,
+          totalPosts,
+          reqUserId,
+        }));
     });
   };
 
@@ -196,13 +198,13 @@ module.exports = (Sequelize, DataTypes) => {
         returning: true,
         plain: true,
       })
-    .then((result) => {
-      models.logger.debug('topic updated...');
-      return adapter.adaptTopic({
-        dbTopic: result[1], // result is [x ,y] : x is number of rows affected, y is actual affected row
-        reqUserId,
+      .then((result) => {
+        models.logger.debug('topic updated...');
+        return adapter.adaptTopic({
+          dbTopic: result[1], // result is [x ,y] : x is number of rows affected, y is actual affected row
+          reqUserId,
+        });
       });
-    });
   };
 
   return Topic;

@@ -27,7 +27,7 @@ function Adapter(logger, db, _discourseClient = null) {// eslint-disable-line
             resolve(null);
           }
         }).catch(() =>
-      resolve(null));
+          resolve(null));
       }
     });
   };
@@ -67,7 +67,7 @@ function Adapter(logger, db, _discourseClient = null) {// eslint-disable-line
     return topics && topics.length > 0 ? topics[0] : dbTopic;
   };
 
-  this.adaptTopics = function a({ dbTopics, topicsPostsCount, reqUserId }) {
+  this.adaptTopics = function a({ dbTopics, topicsPostsCount, reqUserId, includeReadUserIds }) {
     logger.info('adaptTopics - Enter');
     const topics = _.map(dbTopics, (dbTopic) => {
       let userId = dbTopic.createdBy;
@@ -95,7 +95,7 @@ function Adapter(logger, db, _discourseClient = null) {// eslint-disable-line
         if (['system', CODERBOT_USERNAME].indexOf(postUserId) === -1) {
           postUserId = Number(postUserId);
         }
-        topic.posts.push({
+        const topicDetail = {
           id: dbPost.id,
           date: dbPost.createdAt,
           updatedDate: dbPost.updatedAt,
@@ -104,12 +104,17 @@ function Adapter(logger, db, _discourseClient = null) {// eslint-disable-line
           body: dbPost.raw,
           rawContent: dbPost.raw,
           type: 'post',
-        });
+        };
+
+        if (includeReadUserIds) {
+          topicDetail.readUserIds = readStats ? readStats.userIds : [];
+        }
+        topic.posts.push(topicDetail);
       });
       logger.debug(topic.posts, 'topic.posts');
       if (topic.posts && topic.posts.length > 0) {
         topic.posts = _.orderBy(topic.posts, ['date', 'id'], ['asc', 'asc']);
-        topic.read = topic.posts[0].read;
+        topic.read = _.every(topic.posts, post => post.read);
         const lastPost = topic.posts[topic.posts.length - 1];
         topic.lastActivityAt = lastPost.updatedDate ? lastPost.updatedDate : lastPost.date;
       }
