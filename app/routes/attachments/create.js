@@ -9,7 +9,6 @@ const Joi = require('joi');
 const Promise = require('bluebird');
 const multer = require('multer');
 const multerS3 = require('multer-s3');
-const { REFERENCE_LOOKUPS } = require('../../constants');
 
 const HttpStatusError = errors.HttpStatusError;
 
@@ -64,46 +63,51 @@ module.exports = db =>
       referenceId: Joi.number().required(),
     });
     const userId = req.authUser.userId.toString();
-
-    return helper.callReferenceEndpoint(req.authToken, req.id, REFERENCE_LOOKUPS.PROJECT, query.referenceId)
-      .then((hasAccessResp) => {
-        const hasAccess = helper.userHasAccessToEntity(userId, hasAccessResp, REFERENCE_LOOKUPS.PROJECT);
-        if (!hasAccess && !helper.isAdmin(req)) {
-          throw new errors.HttpStatusError(403, 'User doesn\'t have access to the project');
-        }
-        return upload(req, resp);
-      })
-      .then(() => {
-        if (!req.file) {
-          throw new errors.HttpStatusError(400, 'Missing file');
-        }
-        // Validate parameters
-        Joi.assert(req.file, Joi.object().keys({
-          location: Joi.string().required(),
-          originalname: Joi.string().required(),
-          sha1: Joi.string().required(),
-          size: Joi.number().required(),
-        }).unknown());
-        return db.post_attachments.create({
-          postId: params.postId,
-          originalFileName: req.file.originalname,
-          fileSize: req.file.size,
-          sha1: req.file.sha1,
-          url: req.file.location,
-          createdBy: req.authUser.handle,
-          // follow sequelize on how it fills updatedAt on creation
-          updatedBy: req.authUser.handle,
+    return db.topics.findOne({ topicId: req.params.topicId }).then((topic) => {
+      if (!topic) {
+        const err = new errors.HttpStatusError(404, 'Topic does not exist');
+        return next(err);
+      }
+      return helper.callReferenceEndpoint(req.authToken, req.id, topic.reference, query.referenceId)
+        .then((hasAccessResp) => {
+          const hasAccess = helper.userHasAccessToEntity(userId, hasAccessResp, topic.reference);
+          if (!hasAccess && !helper.isAdmin(req)) {
+            throw new errors.HttpStatusError(403, 'User doesn\'t have access to the project');
+          }
+          return upload(req, resp);
+        })
+        .then(() => {
+          if (!req.file) {
+            throw new errors.HttpStatusError(400, 'Missing file');
+          }
+          // Validate parameters
+          Joi.assert(req.file, Joi.object().keys({
+            location: Joi.string().required(),
+            originalname: Joi.string().required(),
+            sha1: Joi.string().required(),
+            size: Joi.number().required(),
+          }).unknown());
+          return db.post_attachments.create({
+            postId: params.postId,
+            originalFileName: req.file.originalname,
+            fileSize: req.file.size,
+            sha1: req.file.sha1,
+            url: req.file.location,
+            createdBy: req.authUser.handle,
+            // follow sequelize on how it fills updatedAt on creation
+            updatedBy: req.authUser.handle,
+          });
+        })
+        .then((createdPostAttachment) => {
+          const content = createdPostAttachment.toJSON();
+          logger.info('Attachment uploaded', content);
+          // remove excluded attributes from the response
+          ['deletedAt', 'deletedBy', 'url'].forEach(attribute => delete content[attribute]);
+          resp.status(200).send(util.wrapResponse(req.id, content));
+        })
+        .catch((error) => {
+          logger.error(error);
+          next(error instanceof HttpStatusError ? error : new HttpStatusError(500, 'Error uploading attachment'));
         });
-      })
-      .then((createdPostAttachment) => {
-        const content = createdPostAttachment.toJSON();
-        logger.info('Attachment uploaded', content);
-        // remove excluded attributes from the response
-        ['deletedAt', 'deletedBy', 'url'].forEach(attribute => delete content[attribute]);
-        resp.status(200).send(util.wrapResponse(req.id, content));
-      })
-      .catch((error) => {
-        logger.error(error);
-        next(error instanceof HttpStatusError ? error : new HttpStatusError(500, 'Error uploading attachment'));
-      });
+    });
   };

@@ -35,9 +35,9 @@ module.exports = (Sequelize, DataTypes) => {
       type: DataTypes.BIGINT,
       allowNull: true,
     },
-    // A tag for filtering
-    tag: {
-      type: DataTypes.STRING,
+    // tags for filtering
+    tags: {
+      type: DataTypes.ARRAY(DataTypes.STRING),
     },
     title: {
       type: DataTypes.STRING,
@@ -84,28 +84,29 @@ module.exports = (Sequelize, DataTypes) => {
     deletedBy: {
       type: DataTypes.STRING,
     },
-  }, {
-    freezeTableName: true,
-  });
+  },
+    {
+      freezeTableName: true,
+    });
 
   Topic.associate = (models) => {
     Topic.hasMany(models.posts, { as: 'posts', foreignKey: 'topicId' });
   };
 
-  Topic.createTopic = (models, topic, reqUserId) => {
+  Topic.createTopic = (models, topic, reqUserId, transaction = null) => {
     const dbTopic = models.topics.build({
       reference: topic.reference,
       referenceId: topic.referenceId,
       discourseTopicId: topic.discourseTopicId,
       title: topic.title,
-      tag: topic.tag,
+      tags: topic.tags,
       hidden: false,
       closed: false,
       archived: false,
       highestPostNumber: 1,
       createdBy: reqUserId,
       updatedBy: reqUserId,
-    });
+    }, { transaction });
     return dbTopic.save();
   };
 
@@ -189,7 +190,7 @@ module.exports = (Sequelize, DataTypes) => {
     });
   };
 
-  Topic.updateTopic = (models, adapter, updatedFields, { topicId, reqUserId }) => {
+  Topic.updateTopic = (models, adapter, updatedFields, { topicId, reqUserId }, transaction = null) => {
     const where = { id: topicId, deletedAt: { [Sequelize.Op.eq]: null } };
     return models.topics.update(
       Object.assign({}, updatedFields, { updatedBy: reqUserId }),
@@ -197,7 +198,7 @@ module.exports = (Sequelize, DataTypes) => {
         where,
         returning: true,
         plain: true,
-      })
+      }, { transaction })
       .then((result) => {
         models.logger.debug('topic updated...');
         return adapter.adaptTopic({

@@ -2,16 +2,16 @@
   "apiVersion": "v5",
   "aws": {
     "config": {
-      "accessKeyId": "xxxxxxxxxxxxxxxxxxxxx",
+      "accessKeyId": "AKIAJEQCSG2OYMA2CO4Q",
       "region": "us-east-1",
-      "secretAccessKey": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+      "secretAccessKey": "XcGCOhWUqIVhxn6Sq1XY/5DGi73yYYvZ4M1lWpqw"
     },
     "dynamodb": {
       "discourseWebhookLogsTable": "message-service-discourse-webhook-logs",
       "elasticSearchIndexingLogsTable": "message-service-elastic-search-indexing-logs"
     },
     "S3": {
-      "bucket": "tc-message-service-attachments"
+      "bucket": "message-service-attachments"
     }
   },
   "elasticsearchConfig": {
@@ -51,7 +51,7 @@
   "VALID_ISSUERS": "[\"https:\/\/topcoder-newauth.auth0.com\/\",\"https:\/\/api.topcoder-dev.com\"]",
   "jwksUri": "",
   "busApiUrl": "https://api.topcoder-dev.com",
-  "topicServiceUrl":"http://api.topcoder-dev.com/v4/topics",
+  "topicServiceUrl":"http://api.topcoder-dev.com/v5/topics",
   "HEALTH_CHECK_URL": "_health",
   "AUTH0_CLIENT_ID": "",
   "AUTH0_CLIENT_SECRET": "",

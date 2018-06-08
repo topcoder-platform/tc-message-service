@@ -77,7 +77,7 @@ function Adapter(logger, db, _discourseClient = null) {// eslint-disable-line
         id: dbTopic.id,
         reference: dbTopic.reference,
         referenceId: dbTopic.referenceId,
-        tag: dbTopic.tag,
+        tags: dbTopic.tags,
         date: dbTopic.createdAt,
         updatedDate: dbTopic.updatedAt,
         lastActivityAt: dbTopic.updatedAt,

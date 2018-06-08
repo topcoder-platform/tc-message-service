@@ -20,14 +20,14 @@ describe('POST /v5/topics ', () => {
   const testBody = {
     reference: 'project',
     referenceId: 'referenceId',
-    tag: 'tag',
+    tags: ['tag'],
     title: 'title',
     body: 'body',
   };
   const testBody2 = {
     reference: 'notexist',
     referenceId: 'notexist',
-    tag: 'tag',
+    tags: ['tag'],
     title: 'not exist',
     body: 'not exist',
   };
@@ -59,7 +59,7 @@ describe('POST /v5/topics ', () => {
     res.body.should.have.propertyByPath('result', 'content', 'id').eql(expTopicId);
     res.body.should.have.propertyByPath('result', 'content', 'reference').eql(expectedTopic.reference);
     res.body.should.have.propertyByPath('result', 'content', 'referenceId').eql(expectedTopic.referenceId);
-    res.body.should.have.propertyByPath('result', 'content', 'tag').eql(expectedTopic.tag);
+    res.body.should.have.propertyByPath('result', 'content', 'tags').eql(expectedTopic.tags);
     res.body.should.have.propertyByPath('result', 'content', 'title').eql(expectedTopic.title);
     res.body.should.have.propertyByPath('result', 'content', 'postIds').length(1);
     // 3 should be the id of the new post, as we already have 2 posts as mock data

@@ -81,7 +81,7 @@ function prepareDB(done) {
           reference: 'project',
           referenceId: 'referenceId',
           discourseTopicId: 1,
-          tag: 'tag',
+          tags: ['tag'],
           title: 'Mock topic title',
           createdBy: '123456789',
         }),

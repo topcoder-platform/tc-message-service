@@ -18,7 +18,7 @@ const retrieveTopics = Promise.coroutine(function* a(logger, dbTopics, userId, d
     topics = yield discourseClient.getTopics(_.map(dbTopics, t => t.discourseTopicId), userId);
     logger.debug(topics);
     _.each(topics, (t) => {
-      t.tag = _.find(dbTopics, { discourseTopicId: t.id }).tag; // eslint-disable-line
+      t.tags = _.find(dbTopics, { discourseTopicId: t.id }).tags; // eslint-disable-line
     });
   } catch (error) {
     logger.info('Failed to get topics from discourse');

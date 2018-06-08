@@ -1,11 +1,12 @@
 import errors from 'common-errors';
 import config from 'config';
 import HelperService from '../../services/helper';
-// import _  from require('lodash');
 
 const util = require('tc-core-library-js').util(config);
 const esClient = require('./../../elasticSearchConnection');
-
+const Adapter = require('../../services/adapter');
+const esIndex = require('./../indexing/indexing');
+const _ = require('lodash');
 
 /**
  * Get specific topic
@@ -23,6 +24,7 @@ module.exports = db =>
   (req, resp, next) => {
     const logger = req.log;
     const helper = HelperService(logger, db);
+    const adapter = new Adapter(logger, db);
     const topicId = req.params.topicId;
     const userId = req.authUser.userId.toString();
 
@@ -41,6 +43,22 @@ module.exports = db =>
         const err = new errors.HttpStatusError(404, 'Topic does not exist');
         return next(err);
       }
+
+      // check read flag based on requested user id
+      _.each(dbTopic.posts, (post) => {
+        post.read = post.readUserIds ? post.readUserIds.indexOf(userId.toString()) !== -1 : false;
+        delete post.readUserIds;
+      });
+      dbTopic.read = _.every(dbTopic.posts, post => post.read);
+      const unreadPosts = _.filter(dbTopic.posts, post => !post.read);
+      logger.debug(`length ${unreadPosts.length}`);
+      if (unreadPosts.length > 0) {
+        // marks unread posts as read for the requested user
+        db.post_user_stats.updateUserStats(db, logger, unreadPosts, userId, 'READ');
+        // update elastic search index only if user read is changed
+        esIndex.updateElasticSearchIndex(db, adapter, dbTopic.id, dbTopic.id);
+      }
+
       return helper.callReferenceEndpoint(req.authToken, req.id, dbTopic.reference, dbTopic.referenceId)
         .then((hasAccessResp) => {
           const hasAccess = helper.userHasAccessToEntity(userId, hasAccessResp, dbTopic.reference);

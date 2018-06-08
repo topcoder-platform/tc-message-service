@@ -112,11 +112,11 @@ const savePost = (db, req, resp, post, formatMessage) => {
         }).catch((e) => {
           logger.error(e);
           reject(formatMessage('Error creating topic in db.', post));
-        });         
-    }).catch((e) => {
-      logger.warn(formatMessage('Error while finding topic by discourse topic id.', post));
-      logger.warn(e);
-    })
+        });
+      }).catch((e) => {
+        logger.warn(formatMessage('Error while finding topic by discourse topic id.', post));
+        logger.warn(e);
+      })
   });
 };
 
@@ -182,7 +182,7 @@ const saveTopic = (db, req, resp, topic, formatMessage) => {
   const adapter = new Adapter(logger, db);
 
   const userId = topic.details.created_by.username;
-  
+
   const helper = HelperService(logger, db);
 
   return new Promise((resolve, reject) => {
@@ -193,7 +193,7 @@ const saveTopic = (db, req, resp, topic, formatMessage) => {
         reference: 'project',
         title: topic.title,
         discourseTopicId:topic.id,
-        tag:"PRIMARY",
+        tags: ["PRIMARY"],
         referenceId,
         posts: [] // discourse sends separate events for topic and post creation for intial topic creation
       };
@@ -247,7 +247,7 @@ const updateTopic = (db, req, resp, topic, formatMessage) => {
   const adapter = new Adapter(logger, db);
 
   const userId = topic.details.created_by.username;
-  
+
   const helper = HelperService(logger, db);
 
   return new Promise((resolve, reject) => {
@@ -269,7 +269,7 @@ const updateTopic = (db, req, resp, topic, formatMessage) => {
             logger.debug(formatMessage('Unable to update topic.', topic, savedTopic));
             resolve(savedTopic);
           });
-        
+
       }).catch((errorMessage) => {
         logger.error(formatMessage(errorMessage, topic));
         reject(formatMessage('Error while fetching topic by discourse id.', topic));
@@ -293,7 +293,7 @@ const process = (db, req, resp, topic, post, modelUpdateType) => {
   // objects
   const obj = topic || post;
   const type = topic ? (modelUpdateType=='create'?'topic':'topic_update')
-                     : (modelUpdateType=='create'?'post':'post_update');
+    : (modelUpdateType=='create'?'post':'post_update');
 
   // ids
   const id = generateId(type, obj.id);
@@ -302,7 +302,7 @@ const process = (db, req, resp, topic, post, modelUpdateType) => {
   // specific functions
   const formatMessage = topic ? createTopicLogMessage : createPostLogMessage;
   const handler = topic ?  (modelUpdateType=='create'?saveTopic:updateTopic)
-                         : (modelUpdateType=='create'?savePost:updatePost);
+    : (modelUpdateType=='create'?savePost:updatePost);
 
   return DynamoService.findOrCreate(id, topicId, type, obj).then((data) => {
     logger.debug(formatMessage(`Initial loading of ${type} from discourse webhook successful.`, obj));
