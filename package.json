@@ -30,7 +30,7 @@
     "start": "node dist",
     "start:dev": "NODE_ENV=local PORT=8001 nodemon -w app --exec \"babel-node app --presets es2015\" | ./node_modules/.bin/bunyan",
     "xstart:dev": "NODE_ENV=local nodemon server.js | ./node_modules/.bin/bunyan",
-    "test": "npm run lint && LOG_LEVEL=debug NODE_ENV=test TC_MESSAGE_SERVICE_AUTH_LOOSE=true ./node_modules/.bin/istanbul cover -x '*.spec.js' ./node_modules/.bin/_mocha -- --timeout 5000 --compilers js:babel-core/register $(find app -path '*.spec.js')",
+    "test": "npm run lint && LOG_LEVEL=debug NODE_ENV=test TC_MESSAGE_SERVICE_AUTH_LOOSE=true AUTH0_CLIENT_ID=$MOCK_AUTH0_CLIENT_ID AUTH0_CLIENT_SECRET=$MOCK_AUTH0_CLIENT_SECRET ./node_modules/.bin/istanbul cover -x '*.spec.js' ./node_modules/.bin/_mocha -- --timeout 5000 --compilers js:babel-core/register $(find app -path '*.spec.js')",
     "test:watch": "NODE_ENV=test ./node_modules/.bin/mocha -w --compilers js:babel-core/register $(find app -name '*.spec.js')"
   },
   "dependencies": {
