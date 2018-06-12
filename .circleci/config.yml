@@ -33,7 +33,7 @@ jobs:
           name: Start container
           command: |
             set -x
-            docker-compose up -d
+            docker-compose up -d -f local/docker-compose.yml
       - run: npm run test
       - run: npm run build
       - persist_to_workspace:
