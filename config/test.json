@@ -6,5 +6,5 @@
   },
   "syncUsersRetryDelay": 500,
   "syncUsersTimeout": 1000,
-  "AUTH0_URL": "http://local.topcoder-dev.com:3001/auth0-m2m-token"
+  "AUTH0_URL": "http://localhost:3001/auth0-m2m-token"
 }
