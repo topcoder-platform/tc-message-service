@@ -7,6 +7,9 @@ const errors = require('common-errors');
 const util = require('../util');
 const { USER_ROLE } = require('../constants');
 const { REFERENCE_LOOKUPS, TOKEN_SCOPES } = require('../constants');
+const tcCoreLibAuth = require('tc-core-library-js').auth;
+
+const m2m = tcCoreLibAuth.m2m(config);
 
 /**
  * Returns helper service containing common functions used in route handlers
@@ -182,10 +185,11 @@ module.exports = (logger, db) => {
         // and anyone should be able to see the threads
       }
       const referenceLookup = result;
-      return axios.get(referenceLookup.endpoint.replace('{id}', referenceId), {
+      return m2m.getMachineToken(config.AUTH0_CLIENT_ID, config.AUTH0_CLIENT_SECRET)
+      .then(token => axios.get(referenceLookup.endpoint.replace('{id}', referenceId), {
         headers: {
           'X-Request-Id': requestId,
-          Authorization: `Bearer ${authToken}`,
+          Authorization: `Bearer ${token}`,
           Accept: 'application/json',
           'Content-Type': 'application/json',
         },
@@ -200,7 +204,7 @@ module.exports = (logger, db) => {
       }).catch((error) => {
         logger.debug(error);
         return [false, null, error];
-      });
+      }));
     }).catch((error) => {
       logger.debug(error);
       return [false, null, error];
