@@ -23,6 +23,11 @@ jobs:
           paths:
             - node_modules
       - run: npm run lint
+      - run:
+          name: Docker Compose
+          command: |
+            cd local
+            docker-compose up
       - run: npm run test
       - run: npm run build
       - persist_to_workspace:
