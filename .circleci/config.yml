@@ -24,10 +24,16 @@ jobs:
             - node_modules
       - run: npm run lint
       - run:
-          name: Docker Compose
+          name: Install Docker Compose
           command: |
-            cd local
-            docker-compose up
+            curl -L https://github.com/docker/compose/releases/download/1.19.0/docker-compose-`uname -s`-`uname -m` > ~/docker-compose
+            chmod +x ~/docker-compose
+            sudo mv ~/docker-compose /usr/local/bin/docker-compose
+      - run:
+          name: Start container
+          command: |
+            set -x
+            docker-compose up -d
       - run: npm run test
       - run: npm run build
       - persist_to_workspace:
