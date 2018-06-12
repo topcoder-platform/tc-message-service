@@ -23,21 +23,10 @@ jobs:
           paths:
             - node_modules
       - run: npm run lint
-      - run:
-          name: Install Docker Compose
-          command: |
-            curl -L https://github.com/docker/compose/releases/download/1.19.0/docker-compose-`uname -s`-`uname -m` > ~/docker-compose
-            chmod +x ~/docker-compose
-            sudo mv ~/docker-compose /usr/local/bin/docker-compose
-      - setup_remote_docker
-      - run:
-          name: Start container
-          command: |
-            set -x
-            docker-compose -f local/docker-compose.yml up -d
-            docker run --network container:mock-services \
-              appropriate/curl --retry 10 --retry-delay 1 --retry-connrefused http://localhost:3001/members/pshah_customer
       - run: npm run test
+        environment:
+          - AUTH0_CLIENT_ID: $MOCK_AUTH0_CLIENT_ID
+          - AUTH0_CLIENT_SECRET: $MOCK_AUTH0_CLIENT_SECRET
       - run: npm run build
       - persist_to_workspace:
           root: .

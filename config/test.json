@@ -5,6 +5,5 @@
     "masterUrl": "postgres://coder:mysecretpassword@local.topcoder-dev.com:5432/messages_test"
   },
   "syncUsersRetryDelay": 500,
-  "syncUsersTimeout": 1000,
-  "AUTH0_URL": "http://localhost:3001/auth0-m2m-token"
+  "syncUsersTimeout": 1000
 }
