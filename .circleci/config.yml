@@ -75,7 +75,7 @@ workflows:
             - test
           filters:
             branches:
-              only: ['dev']
+              only: ['dev', 'feature/using-m2m-token-for-calling-reference-endpoint ']
       - deployProd:
           requires:
             - test
