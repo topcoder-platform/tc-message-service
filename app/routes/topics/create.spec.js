@@ -13,6 +13,8 @@ const axios = require('axios');
 const sinon = require('sinon');
 const config = require('config');
 
+const m2m = server.m2m;
+
 const db = models(server, server.logger);
 
 describe('POST /v4/topics ', () => {
@@ -202,6 +204,8 @@ describe('POST /v4/topics ', () => {
 
   it('should return 200 response with valid input', (done) => {
     const getStub = sandbox.stub(axios, 'get');
+    // mocks the m2m token call
+    const m2mStub = sandbox.stub(m2m, 'getMachineToken').resolves('dummy_token');
     // resolves call (with 200) to reference endpoint in helper.callReferenceEndpoint
     getStub.withArgs('http://reftest/referenceId').resolves({
       data: { result: { status: 200, content: { members: [{ userId: memberUser.userId }] } } },
@@ -219,6 +223,8 @@ describe('POST /v4/topics ', () => {
         if (err) {
           return done(err);
         }
+        // should call m2m.getMachineToken
+        m2mStub.should.have.be.calledOnce;
         // expected topic id = 2
         // expected post id = 3
         return validateSuccessfulCreation(res, testBody, 2, 3, userId, now, done);
@@ -227,6 +233,8 @@ describe('POST /v4/topics ', () => {
 
   it('should return 200 response with valid input (admin access)', (done) => {
     const getStub = sandbox.stub(axios, 'get');
+    // mocks the m2m token call
+    const m2mStub = sandbox.stub(m2m, 'getMachineToken').resolves('dummy_token');
     // resolves call (with 200) to reference endpoint in helper.callReferenceEndpoint
     getStub.withArgs('http://reftest/referenceId').resolves({
       data: { result: { status: 200, content: { members: [{ userId: memberUser.userId }] } } },
@@ -244,6 +252,8 @@ describe('POST /v4/topics ', () => {
         if (err) {
           return done(err);
         }
+        // should call m2m.getMachineToken
+        m2mStub.should.have.be.calledOnce;
         // expected topic id = 2
         // expected post id = 3
         return validateSuccessfulCreation(res, testBody, 2, 3, userId, now, done);
@@ -252,6 +262,8 @@ describe('POST /v4/topics ', () => {
 
   it('should return 200 response with valid input if error to get referenceLookup endpoint (admin)', (done) => {
     const getStub = sandbox.stub(axios, 'get');
+    // mocks the m2m token call
+    const m2mStub = sandbox.stub(m2m, 'getMachineToken').resolves('dummy_token');
     // resolves call (with 200) to reference endpoint in helper.callReferenceEndpoint
     getStub.withArgs('http://reftest/referenceId').resolves({
       data: { result: { status: 200, content: { members: [{ userId: memberUser.userId }] } } },
@@ -269,6 +281,8 @@ describe('POST /v4/topics ', () => {
         if (err) {
           return done(err);
         }
+        // should call m2m.getMachineToken
+        m2mStub.should.have.be.calledOnce;
         // expected topic id = 2
         // expected post id = 3
         return validateSuccessfulCreation(res, testBody, 2, 3, userId, now, done);
@@ -277,6 +291,8 @@ describe('POST /v4/topics ', () => {
 
   it('should return 500 response if error to createPrivatePost with reject', (done) => {
     const getStub = sandbox.stub(axios, 'get');
+    // mocks the m2m token call
+    const m2mStub = sandbox.stub(m2m, 'getMachineToken').resolves('dummy_token');
     // resolves call (with 200) to reference endpoint in helper.callReferenceEndpoint
     getStub.withArgs('http://reftest/referenceId').resolves({
       data: { result: { status: 200, content: { members: [{ userId: memberUser.userId }] } } },
@@ -293,6 +309,8 @@ describe('POST /v4/topics ', () => {
         if (err) {
           return done(err);
         }
+        // should call m2m.getMachineToken
+        m2mStub.should.have.be.calledOnce;
         // should call findPost on posts model
         createTopicStub.should.have.be.calledOnce;
         res.body.should.have.propertyByPath('result', 'content', 'message')

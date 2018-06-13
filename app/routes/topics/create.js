@@ -11,8 +11,9 @@ const { EVENT } = require('../../constants');
  * Handles creation of topics
  * @param {Object} db sequelize db with all models loaded
  * @return {Object} response object
+ * @param {Object} m2m machine to machine token helper object
  */
-module.exports = db =>
+module.exports = (db, m2m) =>
 
   /**
    * Create a new topic for the specified entity.
@@ -25,7 +26,7 @@ module.exports = db =>
    */
   (req, resp, next) => {
     const logger = req.log;
-    const helper = HelperService(logger, db);
+    const helper = HelperService(logger, db, m2m);
     const adapter = new Adapter(logger, db);
 
     const params = req.body;

@@ -32,9 +32,10 @@ const jwt = require('jsonwebtoken');
  * Loads and configures all sub routes of this api
  * @param {Object} logger: logger
  * @param {Object} db sequelize db object containing all models
+ * @param {Object} m2m machine to machine token helper object
  * @return {Object} response
  */
-module.exports = (logger, db) => {
+module.exports = (logger, db, m2m) => {
   const apiVersion = config.apiVersion;
   // health check
   router.get(`/${apiVersion}/topics/health`, (req, res, next) => { // eslint-disable-line
@@ -119,38 +120,38 @@ module.exports = (logger, db) => {
 
   // Register all the routes
   router.route(`/${apiVersion}/topics/list`)
-    .get(topicListHandler(db));
+    .get(topicListHandler(db, m2m));
   router.route(`/${apiVersion}/topics/create`)
-    .post(topicCreateHandler(db));
+    .post(topicCreateHandler(db, m2m));
   router.route(`/${apiVersion}/topics/:topicId/read`)
-    .get(getTopicHandler(db));
+    .get(getTopicHandler(db, m2m));
   router.route(`/${apiVersion}/topics/:topicId/edit`)
-    .post(topicUpdateHandler(db));
+    .post(topicUpdateHandler(db, m2m));
   router.route(`/${apiVersion}/topics/:topicId/remove`)
-    .delete(topicDeleteHandler(db));
+    .delete(topicDeleteHandler(db, m2m));
 
 
   router.route(`/${apiVersion}/topics/:topicId/posts/list`)
-    .get(listPostsHandler(db));
+    .get(listPostsHandler(db, m2m));
   router.route(`/${apiVersion}/topics/:topicId/posts/create`)
-    .post(createPostHandler(db));
+    .post(createPostHandler(db, m2m));
   router.route(`/${apiVersion}/topics/:topicId/posts/:postId/read`)
-    .get(getPostHandler(db));
+    .get(getPostHandler(db, m2m));
   router.route(`/${apiVersion}/topics/:topicId/posts/:postId/edit`)
-    .post(updatePostHandler(db));
+    .post(updatePostHandler(db, m2m));
   router.route(`/${apiVersion}/topics/:topicId/posts/:postId/remove`)
-    .delete(deletePostHandler(db));
+    .delete(deletePostHandler(db, m2m));
 
   router.route(`/${apiVersion}/topics/:topicId/posts/:postId/attachments/create`)
-    .post(createAttachmentHandler(db));
+    .post(createAttachmentHandler(db, m2m));
   router.route(`/${apiVersion}/topics/:topicId/posts/:postId/attachments/:attachmentId/read`)
-    .get(getAttachmentHandler(db));
+    .get(getAttachmentHandler(db, m2m));
   router.route(`/${apiVersion}/topics/:topicId/posts/:postId/attachments/:attachmentId/remove`)
-    .delete(deleteAttachmentHandler(db));
+    .delete(deleteAttachmentHandler(db, m2m));
 
   router.use(`/${apiVersion}/topics/webhooks/sendgrid`, formidable());
   router.route(`/${apiVersion}/topics/webhooks/sendgrid`)
-    .post(webhookPostHandler(db));
+    .post(webhookPostHandler(db, m2m));
 
   // register error handler
   router.use((err, req, res, next) => { // eslint-disable-line

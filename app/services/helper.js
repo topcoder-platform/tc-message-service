@@ -7,17 +7,15 @@ const errors = require('common-errors');
 const util = require('../util');
 const { USER_ROLE } = require('../constants');
 const { REFERENCE_LOOKUPS, TOKEN_SCOPES } = require('../constants');
-const tcCoreLibAuth = require('tc-core-library-js').auth;
-
-const m2m = tcCoreLibAuth.m2m(config);
 
 /**
  * Returns helper service containing common functions used in route handlers
  * @param {Object} logger the logger
  * @param {Object} db sequelize db with all models loaded
+ * @param {Object} m2m machine to machine token helper object
  * @return {function} function
  */
-module.exports = (logger, db) => {
+module.exports = (logger, db, m2m) => {
   /**
    * Helper method to clean up the provided email address for deducing the final address that matters for
    * the delivery of the email i.e. removing any non standard parts in the email address e.g. getting rid

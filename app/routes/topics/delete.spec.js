@@ -7,11 +7,13 @@ const server = require('../../app');
 const axios = require('axios');
 const sinon = require('sinon');
 const models = require('../../models');
+const config = require('config');
+
+require('should-sinon');
 
 const db = models(server, server.logger);
 
-require('should-sinon');
-const config = require('config');
+const m2m = server.m2m;
 
 describe('DELETE /v4/topics/:topicId ', () => {
   const topicId = 1;
@@ -73,6 +75,8 @@ describe('DELETE /v4/topics/:topicId ', () => {
 
   it('should return 200 response with valid jwt token and payload', (done) => {
     const getStub = sandbox.stub(axios, 'get');
+    // mocks the m2m token call
+    const m2mStub = sandbox.stub(m2m, 'getMachineToken').resolves('dummy_token');
     // resolves call (with 200) to reference endpoint in helper.callReferenceEndpoint
     getStub.withArgs('http://reftest/referenceId').resolves({
       data: { result: { status: 200, content: { members: [{ userId: memberUser.userId }] } } },
@@ -89,6 +93,8 @@ describe('DELETE /v4/topics/:topicId ', () => {
           if (err) {
             return done(err);
           }
+          // should call m2m.getMachineToken
+          m2mStub.should.have.be.calledOnce;
           res.body.result.success.should.eql(true);
           return db.topics.findAll({
             where: { deletedAt: { [db.Sequelize.Op.eq]: null } },
@@ -103,6 +109,8 @@ describe('DELETE /v4/topics/:topicId ', () => {
 
   it('should return 422 response if topic has comments', (done) => {
     const getStub = sandbox.stub(axios, 'get');
+    // mocks the m2m token call
+    const m2mStub = sandbox.stub(m2m, 'getMachineToken').resolves('dummy_token');
     // resolves call (with 200) to reference endpoint in helper.callReferenceEndpoint
     getStub.withArgs('http://reftest/referenceId').resolves({
       data: { result: { status: 200, content: { members: [{ userId: memberUser.userId }] } } },
@@ -117,6 +125,8 @@ describe('DELETE /v4/topics/:topicId ', () => {
         if (err) {
           return done(err);
         }
+        // should call m2m.getMachineToken
+        m2mStub.should.have.be.calledOnce;
         res.body.should.have.propertyByPath('result', 'content', 'message')
                   .eql('Topic has comments and can not be deleted');
         return db.topics.findAll({
@@ -131,6 +141,8 @@ describe('DELETE /v4/topics/:topicId ', () => {
 
   it('should return 404 response if topic does not exist', (done) => {
     const getStub = sandbox.stub(axios, 'get');
+    // mocks the m2m token call
+    const m2mStub = sandbox.stub(m2m, 'getMachineToken').resolves('dummy_token');
     // resolves call (with 200) to reference endpoint in helper.callReferenceEndpoint
     getStub.withArgs('http://reftest/referenceId').resolves({
       data: { result: { status: 200, content: { members: [{ userId: memberUser.userId }] } } },
@@ -145,6 +157,8 @@ describe('DELETE /v4/topics/:topicId ', () => {
         if (err) {
           throw done(err);
         }
+        // should call m2m.getMachineToken
+        m2mStub.should.have.be.calledOnce;
         res.body.should.have.propertyByPath('result', 'content', 'message')
                   .eql('Topic does not exist');
         return done();
@@ -153,6 +167,8 @@ describe('DELETE /v4/topics/:topicId ', () => {
 
   it('should return 500 response if error getting topic', (done) => {
     const getStub = sandbox.stub(axios, 'get');
+    // mocks the m2m token call
+    const m2mStub = sandbox.stub(m2m, 'getMachineToken').resolves('dummy_token');
     // resolves call (with 200) to reference endpoint in helper.callReferenceEndpoint
     getStub.withArgs('http://reftest/referenceId').resolves({
       data: { result: { status: 200, content: { members: [{ userId: memberUser.userId }] } } },
@@ -168,6 +184,8 @@ describe('DELETE /v4/topics/:topicId ', () => {
         if (err) {
           return done(err);
         }
+        // should call m2m.getMachineToken
+        m2mStub.should.have.be.calledOnce;
         // should call findById on topics model
         findByIdStub.should.have.be.calledOnce;
         res.body.should.have.propertyByPath('result', 'content', 'message')
@@ -178,6 +196,8 @@ describe('DELETE /v4/topics/:topicId ', () => {
 
   it('should return 500 response if error deleting topic', (done) => {
     const getStub = sandbox.stub(axios, 'get');
+    // mocks the m2m token call
+    const m2mStub = sandbox.stub(m2m, 'getMachineToken').resolves('dummy_token');
     // resolves call (with 200) to reference endpoint in helper.callReferenceEndpoint
     getStub.withArgs('http://reftest/referenceId').resolves({
       data: { result: { status: 200, content: { members: [{ userId: memberUser.userId }] } } },
@@ -193,6 +213,8 @@ describe('DELETE /v4/topics/:topicId ', () => {
         if (err) {
           return done(err);
         }
+        // should call m2m.getMachineToken
+        m2mStub.should.have.be.calledOnce;
         // should call getTopicPostsCount on topics model
         getTopicPostsCountStub.should.have.be.calledOnce;
         res.body.should.have.propertyByPath('result', 'content', 'message')

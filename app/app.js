@@ -13,7 +13,9 @@ import busApi from './events/busApi';
 const coreLib = require('tc-core-library-js');
 const Routes = require('./routes');
 const models = require('./models');
-// const rabbitMQService = require('./services/rabbitmq');
+
+const tcCoreLibAuth = coreLib.auth;
+const m2m = tcCoreLibAuth.m2m(config);
 
 // Define and configure app
 const app = express();
@@ -52,7 +54,9 @@ const logger = coreLib.logger({
 app.logger = logger;
 const db = models(app, logger);
 
-const routes = Routes(logger, db);
+// adds m2m module of tc core lib to the app
+app.m2m = m2m;
+const routes = Routes(logger, db, m2m);
 
 // add request Id
 const addRequestId = expressRequestId();
