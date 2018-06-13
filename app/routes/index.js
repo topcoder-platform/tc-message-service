@@ -75,12 +75,6 @@ module.exports = (logger, db, m2m) => {
   });
 
   router.all(RegExp(`\\/${apiVersion}\\/topics\\/(?!webhooks|!health).*`), (req, res, next) => {
-    // if (req.path === `/${apiVersion}/topics/webhooks/discourse`
-    //   || req.path === `/${apiVersion}/topics/webhooks/sendgrid`
-    //   || req.path === `/${apiVersion}/topics/health`) {
-    //   next();
-    //   return;
-    // }
     if (`${process.env.TC_MESSAGE_SERVICE_AUTH_LOOSE}` !== 'true') {
       jwtAuth()(req, res, next);
       return;
@@ -110,11 +104,7 @@ module.exports = (logger, db, m2m) => {
       res.send();
     }
   }, (req, res, next) => {
-    // if (req.path !== `/${apiVersion}/topics/webhooks/discourse`
-    //   && req.path !== `/${apiVersion}/topics/webhooks/sendgrid`
-    //   && req.path !== `/${apiVersion}/topics/health`) {
-      req.authToken = req.get('authorization').split(' ')[1]; // eslint-disable-line
-    // }
+    req.authToken = req.get('authorization').split(' ')[1]; // eslint-disable-line
     next();
   });
 
