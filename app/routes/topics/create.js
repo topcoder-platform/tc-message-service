@@ -40,7 +40,7 @@ module.exports = (db, m2m) =>
       body: Joi.string().required(),
     });
 
-    const userId = req.authUser.isMachine ? config.get('coderBotUsername')  : req.authUser.userId.toString();
+    const userId = req.authUser.isMachine ? config.get('coderBotUsername') : req.authUser.userId.toString();
     return helper.callReferenceEndpoint(req.authToken, req.id, params.reference, params.referenceId)
       .then((hasAccessResp) => {
         const hasAccess = helper.userHasAccessToEntity(userId, hasAccessResp, params.reference);
