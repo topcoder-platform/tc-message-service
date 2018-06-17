@@ -50,12 +50,12 @@ module.exports = db =>
           logger.info('should return after here');
           throw new errors.HttpStatusError(403, 'User doesn\'t have access to the entity');
         }
-        let tags = params.tag.split(',');
+        const tags = params.tag.split(',');
         const pgTopic = {
           reference: params.reference,
           referenceId: params.referenceId,
           title: params.title,
-          tags: tags,
+          tags,
         };
 
         logger.info('should return befor here');
