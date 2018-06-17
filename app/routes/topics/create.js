@@ -37,7 +37,7 @@ module.exports = db =>
     Joi.assert(params, {
       reference: Joi.string().required(),
       referenceId: Joi.string().required(),
-      tags: Joi.array().items(Joi.string()).min(1).required(),
+      tag: Joi.string().required(),
       title: Joi.string().required(),
       body: Joi.string().required(),
     });
@@ -50,11 +50,12 @@ module.exports = db =>
           logger.info('should return after here');
           throw new errors.HttpStatusError(403, 'User doesn\'t have access to the entity');
         }
+        let tags = params.tag.split(',');
         const pgTopic = {
           reference: params.reference,
           referenceId: params.referenceId,
           title: params.title,
-          tags: params.tags,
+          tags: tags,
         };
 
         logger.info('should return befor here');
