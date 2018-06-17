@@ -50,7 +50,7 @@ module.exports = db =>
       }
     });
     // allowed filters
-    filter = _.pick(filter, ['reference', 'referenceId', 'tag']);
+    filter = _.pick(filter, ['reference', 'referenceId', 'tags']);
 
     // Verify required filters are present
     if (!filter.reference || !filter.referenceId) {

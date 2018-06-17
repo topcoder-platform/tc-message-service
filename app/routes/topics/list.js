@@ -54,7 +54,7 @@ module.exports = db =>
       const term = {};
       if (singleKey === 'tag') {
         term.regexp = {};
-        term.regexp.tags = `.*${singleValue.toLowerCase()}.*`;
+        term.regexp.tag = `.*${singleValue.toLowerCase()}.*`;
       } else {
         term.term = {};
         term.term[singleKey] = singleValue.toLowerCase();
