@@ -5,12 +5,9 @@ const config = require('config');
 const util = require('tc-core-library-js').util(config);
 const Promise = require('bluebird');
 const errors = require('common-errors');
-const Sequelize = require('sequelize');
 const Joi = require('joi');
 const Adapter = require('../../services/adapter');
 const esIndex = require('./../indexing/indexing');
-
-const Op = Sequelize.Op;
 
 /**
  * Handles listing of topics
@@ -43,7 +40,7 @@ module.exports = db =>
       const parts = value.split('=');
       if (parts.length === 2) {
         if (parts[0] === 'tag') {
-          filter.tag = { $contains: { [Op.regexp]: parts[1] } };
+          filter.tags = { $contains: [parts[1]] };
         } else {
           filter[parts[0]] = parts[1];
         }
