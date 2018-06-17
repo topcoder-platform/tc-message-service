@@ -38,6 +38,7 @@ module.exports = (Sequelize, DataTypes) => {
     // tags for filtering
     tags: {
       type: DataTypes.ARRAY(DataTypes.STRING),
+      allowNull: true,
     },
     title: {
       type: DataTypes.STRING,

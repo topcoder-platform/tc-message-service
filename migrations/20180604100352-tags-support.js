@@ -7,14 +7,24 @@ module.exports = {
       'tags',
       {
         type: Sequelize.ARRAY(Sequelize.STRING),
-        allowNull: false,
+        allowNull: true,
       }
     ),
+    queryInterface.sequelize.query(
+        'UPDATE topics SET tags = ARRAY[tag];'
+      ),
     queryInterface.removeColumn('topics', 'tag')
   },
 
   down: (queryInterface, Sequelize) => {
-    queryInterface.removeColumn('topics', 'tag'),
+    queryInterface.addColumn('topics', 'tag',
+      {
+        type: Sequelize.STRING,
+        allowNull: true,
+      }),
+    queryInterface.sequelize.query(
+        'UPDATE topics SET tag = ARRAY[tags[0]];'
+      ),
     queryInterface.removeColumn('topics', 'tags')
   }
 };

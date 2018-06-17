@@ -84,7 +84,6 @@ module.exports = db =>
             _.forEach(dbTopicElastic.hits.hits, (source) => {
               dbTopics.push(source._source);
             });
-
             if (!dbTopics || dbTopics.length === 0) {
               // returning empty list
               return [];

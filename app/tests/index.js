@@ -117,11 +117,14 @@ function prepareDB(done) {
     })
     .then((responses) => {
       if (responses) {
+        const tpc = JSON.parse(JSON.stringify(responses.topic));
+        tpc.tag = tpc.tags.join(',');
+        delete tpc.tags;
         esClient.index({
           index: config.get('elasticsearchConfig.indexName'),
           id: responses.topic.id,
           type: 'topic',
-          body: responses.topic,
+          body: tpc,
         }, () => {
           if (done && typeof done === 'function') {
             done();

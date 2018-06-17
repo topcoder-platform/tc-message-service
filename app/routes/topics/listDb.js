@@ -43,7 +43,7 @@ module.exports = db =>
       const parts = value.split('=');
       if (parts.length === 2) {
         if (parts[0] === 'tag') {
-          filter.tags = { [Op.regexp]: parts[1] };
+          filter.tag = { $contains: { [Op.regexp]: parts[1] } };
         } else {
           filter[parts[0]] = parts[1];
         }

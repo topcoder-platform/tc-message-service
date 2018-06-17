@@ -7,7 +7,7 @@ services:
     postgres:
         image: postgres:9.5
         ports:
-            - '5435:5435'
+            - '5432:5432'
         environment:
             POSTGRES_USER: 'coder'
             POSTGRES_PASSWORD: 'mysecretpassword'
