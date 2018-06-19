@@ -7,7 +7,8 @@
       "secretAccessKey": "AWS_SECRET_ACCESS_KEY"
     },
     "dynamodb": {
-      "discourseWebhookLogsTable": "DDB_DISCOURSE_WEBHOOK_LOGS_TABLE"
+      "discourseWebhookLogsTable": "DDB_DISCOURSE_WEBHOOK_LOGS_TABLE",
+      "elasticSearchIndexingLogsTable": "ES_INDEXING_LOGS_TABLE"
     },
     "S3": {
       "bucket": "AWS_S3_BUCKET"
