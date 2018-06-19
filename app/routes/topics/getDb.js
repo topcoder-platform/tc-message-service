@@ -16,9 +16,10 @@ const util = require('tc-core-library-js').util(config);
 /**
  * Get specific topic
  * @param {Object} db sequelize db with all models loaded
+ * @param {Object} m2m machine to machine token helper object
  * @return {Object} response
  */
-module.exports = db =>
+module.exports = (db, m2m) =>
 
   /**
    * Gets topic from database for the specified entity, and in the process it does:
@@ -28,7 +29,7 @@ module.exports = db =>
    */
   (req, resp, next) => {
     const logger = req.log;
-    const helper = HelperService(logger, db);
+    const helper = HelperService(logger, db, m2m);
     const adapter = new Adapter(logger, db);
     const topicId = req.params.topicId;
     const userId = req.authUser.userId.toString();

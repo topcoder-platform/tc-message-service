@@ -11,6 +11,10 @@ const deleteAttachmentHandler = require('./attachments/delete');
 
 const getTopicHandler = require('./topics/get');
 const topicListHandler = require('./topics/list');
+
+const getTopicDbHandler = require('./topics/getDb');
+const topicListDbHandler = require('./topics/listDb');
+
 const topicCreateHandler = require('./topics/create');
 const topicUpdateHandler = require('./topics/update');
 const topicDeleteHandler = require('./topics/delete');
@@ -111,10 +115,14 @@ module.exports = (logger, db, m2m) => {
   // Register all the routes
   router.route(`/${apiVersion}/topics/list`)
     .get(topicListHandler(db, m2m));
+  router.route(`/${apiVersion}/topics/list/db`)
+    .get(topicListDbHandler(db, m2m));
   router.route(`/${apiVersion}/topics/create`)
     .post(topicCreateHandler(db, m2m));
   router.route(`/${apiVersion}/topics/:topicId/read`)
     .get(getTopicHandler(db, m2m));
+  router.route(`/${apiVersion}/topics/:topicId/read/db`)
+    .get(getTopicDbHandler(db, m2m));
   router.route(`/${apiVersion}/topics/:topicId/edit`)
     .post(topicUpdateHandler(db, m2m));
   router.route(`/${apiVersion}/topics/:topicId/remove`)
