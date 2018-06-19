@@ -6,6 +6,9 @@ const util = require('tc-core-library-js').util(config);
 const errors = require('common-errors');
 const Joi = require('joi');
 const { EVENT } = require('../../constants');
+const esClient = require('./../../elasticSearchConnection');
+const uuidv1 = require('uuid/v1');
+const DynamoService = require('../../services/dynamodbErrorLog');
 
 /**
  * Delete a topic from Discourse and Postgresql

@@ -8,6 +8,7 @@ const errors = require('common-errors');
 const Adapter = require('../../services/adapter');
 const Joi = require('joi');
 const Promise = require('bluebird');
+const esIndex = require('./../indexing/indexing');
 
 /**
  * Save a topic in Discourse

@@ -38,7 +38,11 @@ module.exports = (db, m2m) =>
 
     // Parse filter
     const parsedFilter = (req.query.filter || '').split('&');
-    let filter = {};
+    const esFilter = {};
+    const filter = {};
+    esFilter.query = {};
+    esFilter.query.bool = {};
+    esFilter.query.bool.filter = [];
     _(parsedFilter).each((value) => {
       const parts = value.split('=');
       if (parts.length === 2) {

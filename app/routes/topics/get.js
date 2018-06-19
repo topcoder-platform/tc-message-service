@@ -1,6 +1,5 @@
 import errors from 'common-errors';
 import config from 'config';
-import Adapter from '../../services/adapter';
 import HelperService from '../../services/helper';
 
 const util = require('tc-core-library-js').util(config);

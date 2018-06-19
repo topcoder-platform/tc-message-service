@@ -5,6 +5,10 @@ const Promise = require('bluebird');
 
 const db = models(server, server.logger);
 
+const esClient = require('./../elasticSearchConnection');
+
+const config = require('config');
+
 
 const jwts = {
   // userId = 40051331

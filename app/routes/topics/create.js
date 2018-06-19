@@ -7,6 +7,7 @@ const errors = require('common-errors');
 const Joi = require('joi');
 const Adapter = require('../../services/adapter');
 const { EVENT } = require('../../constants');
+const esIndex = require('./../indexing/indexing');
 
 /**
  * Handles creation of topics
