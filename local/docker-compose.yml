@@ -1,6 +1,7 @@
 version: '2'
 services:
     mock-services:
+        container_name: mock-services
         build: 'mock-services'
         ports:
             - 3001:3001

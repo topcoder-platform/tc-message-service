@@ -12,9 +12,10 @@ const HttpStatusError = errors.HttpStatusError;
 /**
  * Get specific attachment
  * @param {Object} db sequelize db with all models loaded
+ * @param {Object} m2m machine to machine token helper object
  * @return {Object} response
  */
-module.exports = db =>
+module.exports = (db, m2m) =>
   /**
    * Redirects to the specified attachment for the specified post, and in the process it does:
    *  - Checks if the user has access to the project
@@ -22,7 +23,7 @@ module.exports = db =>
    */
   (req, resp, next) => {
     const logger = req.log;
-    const helper = HelperService(logger, db);
+    const helper = HelperService(logger, db, m2m);
 
     // Validate request parameters
     Joi.assert(req.authUser, Joi.object().keys({

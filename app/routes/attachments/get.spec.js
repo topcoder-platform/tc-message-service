@@ -10,6 +10,8 @@ const aws = require('aws-sdk');
 const sinon = require('sinon');
 const config = require('config');
 
+const m2m = server.m2m;
+
 const db = models(server, server.logger);
 
 require('should-sinon');
@@ -27,12 +29,16 @@ describe('GET /v4/topics/:topicId/posts/:postId/attachments/:attachmentId', () =
   let sandbox;
 
   const stubWithNoAccessToProject = () => {
+    // mocks the m2m token call
+    sandbox.stub(m2m, 'getMachineToken').resolves('dummy_token');
     sandbox.stub(axios, 'get').withArgs('http://reftest/1').resolves({
       data: { result: { status: 403, content: {} } },
     });
   };
 
   const stubWithAccessToProject = () => {
+    // mocks the m2m token call
+    sandbox.stub(m2m, 'getMachineToken').resolves('dummy_token');
     sandbox.stub(axios, 'get').withArgs('http://reftest/1').resolves({
       data: { result: { status: 200, content: { members: [{ userId: memberUser.userId }] } } },
     });

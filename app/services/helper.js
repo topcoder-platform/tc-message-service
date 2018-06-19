@@ -12,9 +12,10 @@ const { REFERENCE_LOOKUPS, TOKEN_SCOPES } = require('../constants');
  * Returns helper service containing common functions used in route handlers
  * @param {Object} logger the logger
  * @param {Object} db sequelize db with all models loaded
+ * @param {Object} m2m machine to machine token helper object
  * @return {function} function
  */
-module.exports = (logger, db) => {
+module.exports = (logger, db, m2m) => {
   /**
    * Helper method to clean up the provided email address for deducing the final address that matters for
    * the delivery of the email i.e. removing any non standard parts in the email address e.g. getting rid
@@ -182,10 +183,11 @@ module.exports = (logger, db) => {
         // and anyone should be able to see the threads
       }
       const referenceLookup = result;
-      return axios.get(referenceLookup.endpoint.replace('{id}', referenceId), {
+      return m2m.getMachineToken(config.AUTH0_CLIENT_ID, config.AUTH0_CLIENT_SECRET)
+      .then(token => axios.get(referenceLookup.endpoint.replace('{id}', referenceId), {
         headers: {
           'X-Request-Id': requestId,
-          Authorization: `Bearer ${authToken}`,
+          Authorization: `Bearer ${token}`,
           Accept: 'application/json',
           'Content-Type': 'application/json',
         },
@@ -200,7 +202,7 @@ module.exports = (logger, db) => {
       }).catch((error) => {
         logger.debug(error);
         return [false, null, error];
-      });
+      }));
     }).catch((error) => {
       logger.debug(error);
       return [false, null, error];

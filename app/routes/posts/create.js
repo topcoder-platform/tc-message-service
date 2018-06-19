@@ -10,12 +10,13 @@ const { EVENT } = require('../../constants');
 /**
  * Creates a new post to a topic in Discourse
  * @param {Object} db sequelize db with models loaded
+ * @param {Object} m2m machine to machine token helper object
  * @return {object} response
  */
-module.exports = db => (req, resp, next) => {
+module.exports = (db, m2m) => (req, resp, next) => {
   const logger = req.log;
   const adapter = new Adapter(logger, db);
-  const helper = HelperService(logger, db);
+  const helper = HelperService(logger, db, m2m);
 
     // Validate request parameters
   Joi.assert(req.body, {
