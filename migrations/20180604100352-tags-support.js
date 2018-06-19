@@ -9,22 +9,17 @@ module.exports = {
         type: Sequelize.ARRAY(Sequelize.STRING),
         allowNull: true,
       }
-    ),
-    queryInterface.sequelize.query(
-        'UPDATE topics SET tags = ARRAY[tag];'
-      ),
-    queryInterface.removeColumn('topics', 'tag')
+    ).then(() => queryInterface.sequelize.query('UPDATE topics SET tags = ARRAY[tag] WHERE tag IS NOT NULL;'))
+    .then(() => queryInterface.removeColumn('topics', 'tag'))
   },
 
   down: (queryInterface, Sequelize) => {
+    // queryInterface.removeColumn('topics', 'tags')
     queryInterface.addColumn('topics', 'tag',
       {
         type: Sequelize.STRING,
         allowNull: true,
-      }),
-    queryInterface.sequelize.query(
-        'UPDATE topics SET tag = ARRAY[tags[0]];'
-      ),
-    queryInterface.removeColumn('topics', 'tags')
+      }).then(() => queryInterface.sequelize.query('UPDATE topics SET tag = tags[1] WHERE tags IS NOT NULL;'))
+      .then(() => queryInterface.removeColumn('topics', 'tags'))
   }
 };
