@@ -188,23 +188,4 @@ describe('GET /v4/topics/:topicId', () => {
         }, done);
       });
   });
-
-
-  it('should return 500 response if error to get topic', (done) => {
-    const findTopicStub = sandbox.stub(db.topics, 'findTopic').rejects();
-    request(server)
-      .get(apiPath)
-      .set({
-        Authorization: `Bearer ${jwts.admin}`,
-      })
-      .expect(500)
-      .end((err) => {
-        if (err) {
-          return done(err);
-        }
-        // should call findTopic on posts model
-        findTopicStub.should.have.be.calledOnce;
-        return done();
-      });
-  });
 });
