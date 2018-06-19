@@ -12,7 +12,7 @@ import _ from 'lodash';
  * @return {void}
  */
 module.exports = (Sequelize, DataTypes) => {
-    // PostUserStats
+  // PostUserStats
   const PostUserStats = Sequelize.define('post_user_stats', {
     // The primary key
     postId: {
@@ -33,10 +33,11 @@ module.exports = (Sequelize, DataTypes) => {
       type: DataTypes.BIGINT,
       allowNull: false,
     },
-  }, {
-    freezeTableName: true,
-    timestamps: false,
-  });
+  },
+    {
+      freezeTableName: true,
+      timestamps: false,
+    });
 
   PostUserStats.createStats = (models, logger, { post, userId, action }) => {
     logger.debug('Saving PostUserStats');
@@ -61,13 +62,12 @@ module.exports = (Sequelize, DataTypes) => {
    */
   PostUserStats.updateUserStats = (models, logger, posts, userId, action) => {
     const postIds = posts.map(p => p.id).join(',');
-    const query = `UPDATE post_user_stats SET "userIds"=array_append("userIds", '${userId}')
-      WHERE "postId" IN (${postIds}) AND action='${action}' AND NOT("userIds" @> ARRAY[${userId}]::varchar[])`;
-    logger.debug('query', query);
-    return Sequelize.query(query)
-    .then((resp) => {
-      logger.debug(`Updated ${resp[1].rowCount} post_user_stats for posts ${postIds} for the user ${userId}`);
-    });
+    return Sequelize.query(`UPDATE post_user_stats SET "userIds"=array_append("userIds", $userId)
+    WHERE "postId" IN ($postIds) AND "action"=$action AND NOT("userIds" @> ARRAY[$userId]::varchar[])`,
+      { bind: { userId, postIds, action }, type: Sequelize.QueryTypes.UPDATE })
+      .then((resp) => {
+        logger.debug(`Updated ${resp} post_user_stats for posts ${postIds} for the user ${userId}`);
+      });
   };
 
   /**
@@ -84,12 +84,15 @@ module.exports = (Sequelize, DataTypes) => {
   PostUserStats.findPostsWithoutUserAction = (models, logger, posts, userId, action) => {
     const postIds = posts.map(p => p.id).join(',');
     return Sequelize.query(`SELECT pus."postId" as id FROM post_user_stats pus
-        WHERE "postId" IN (${postIds})
-        AND action=${action} AND NOT("userIds" @> ARRAY[${userId}]::varchar[])`)
-    .then((resp) => {
-      logger.debug(`Found ${resp[1].rowCount} post_user_stats for the user: `);
-      return _.get(resp, '[1].rows', []);
-    });
+        WHERE "postId" IN ($postIds)
+        AND action=$action AND NOT("userIds" @> ARRAY[$userId]::varchar[])`, {
+          bind: { postIds, action, userId },
+          type: Sequelize.QueryTypes.SELECT,
+        })
+      .then((resp) => {
+        logger.debug(`Found ${resp} post_user_stats for the user: `);
+        return _.get(resp, '[1].rows', []);
+      });
   };
 
   return PostUserStats;

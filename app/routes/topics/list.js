@@ -6,7 +6,9 @@ const util = require('tc-core-library-js').util(config);
 const Promise = require('bluebird');
 const errors = require('common-errors');
 const Joi = require('joi');
+const esClient = require('./../../elasticSearchConnection');
 const Adapter = require('../../services/adapter');
+const esIndex = require('./../indexing/indexing');
 
 
 /**
@@ -44,7 +46,18 @@ module.exports = (db, m2m) =>
       }
     });
     // allowed filters
-    filter = _.pick(filter, ['reference', 'referenceId', 'tag']);
+    const filterTerm = _.pick(filter, ['reference', 'referenceId', 'tag']);
+    _.forEach(filterTerm, (singleValue, singleKey) => {
+      const term = {};
+      if (singleKey === 'tag') {
+        term.regexp = {};
+        term.regexp.tag = `.*${singleValue.toLowerCase()}.*`;
+      } else {
+        term.term = {};
+        term.term[singleKey] = singleValue.toLowerCase();
+      }
+      esFilter.query.bool.filter.push(term);
+    });
 
     // Verify required filters are present
     if (!filter.reference || !filter.referenceId) {
@@ -53,36 +66,55 @@ module.exports = (db, m2m) =>
 
     const userId = req.authUser.userId.toString();
     return helper.callReferenceEndpoint(req.authToken, req.id, filter.reference, filter.referenceId)
-    .then((hasAccessResp) => {
-      const hasAccess = helper.userHasAccessToEntity(userId, hasAccessResp, filter.reference);
-      if (!hasAccess && !helper.isAdmin(req)) {
-        throw new errors.HttpStatusError(403, 'User doesn\'t have access to the entity');
-      }
-      // Get topics from the Postgres database
-      return db.topics.findTopics(db, adapter, { filters: filter, numberOfPosts: -1, reqUserId: userId })
-      .then((dbTopics) => {
-        if (!dbTopics || dbTopics.length === 0) {
-          // returning empty list
-          return [];
+      .then((hasAccessResp) => {
+        const hasAccess = helper.userHasAccessToEntity(userId, hasAccessResp, filter.reference);
+        if (!hasAccess && !helper.isAdmin(req)) {
+          throw new errors.HttpStatusError(403, 'User doesn\'t have access to the entity');
         }
+        // Get topics from the Elastic Search
+        return esClient.search({
+          index: config.get('elasticsearchConfig.indexName'),
+          type: 'topic',
+          body: esFilter,
+        })
+          .then((dbTopicElastic) => {
+            const dbTopics = [];
+            _.forEach(dbTopicElastic.hits.hits, (source) => {
+              dbTopics.push(source._source);
+            });
+            if (!dbTopics || dbTopics.length === 0) {
+              // returning empty list
+              return [];
+            }
 
-        // Mark all unread topics as read.
-        Promise.all(dbTopics.filter(topic => !topic.read).map((topic) => {
-          if (topic.posts && topic.posts.length > 0) {
-            // marks first post as read for the request user
-            db.post_user_stats.updateUserStats(db, logger, [topic.posts[0]], userId, 'READ');
-          }
-          return Promise.resolve();
-        }));
-        // logger.debug('adapting topics', dbTopics);
-        const adaptedTopics = dbTopics;
-        // const adaptedTopics = adapter.adaptTopics({ topics : dbTopics });
-        return adaptedTopics;
+            // check read flag based on requested user id
+            _.each(dbTopics, (topic) => {
+              _.each(topic.posts, (post) => {
+                post.read = post.readUserIds ? post.readUserIds.indexOf(userId) !== -1 : false;
+                delete post.readUserIds;
+              });
+              topic.read = _.every(topic.posts, post => post.read);
+            });
+
+            // Mark all unread topics as read.
+            Promise.all(dbTopics.filter(topic => !topic.read).map((topic) => {
+              const unreadPosts = _.filter(topic.posts, post => !post.read);
+              if (unreadPosts.length > 0) {
+                // marks unread posts as read for the requested user
+                db.post_user_stats.updateUserStats(db, logger, unreadPosts, userId, 'READ');
+                // update elastic search index only if user read is changed
+                esIndex.updateElasticSearchIndex(db, adapter, topic.id, topic.id);
+              }
+              return Promise.resolve();
+            }));
+            const adaptedTopics = dbTopics;
+            return adaptedTopics;
+          })
+          .then(result => resp.status(200).send(util.wrapResponse(req.id, result)));
       })
-      .then(result => resp.status(200).send(util.wrapResponse(req.id, result)));
-    })
-    .catch((error) => {
-      logger.error(error);
-      next(error instanceof errors.HttpStatusError ? error : new errors.HttpStatusError(500, 'Error fetching topics'));
-    });
+      .catch((error) => {
+        logger.error(error);
+        next(error instanceof errors.HttpStatusError ?
+          error : new errors.HttpStatusError(500, 'Error fetching topics'));
+      });
   };

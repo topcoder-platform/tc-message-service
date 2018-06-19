@@ -43,6 +43,16 @@ module.exports = (db, m2m) => (req, resp, next) => {
         topic.deletedAt = new Date();
         topic.deletedBy = userId;
         topic.save().then(() => {
+          // update elastic search index
+          esClient.delete({
+            index: config.get('elasticsearchConfig.indexName'),
+            type: 'topic',
+            id: topic.id,
+          }, (err) => {
+            if (err) {
+              DynamoService.save(uuidv1(), topic.id, 'topic', topic, JSON.stringify(err));
+            }
+          });
           req.app.emit(EVENT.TOPIC_DELETED, { topic, req });
           resp.status(200).send(util.wrapResponse(req.id));
         });

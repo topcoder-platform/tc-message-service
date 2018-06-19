@@ -13,6 +13,12 @@
       "bucket": "AWS_S3_BUCKET"
     }
   },
+  "elasticsearchConfig": {
+    "host": "MESSAGES_ES_URL",
+    "apiVersion": "6.2",
+    "indexName": "MESSAGES_ES_INDEX_NAME",
+    "docType": "messages"
+  },
   "defaultDiscoursePw": "DEFAULT_DISCOURSE_PW",
   "discourseApiKey": "DISCOURSE_API_KEY",
   "coderBotUsername": "CODERBOT_USERNAME",

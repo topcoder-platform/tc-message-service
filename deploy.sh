@@ -159,6 +159,14 @@ make_task_def(){
         {
           "name": "TOKEN_CACHE_TIME",
           "value": "%s"
+        },
+        {
+          "name": "MESSAGES_ES_URL",
+          "value": "%s"
+        },
+        {
+          "name": "MESSAGES_ES_INDEX_NAME",
+          "value": "%s"
         }
       ],
       "portMappings": [
@@ -192,6 +200,8 @@ make_task_def(){
   DDB_DISCOURSE_WEBHOOK_LOGS_TABLE=$(eval "echo \$${ENV}_DDB_DISCOURSE_WEBHOOK_LOGS_TABLE")
   DISCOURSE_WEBHOOK_SECRET=$(eval "echo \$${ENV}_DISCOURSE_WEBHOOK_SECRET")
   CODERBOT_USERNAME=$(eval "echo \$${ENV}_CODERBOT_USERNAME")
+  MESSAGES_ES_URL=$(eval "echo \$${ENV}_MESSAGES_ES_URL")
+  MESSAGES_ES_INDEX_NAME=$(eval "echo \$${ENV}_MESSAGES_ES_INDEX_NAME")
   if [ "$ENV" = "PROD" ]; then
     NODE_ENV=production
   elif [ "$ENV" = "DEV" ]; then
@@ -207,7 +217,7 @@ AUTH0_CLIENT_SECRET=$(eval "echo \$${ENV}_AUTH0_CLIENT_SECRET")
 TOKEN_CACHE_TIME=$(eval "echo \$${ENV}_TOKEN_CACHE_TIME")
 
 
-  task_def=$(printf "$task_template" $family $ACCOUNT_ID $AWS_ECS_CONTAINER_NAME $ACCOUNT_ID $AWS_REGION $AWS_REPOSITORY $CIRCLE_SHA1 $NODE_ENV $LOG_LEVEL $CAPTURE_LOGS $LOGENTRIES_TOKEN $API_VERSION $AWS_REGION $AWS_ACCESS_KEY_ID $AWS_SECRET_ACCESS_KEY $AUTH_DOMAIN $AUTH_SECRET $VALID_ISSUERS $DB_MASTER_URL $MEMBER_SERVICE_URL $IDENTITY_SERVICE_ENDPOINT $BUS_API_URL $TOPIC_SERVICE_V4_URL $SYSTEM_USER_CLIENT_ID $SYSTEM_USER_CLIENT_SECRET $DDB_DISCOURSE_WEBHOOK_LOGS_TABLE $DISCOURSE_WEBHOOK_SECRET $CODERBOT_USERNAME "$AUTH0_URL" "$AUTH0_AUDIENCE" $AUTH0_CLIENT_ID "$AUTH0_CLIENT_SECRET" $TOKEN_CACHE_TIME $PORT $PORT $AWS_ECS_CLUSTER $AWS_REGION $NODE_ENV)
+  task_def=$(printf "$task_template" $family $ACCOUNT_ID $AWS_ECS_CONTAINER_NAME $ACCOUNT_ID $AWS_REGION $AWS_REPOSITORY $CIRCLE_SHA1 $NODE_ENV $LOG_LEVEL $CAPTURE_LOGS $LOGENTRIES_TOKEN $API_VERSION $AWS_REGION $AWS_ACCESS_KEY_ID $AWS_SECRET_ACCESS_KEY $AUTH_DOMAIN $AUTH_SECRET $VALID_ISSUERS $DB_MASTER_URL $MEMBER_SERVICE_URL $IDENTITY_SERVICE_ENDPOINT $BUS_API_URL $TOPIC_SERVICE_V4_URL $SYSTEM_USER_CLIENT_ID $SYSTEM_USER_CLIENT_SECRET $DDB_DISCOURSE_WEBHOOK_LOGS_TABLE $DISCOURSE_WEBHOOK_SECRET $CODERBOT_USERNAME "$AUTH0_URL" "$AUTH0_AUDIENCE" $AUTH0_CLIENT_ID "$AUTH0_CLIENT_SECRET" $TOKEN_CACHE_TIME $MESSAGES_ES_URL $MESSAGES_ES_INDEX_NAME $PORT $PORT $AWS_ECS_CLUSTER $AWS_REGION $NODE_ENV)
 }
 
 push_ecr_image(){
@@ -216,7 +226,7 @@ push_ecr_image(){
 }
 
 register_definition() {
-    if revision=$(aws ecs register-task-definition --cli-input-json "$task_def" | $JQ '.taskDefinition.taskDefinitionArn'); then
+    if revision=$(aws ecs register-task-definition --cli-input-json "$task_def" 2> /dev/null | $JQ '.taskDefinition.taskDefinitionArn'); then
         echo "Revision: $revision"
     else
         echo "Failed to register task definition"
