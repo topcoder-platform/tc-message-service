@@ -1,18 +1,20 @@
 import errors from 'common-errors';
 import config from 'config';
-import Adapter from '../../services/adapter';
 import HelperService from '../../services/helper';
-// import _  from require('lodash');
 
 const util = require('tc-core-library-js').util(config);
-
+const esClient = require('./../../elasticSearchConnection');
+const Adapter = require('../../services/adapter');
+const esIndex = require('./../indexing/indexing');
+const _ = require('lodash');
 
 /**
  * Get specific topic
  * @param {Object} db sequelize db with all models loaded
+ * @param {Object} m2m machine to machine token helper object
  * @return {Object} response
  */
-module.exports = db =>
+module.exports = (db, m2m) =>
 
   /**
    * Gets topic from database for the specified entity, and in the process it does:
@@ -22,17 +24,40 @@ module.exports = db =>
    */
   (req, resp, next) => {
     const logger = req.log;
-    const helper = HelperService(logger, db);
+    const helper = HelperService(logger, db, m2m);
     const adapter = new Adapter(logger, db);
     const topicId = req.params.topicId;
     const userId = req.authUser.userId.toString();
 
-    // Get topic from the Postgres database
-    return db.topics.findTopic(db, adapter, { topicId, numberOfPosts: -1, reqUserId: userId })
-    .then((dbTopic) => {
+    return esClient.search({
+      index: config.get('elasticsearchConfig.indexName'),
+      type: 'topic',
+      body: { query: { match: { id: topicId } } },
+    }).then((dbTopicElastic) => {
+      if (dbTopicElastic.hits.hits.length === 0) {
+        const err = new errors.HttpStatusError(404, 'Topic does not exist');
+        return next(err);
+      }
+      const dbTopic = dbTopicElastic.hits.hits[0]._source;
+
       if (!dbTopic) {
         const err = new errors.HttpStatusError(404, 'Topic does not exist');
         return next(err);
+      }
+
+      // check read flag based on requested user id
+      _.each(dbTopic.posts, (post) => {
+        post.read = post.readUserIds ? post.readUserIds.indexOf(userId.toString()) !== -1 : false;
+        delete post.readUserIds;
+      });
+      dbTopic.read = _.every(dbTopic.posts, post => post.read);
+      const unreadPosts = _.filter(dbTopic.posts, post => !post.read);
+      logger.debug(`length ${unreadPosts.length}`);
+      if (unreadPosts.length > 0) {
+        // marks unread posts as read for the requested user
+        db.post_user_stats.updateUserStats(db, logger, unreadPosts, userId, 'READ');
+        // update elastic search index only if user read is changed
+        esIndex.updateElasticSearchIndex(db, adapter, dbTopic.id, dbTopic.id);
       }
 
       return helper.callReferenceEndpoint(req.authToken, req.id, dbTopic.reference, dbTopic.referenceId)

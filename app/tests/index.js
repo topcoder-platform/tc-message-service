@@ -5,6 +5,10 @@ const Promise = require('bluebird');
 
 const db = models(server, server.logger);
 
+const esClient = require('./../elasticSearchConnection');
+
+const config = require('config');
+
 
 const jwts = {
   // userId = 40051331
@@ -47,7 +51,18 @@ function clearDBPromise() {
     .then(() => db.reference_lookups.truncate({
       cascade: true,
       logging: false,
-    }));
+    }))
+    .then(() => {
+      esClient.deleteByQuery(
+        {
+          index: config.get('elasticsearchConfig.indexName'),
+          type: 'topic',
+          body: { query: {
+            match_all: {},
+          } },
+        }).then(() => {}).then(() => {
+        });
+    });
 }
 
 function clearDB(done) {
@@ -66,7 +81,7 @@ function prepareDB(done) {
           reference: 'project',
           referenceId: 'referenceId',
           discourseTopicId: 1,
-          tag: 'tag',
+          tags: ['tag'],
           title: 'Mock topic title',
           createdBy: '123456789',
         }),
@@ -101,8 +116,20 @@ function prepareDB(done) {
       });
     })
     .then((responses) => {
-      if (done && typeof done === 'function') {
-        done();
+      if (responses) {
+        const tpc = JSON.parse(JSON.stringify(responses.topic));
+        tpc.tag = tpc.tags.join(',');
+        delete tpc.tags;
+        esClient.index({
+          index: config.get('elasticsearchConfig.indexName'),
+          id: responses.topic.id,
+          type: 'topic',
+          body: tpc,
+        }, () => {
+          if (done && typeof done === 'function') {
+            done();
+          }
+        });
       }
       return responses;
     });

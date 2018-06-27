@@ -11,6 +11,8 @@ const sinon = require('sinon');
 const Promise = require('bluebird');
 const config = require('config');
 
+const m2m = server.m2m;
+
 const models = require('../../models');
 
 const db = models(server, server.logger);
@@ -142,6 +144,8 @@ describe('GET /v4/topics ', () => {
 
   it('should return 403 if user is not part of project team and is not an admin or manager', (done) => {
     const getStub = sandbox.stub(axios, 'get').resolves();
+    // mocks the m2m token call
+    const m2mStub = sandbox.stub(m2m, 'getMachineToken').resolves('dummy_token');
 
     // resolves call (with 403) to reference endpoint in helper.callReferenceEndpoint
     getStub.withArgs('http://reftest/referenceId').resolves({
@@ -158,6 +162,8 @@ describe('GET /v4/topics ', () => {
         if (err) {
           return done(err);
         }
+        // should call m2m.getMachineToken
+        m2mStub.should.have.be.calledOnce;
         // once for reference endpoint call
         sinon.assert.calledOnce(getStub);
         return done();
@@ -166,6 +172,8 @@ describe('GET /v4/topics ', () => {
 
   it('should return 403 if user is not part of project team and is not an admin or manager', (done) => {
     const getStub = sandbox.stub(axios, 'get').resolves();
+    // mocks the m2m token call
+    const m2mStub = sandbox.stub(m2m, 'getMachineToken').resolves('dummy_token');
 
     // resolves call (with 200) to reference endpoint in helper.callReferenceEndpoint
     // but members list does not include the calling user's id
@@ -183,6 +191,8 @@ describe('GET /v4/topics ', () => {
         if (err) {
           return done(err);
         }
+        // should call m2m.getMachineToken
+        m2mStub.should.have.be.calledOnce;
         // once for reference endpoint call
         sinon.assert.calledOnce(getStub);
         return done();
@@ -191,6 +201,8 @@ describe('GET /v4/topics ', () => {
 
   it('should return topics even if user is not part of project team but is a manager', (done) => {
     const getStub = sandbox.stub(axios, 'get').resolves();
+    // mocks the m2m token call
+    const m2mStub = sandbox.stub(m2m, 'getMachineToken').resolves('dummy_token');
     // stub for updateUserStats method of PostUserStats modal
     const updateStatsStub = sandbox.stub(db.post_user_stats, 'updateUserStats').resolves();
 
@@ -208,6 +220,8 @@ describe('GET /v4/topics ', () => {
         if (err) {
           return done(err);
         }
+        // should call m2m.getMachineToken
+        m2mStub.should.have.be.calledOnce;
         res.body.result.content.should.be.of.length(1);
         // once for reference endpoint call
         sinon.assert.calledOnce(getStub);
@@ -226,6 +240,8 @@ describe('GET /v4/topics ', () => {
 
   it('should return topics even if user is not part of project team but is a manager (ref lookup error)', (done) => {
     const getStub = sandbox.stub(axios, 'get').resolves();
+    // mocks the m2m token call
+    const m2mStub = sandbox.stub(m2m, 'getMachineToken').resolves('dummy_token');
     // stub for updateUserStats method of PostUserStats modal
     const updateStatsStub = sandbox.stub(db.post_user_stats, 'updateUserStats').resolves();
 
@@ -244,6 +260,8 @@ describe('GET /v4/topics ', () => {
         if (err) {
           return done(err);
         }
+        // should call m2m.getMachineToken
+        m2mStub.should.have.be.calledOnce;
         res.body.result.content.should.be.of.length(1);
         // once for reference endpoint call
         sinon.assert.calledOnce(getStub);
@@ -262,6 +280,8 @@ describe('GET /v4/topics ', () => {
 
   it('should return topics even if user is not part of project team but is a manager (not in members list)', (done) => {
     const getStub = sandbox.stub(axios, 'get').resolves();
+    // mocks the m2m token call
+    const m2mStub = sandbox.stub(m2m, 'getMachineToken').resolves('dummy_token');
     // stub for updateUserStats method of PostUserStats modal
     const updateStatsStub = sandbox.stub(db.post_user_stats, 'updateUserStats').resolves();
 
@@ -280,6 +300,8 @@ describe('GET /v4/topics ', () => {
         if (err) {
           return done(err);
         }
+        // should call m2m.getMachineToken
+        m2mStub.should.have.be.calledOnce;
         res.body.result.content.should.be.of.length(1);
         // once for reference endpoint call  and once for getting the topics from discourse
         sinon.assert.calledOnce(getStub);
@@ -298,6 +320,8 @@ describe('GET /v4/topics ', () => {
 
   it('should return topics even if user is not part of project team but is a admin', (done) => {
     const getStub = sandbox.stub(axios, 'get').resolves();
+    // mocks the m2m token call
+    const m2mStub = sandbox.stub(m2m, 'getMachineToken').resolves('dummy_token');
     // stub for updateUserStats method of PostUserStats modal
     const updateStatsStub = sandbox.stub(db.post_user_stats, 'updateUserStats').resolves();
 
@@ -317,6 +341,8 @@ describe('GET /v4/topics ', () => {
         if (err) {
           return done(err);
         }
+        // should call m2m.getMachineToken
+        m2mStub.should.have.be.calledOnce;
         res.body.result.content.should.be.of.length(1);
         // once for reference endpoint call  and once for getting the topics from discourse
         sinon.assert.calledOnce(getStub);
@@ -335,6 +361,8 @@ describe('GET /v4/topics ', () => {
 
   it('should return topics even if user is not part of project team but is a admin (Ref lookup error)', (done) => {
     const getStub = sandbox.stub(axios, 'get').resolves();
+    // mocks the m2m token call
+    const m2mStub = sandbox.stub(m2m, 'getMachineToken').resolves('dummy_token');
     // stub for updateUserStats method of PostUserStats modal
     const updateStatsStub = sandbox.stub(db.post_user_stats, 'updateUserStats').resolves();
 
@@ -354,6 +382,8 @@ describe('GET /v4/topics ', () => {
         if (err) {
           return done(err);
         }
+        // should call m2m.getMachineToken
+        m2mStub.should.have.be.calledOnce;
         res.body.result.content.should.be.of.length(1);
         // once for reference endpoint call
         sinon.assert.calledOnce(getStub);
@@ -372,6 +402,8 @@ describe('GET /v4/topics ', () => {
 
   it('should return topics even if user is not part of project team but is a admin (not in members list)', (done) => {
     const getStub = sandbox.stub(axios, 'get').resolves();
+    // mocks the m2m token call
+    const m2mStub = sandbox.stub(m2m, 'getMachineToken').resolves('dummy_token');
     // stub for updateUserStats method of PostUserStats modal
     const updateStatsStub = sandbox.stub(db.post_user_stats, 'updateUserStats').resolves();
 
@@ -392,6 +424,8 @@ describe('GET /v4/topics ', () => {
         if (err) {
           return done(err);
         }
+        // should call m2m.getMachineToken
+        m2mStub.should.have.be.calledOnce;
         res.body.result.content.should.be.of.length(1);
         // once for reference endpoint call
         sinon.assert.calledOnce(getStub);
@@ -410,6 +444,8 @@ describe('GET /v4/topics ', () => {
 
   it('should return 200 response with matching topicLookup', (done) => {
     const getStub = sandbox.stub(axios, 'get').resolves();
+    // mocks the m2m token call
+    const m2mStub = sandbox.stub(m2m, 'getMachineToken').resolves('dummy_token');
     // stub for updateUserStats method of PostUserStats modal
     const updateStatsStub = sandbox.stub(db.post_user_stats, 'updateUserStats').resolves();
 
@@ -427,6 +463,8 @@ describe('GET /v4/topics ', () => {
         if (err) {
           return done(err);
         }
+        // should call m2m.getMachineToken
+        m2mStub.should.have.be.calledOnce;
         // once for reference endpoint call
         sinon.assert.calledOnce(getStub);
         // should call UPDATE on post user stats table
@@ -444,6 +482,8 @@ describe('GET /v4/topics ', () => {
 
   it('should return 200 response even if error in updateUserStats', (done) => {
     const getStub = sandbox.stub(axios, 'get').resolves();
+    // mocks the m2m token call
+    const m2mStub = sandbox.stub(m2m, 'getMachineToken').resolves('dummy_token');
     // stub for updateUserStats method of PostUserStats modal
     const updateStatsStub = sandbox.stub(db.post_user_stats, 'updateUserStats').rejects();
 
@@ -461,6 +501,8 @@ describe('GET /v4/topics ', () => {
         if (err) {
           return done(err);
         }
+        // should call m2m.getMachineToken
+        m2mStub.should.have.be.calledOnce;
         // once for reference endpoint call
         sinon.assert.calledOnce(getStub);
         // should call UPDATE on post user stats table
@@ -473,35 +515,6 @@ describe('GET /v4/topics ', () => {
           res.body.should.have.propertyByPath('result', 'content', '0', 'lastActivityAt')
           .eql(topicPost.updatedAt);
         }, done);
-      });
-  });
-
-  it('should return 500 response even if there is a runtime error', (done) => {
-    const getStub = sandbox.stub(axios, 'get').resolves();
-    // stub for updateUserStats method of PostUserStats modal
-    const findTopicsStub = sandbox.stub(db.topics, 'findTopics').throws();
-
-    // resolves call (with 200) to reference endpoint in helper.callReferenceEndpoint
-    getStub.withArgs('http://reftest/referenceId').resolves({
-      data: { result: { status: 200, content: { members: [{ userId: memberUser.userId }] } } },
-    });
-
-    request(server)
-      .get(apiPath)
-      .set({ Authorization: `Bearer ${jwts.member}` })
-      .query(testQuery)
-      .expect(500)
-      .end((err, res) => { // eslint-disable-line
-        if (err) {
-          return done(err);
-        }
-        // once for reference endpoint call
-        sinon.assert.calledOnce(getStub);
-        // should call findTopics on topics model
-        findTopicsStub.should.have.be.calledOnce;
-        res.body.should.have.propertyByPath('result', 'content', 'message')
-          .eql('Error fetching topics');
-        done();
       });
   });
 });

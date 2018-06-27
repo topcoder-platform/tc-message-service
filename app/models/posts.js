@@ -10,7 +10,7 @@
  * @return {void}
  */
 module.exports = (Sequelize, DataTypes) => {
-    // Posts
+  // Posts
   const Post = Sequelize.define('posts', {
     // The primary key
     id: {
@@ -73,9 +73,10 @@ module.exports = (Sequelize, DataTypes) => {
     deletedBy: {
       type: DataTypes.STRING,
     },
-  }, {
-    freezeTableName: true,
-  });
+  },
+    {
+      freezeTableName: true,
+    });
 
   Post.associate = (models) => {
     Post.hasMany(models.post_user_stats, { as: 'userStats', foreignKey: 'postId' });
@@ -89,10 +90,11 @@ module.exports = (Sequelize, DataTypes) => {
    * @param {Object} topic topic object for which post is to be created
    * @param {String} discoursePostId discourse post id
    * @param {String} reqUserId id of the user requesting the operation
+   * @param {Object} transaction the transaction
    *
    * @return {Promise} promise resolving in a Sequelize object representig a post
    */
-  Post.createPost = (models, postBody, topic, discoursePostId = null, reqUserId) => {
+  Post.createPost = (models, postBody, topic, discoursePostId = null, reqUserId, transaction = null) => {
     const post = models.posts.build({
       topicId: topic.id,
       discoursePostId,
@@ -102,7 +104,7 @@ module.exports = (Sequelize, DataTypes) => {
       hidden: false,
       createdBy: reqUserId,
       updatedBy: reqUserId,
-    });
+    }, { transaction });
     return post.save();
   };
 
@@ -160,7 +162,7 @@ module.exports = (Sequelize, DataTypes) => {
    *
    * @return {Promise} promise which resolves to logical model of the found posts
    */
-  Post.findPosts = (models, adapter, filters, { fetchDeleted = false } = { }) => {
+  Post.findPosts = (models, adapter, filters, { fetchDeleted = false } = {}) => {
     const where = filters;
     if (!fetchDeleted) {
       where.deletedAt = { [Sequelize.Op.eq]: null };
@@ -211,10 +213,11 @@ module.exports = (Sequelize, DataTypes) => {
    * postId : id of post to be updated
    * discoursePostId: discourse post id of the post to be updated
    * @param {String} reqUserId id of the user requesting the operation
+   * @param {Object} transaction the transaction
    *
    * @return {Promise} promise which resolves to logical model of the updated post
    */
-  Post.updatePost = (models, adapter, updatedFields, { postId, discoursePostId }, reqUserId) => {
+  Post.updatePost = (models, adapter, updatedFields, { postId, discoursePostId }, reqUserId, transaction) => {
     const where = { deletedAt: { [Sequelize.Op.eq]: null } };
     if (postId) {
       where.id = postId;
@@ -228,11 +231,11 @@ module.exports = (Sequelize, DataTypes) => {
         where,
         returning: true,
         plain: true,
-      })
-    .then((result) => { // result is [x ,y] : x is number of rows affected, y is actual affected row
-      models.logger.debug('post updated...');
-      return adapter.adaptPost(result[1]);
-    });
+      }, { transaction })
+      .then((result) => { // result is [x ,y] : x is number of rows affected, y is actual affected row
+        models.logger.debug('post updated...');
+        return adapter.adaptPost(result[1]);
+      });
   };
 
   return Post;

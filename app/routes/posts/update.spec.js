@@ -11,6 +11,8 @@ const should = require('should');
 const models = require('../../models');
 const config = require('config');
 
+const m2m = server.m2m;
+
 const db = models(server, server.logger);
 
 describe('POST /v4/topics/:topicId/posts/:postId/edit ', () => {
@@ -94,6 +96,8 @@ describe('POST /v4/topics/:topicId/posts/:postId/edit ', () => {
 
   it('should return 200 response with valid jwt token and payload', (done) => {
     const getStub = sandbox.stub(axios, 'get');
+    // mocks the m2m token call
+    const m2mStub = sandbox.stub(m2m, 'getMachineToken').resolves('dummy_token');
     // resolves call (with 200) to reference endpoint in helper.callReferenceEndpoint
     getStub.withArgs('http://reftest/referenceId').resolves({
       data: { result: { status: 200, content: { members: [{ userId: memberUser.userId }] } } },
@@ -110,6 +114,8 @@ describe('POST /v4/topics/:topicId/posts/:postId/edit ', () => {
         if (err) {
           return done(err);
         }
+        // should call m2m.getMachineToken
+        m2mStub.should.have.be.calledOnce;
         const expectedCreatedBy = Number(expectedTopicPosts[0].createdBy);
         res.body.result.content.should.not.be.null;
         res.body.should.have.propertyByPath('result', 'content', 'id').eql(postId);
@@ -129,6 +135,8 @@ describe('POST /v4/topics/:topicId/posts/:postId/edit ', () => {
 
   it('should return 200 response with valid jwt token and payload (admin)', (done) => {
     const getStub = sandbox.stub(axios, 'get');
+    // mocks the m2m token call
+    const m2mStub = sandbox.stub(m2m, 'getMachineToken').resolves('dummy_token');
     // resolves call (with 200) to reference endpoint in helper.callReferenceEndpoint
     getStub.withArgs('http://reftest/referenceId').resolves({
       data: { result: { status: 200, content: { members: [{ userId: memberUser.userId }] } } },
@@ -145,6 +153,8 @@ describe('POST /v4/topics/:topicId/posts/:postId/edit ', () => {
         if (err) {
           return done(err);
         }
+        // should call m2m.getMachineToken
+        m2mStub.should.have.be.calledOnce;
         const expectedCreatedBy = Number(expectedTopicPosts[0].createdBy);
         res.body.result.content.should.not.be.null;
         res.body.should.have.propertyByPath('result', 'content', 'id').eql(postId);
@@ -164,6 +174,8 @@ describe('POST /v4/topics/:topicId/posts/:postId/edit ', () => {
 
   it('should return 200 response with valid jwt token and payload(manager)', (done) => {
     const getStub = sandbox.stub(axios, 'get');
+    // mocks the m2m token call
+    const m2mStub = sandbox.stub(m2m, 'getMachineToken').resolves('dummy_token');
     // resolves call (with 200) to reference endpoint in helper.callReferenceEndpoint
     getStub.withArgs('http://reftest/referenceId').resolves({
       data: { result: { status: 200, content: { members: [{ userId: memberUser.userId }] } } },
@@ -180,6 +192,8 @@ describe('POST /v4/topics/:topicId/posts/:postId/edit ', () => {
         if (err) {
           return done(err);
         }
+        // should call m2m.getMachineToken
+        m2mStub.should.have.be.calledOnce;
         const expectedCreatedBy = Number(expectedTopicPosts[0].createdBy);
         res.body.result.content.should.not.be.null;
         res.body.should.have.propertyByPath('result', 'content', 'id').eql(postId);
@@ -199,6 +213,8 @@ describe('POST /v4/topics/:topicId/posts/:postId/edit ', () => {
 
   it('should return 500 response with error in finding the topic of the post to be updated', (done) => {
     const getStub = sandbox.stub(axios, 'get');
+    // mocks the m2m token call
+    const m2mStub = sandbox.stub(m2m, 'getMachineToken').resolves('dummy_token');
     // resolves call (with 200) to reference endpoint in helper.callReferenceEndpoint
     getStub.withArgs('http://reftest/referenceId').resolves({
       data: { result: { status: 200, content: { members: [{ userId: memberUser.userId }] } } },
@@ -215,6 +231,8 @@ describe('POST /v4/topics/:topicId/posts/:postId/edit ', () => {
         if (err) {
           return done(err);
         }
+        // should call m2m.getMachineToken
+        m2mStub.should.have.be.calledOnce;
         // should call findTopic on posts model
         findTopicStub.should.have.be.calledOnce;
         res.body.should.have.propertyByPath('result', 'content', 'message')
@@ -225,6 +243,8 @@ describe('POST /v4/topics/:topicId/posts/:postId/edit ', () => {
 
   it('should return 500 response with error in finding the post to be updated', (done) => {
     const getStub = sandbox.stub(axios, 'get');
+    // mocks the m2m token call
+    const m2mStub = sandbox.stub(m2m, 'getMachineToken').resolves('dummy_token');
     // resolves call (with 200) to reference endpoint in helper.callReferenceEndpoint
     getStub.withArgs('http://reftest/referenceId').resolves({
       data: { result: { status: 200, content: { members: [{ userId: memberUser.userId }] } } },
@@ -241,6 +261,8 @@ describe('POST /v4/topics/:topicId/posts/:postId/edit ', () => {
         if (err) {
           return done(err);
         }
+        // should call m2m.getMachineToken
+        m2mStub.should.have.be.calledOnce;
         // should call findPost on posts model
         findPostStub.should.have.be.calledOnce;
         res.body.should.have.propertyByPath('result', 'content', 'message')

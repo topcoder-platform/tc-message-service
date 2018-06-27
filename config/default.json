@@ -7,11 +7,18 @@
       "secretAccessKey": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
     },
     "dynamodb": {
-      "discourseWebhookLogsTable": "message-service-discourse-webhook-logs"
+      "discourseWebhookLogsTable": "message-service-discourse-webhook-logs",
+      "elasticSearchIndexingLogsTable": "MessageServiceESIndexingLogs"
     },
     "S3": {
       "bucket": "tc-message-service-attachments"
     }
+  },
+  "elasticsearchConfig": {
+    "host": "http://localhost:9200",
+    "apiVersion": "6.2",
+    "indexName": "messages",
+    "docType": "messages"
   },
   "defaultDiscoursePw": "supersecretpw",
   "coderBotUsername": "system",

@@ -1,18 +1,21 @@
 
 const config = require('config');
+const Sequelize = require('sequelize');
 const util = require('tc-core-library-js').util(config);
 const HelperService = require('../../services/helper');
 const errors = require('common-errors');
 const Joi = require('joi');
 const Adapter = require('../../services/adapter');
 const { EVENT } = require('../../constants');
+const esIndex = require('./../indexing/indexing');
 
 /**
  * Handles creation of topics
  * @param {Object} db sequelize db with all models loaded
  * @return {Object} response object
+ * @param {Object} m2m machine to machine token helper object
  */
-module.exports = db =>
+module.exports = (db, m2m) =>
 
   /**
    * Create a new topic for the specified entity.
@@ -25,7 +28,7 @@ module.exports = db =>
    */
   (req, resp, next) => {
     const logger = req.log;
-    const helper = HelperService(logger, db);
+    const helper = HelperService(logger, db, m2m);
     const adapter = new Adapter(logger, db);
 
     const params = req.body;
@@ -39,43 +42,55 @@ module.exports = db =>
       body: Joi.string().required(),
     });
 
-    const userId = req.authUser.userId.toString();
+    const userId = req.authUser.isMachine ? config.get('coderBotUsername') : req.authUser.userId.toString();
     return helper.callReferenceEndpoint(req.authToken, req.id, params.reference, params.referenceId)
       .then((hasAccessResp) => {
         const hasAccess = helper.userHasAccessToEntity(userId, hasAccessResp, params.reference);
         if (!hasAccess && !helper.isAdmin(req)) {
+          logger.info('should return after here');
           throw new errors.HttpStatusError(403, 'User doesn\'t have access to the entity');
         }
+        const tags = params.tag.split(',');
         const pgTopic = {
           reference: params.reference,
           referenceId: params.referenceId,
           title: params.title,
-          tag: params.tag,
+          tags,
         };
 
-        return db.topics.createTopic(db, pgTopic, userId).then((savedTopic) => { /* eslint no-param-reassign: ["error", { "props": true, "ignorePropertyModificationsFor": ["savedTopic"] }] */
-          logger.debug('topic saved in Postgres: ', savedTopic);
-          return db.posts.createPost(db, params.body, savedTopic, null, userId).then((savedPost) => {
-            logger.info('post saved in Postgres', savedPost);
-            const topic = savedTopic.dataValues;
-            const post = savedPost.dataValues;
-            topic.posts = [post];
-            req.app.emit(EVENT.TOPIC_CREATED, { topic, req });
-            // creates an entry in post_user_stats table for tracking user actions against this post
-            // right now it only creates entry for 'READ' action, in future we may create more entries
-            // when we support more actions e.g. 'LIKE', 'BOOKMARK', 'FAVORITE' etc
-            db.post_user_stats.createStats(db, logger, {
-              post: savedPost,
-              userId,
-              action: 'READ',
-            }).then(() => logger.debug('post_user_stats entry created for post: ', savedPost.id));
-            return resp.status(200).send(util.wrapResponse(
-              req.id,
-              adapter.adaptTopic({ dbTopic: topic, totalPosts: 1 })));
-          });
+        logger.info('should return befor here');
+        const database = new Sequelize(config.get('dbConfig.masterUrl'), {
+          logging: false,
         });
+        return database.transaction(trans =>
+          db.topics.createTopic(db, pgTopic, userId, trans).then((savedTopic) => { /* eslint no-param-reassign: ["error", { "props": true, "ignorePropertyModificationsFor": ["savedTopic"] }] */
+            logger.debug('topic saved in Postgres: ', savedTopic);
+            return db.posts.createPost(db, params.body, savedTopic, null, userId, trans).then((savedPost) => {
+              logger.info('post saved in Postgres', savedPost);
+              const topic = savedTopic.dataValues;
+              const post = savedPost.dataValues;
+              topic.posts = [post];
+              req.app.emit(EVENT.TOPIC_CREATED, { topic, req });
+              // creates an entry in post_user_stats table for tracking user actions against this post
+              // right now it only creates entry for 'READ' action, in future we may create more entries
+              // when we support more actions e.g. 'LIKE', 'BOOKMARK', 'FAVORITE' etc
+              db.post_user_stats.createStats(db, logger, {
+                post: savedPost,
+                userId,
+                action: 'READ',
+              }).then(() => {
+                logger.debug('post_user_stats entry created for post: ', savedPost.id);
+                // update elastic search index
+                esIndex.updateElasticSearchIndex(db, adapter, savedTopic.id, savedTopic.id);
+                return resp.status(200).send(util.wrapResponse(
+                  req.id,
+                  adapter.adaptTopic({ dbTopic: topic, totalPosts: 1 })));
+              });
+            });
+          }));
       }).catch((error) => {
         logger.error('Failed to create topic', error);
-        next(error instanceof errors.HttpStatusError ? error : new errors.HttpStatusError(500, 'Error creating topic'));
+        next(error instanceof errors.HttpStatusError ? error :
+          new errors.HttpStatusError(500, 'Error creating topic'));
       });
   };
