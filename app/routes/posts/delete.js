@@ -10,12 +10,13 @@ const HelperService = require('../../services/helper');
 /**
  * Delete a post in Discourse
  * @param {Object} db sequelize db with models loaded
+ * @param {Object} m2m machine to machine token helper object
  * @return {Object} response
  */
-module.exports = db => (req, resp, next) => {
+module.exports = (db, m2m) => (req, resp, next) => {
   const logger = req.log;
   const adapter = new Adapter(logger, db);
-  const helper = HelperService(logger, db);
+  const helper = HelperService(logger, db, m2m);
 
   // Validate request parameters
   Joi.assert(req.params, {

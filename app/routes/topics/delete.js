@@ -6,15 +6,19 @@ const util = require('tc-core-library-js').util(config);
 const errors = require('common-errors');
 const Joi = require('joi');
 const { EVENT } = require('../../constants');
+const esClient = require('./../../elasticSearchConnection');
+const uuidv1 = require('uuid/v1');
+const DynamoService = require('../../services/dynamodbErrorLog');
 
 /**
  * Delete a topic from Discourse and Postgresql
  * @param {Object} db sequelize db with all models loaded
+ * @param {Object} m2m machine to machine token helper object
  * @return {object} response
  */
-module.exports = db => (req, resp, next) => {
+module.exports = (db, m2m) => (req, resp, next) => {
   const logger = req.log;
-  const helper = HelperService(logger, db);
+  const helper = HelperService(logger, db, m2m);
 
   // Validate request parameters
   Joi.assert(req.params, {
@@ -42,6 +46,16 @@ module.exports = db => (req, resp, next) => {
         topic.deletedAt = new Date();
         topic.deletedBy = userId;
         topic.save().then(() => {
+          // update elastic search index
+          esClient.delete({
+            index: config.get('elasticsearchConfig.indexName'),
+            type: 'topic',
+            id: topic.id,
+          }, (err) => {
+            if (err) {
+              DynamoService.save(uuidv1(), topic.id, 'topic', topic, JSON.stringify(err));
+            }
+          });
           req.app.emit(EVENT.TOPIC_DELETED, { topic, req });
           resp.status(200).send(util.wrapResponse(req.id));
         });

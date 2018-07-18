@@ -35,9 +35,10 @@ module.exports = (Sequelize, DataTypes) => {
       type: DataTypes.BIGINT,
       allowNull: true,
     },
-    // A tag for filtering
-    tag: {
-      type: DataTypes.STRING,
+    // tags for filtering
+    tags: {
+      type: DataTypes.ARRAY(DataTypes.STRING),
+      allowNull: true,
     },
     title: {
       type: DataTypes.STRING,
@@ -84,28 +85,29 @@ module.exports = (Sequelize, DataTypes) => {
     deletedBy: {
       type: DataTypes.STRING,
     },
-  }, {
-    freezeTableName: true,
-  });
+  },
+    {
+      freezeTableName: true,
+    });
 
   Topic.associate = (models) => {
     Topic.hasMany(models.posts, { as: 'posts', foreignKey: 'topicId' });
   };
 
-  Topic.createTopic = (models, topic, reqUserId) => {
+  Topic.createTopic = (models, topic, reqUserId, transaction = null) => {
     const dbTopic = models.topics.build({
       reference: topic.reference,
       referenceId: topic.referenceId,
       discourseTopicId: topic.discourseTopicId,
       title: topic.title,
-      tag: topic.tag,
+      tags: topic.tags,
       hidden: false,
       closed: false,
       archived: false,
       highestPostNumber: 1,
       createdBy: reqUserId,
       updatedBy: reqUserId,
-    });
+    }, { transaction });
     return dbTopic.save();
   };
 
@@ -115,6 +117,7 @@ module.exports = (Sequelize, DataTypes) => {
     fetchDeleted = false,
     raw = false,
     reqUserId,
+    includeReadUserIds = false,
   }) => {
     const where = filters;
     const postsWhere = {};
@@ -144,14 +147,15 @@ module.exports = (Sequelize, DataTypes) => {
     }).then((topics) => {
       const topicIds = topics.map(t => t.id);
       return models.posts.getPostsCount(topicIds)
-      .then((topicsPostsCount) => {
-        models.logger.debug('topicsPostsCount', topicsPostsCount);
-        return adapter.adaptTopics({
-          dbTopics: topics,
-          topicsPostsCount: topicsPostsCount.map(tpc => tpc),
-          reqUserId,
+        .then((topicsPostsCount) => {
+          models.logger.debug('topicsPostsCount', topicsPostsCount);
+          return adapter.adaptTopics({
+            dbTopics: topics,
+            topicsPostsCount: topicsPostsCount.map(tpc => tpc),
+            reqUserId,
+            includeReadUserIds,
+          });
         });
-      });
     });
   };
 
@@ -179,15 +183,15 @@ module.exports = (Sequelize, DataTypes) => {
     }).then((topic) => {
       if (!topic) return null;
       return models.posts.getTopicPostsCount(topicId)
-      .then(totalPosts => adapter.adaptTopic({
-        dbTopic: topic,
-        totalPosts,
-        reqUserId,
-      }));
+        .then(totalPosts => adapter.adaptTopic({
+          dbTopic: topic,
+          totalPosts,
+          reqUserId,
+        }));
     });
   };
 
-  Topic.updateTopic = (models, adapter, updatedFields, { topicId, reqUserId }) => {
+  Topic.updateTopic = (models, adapter, updatedFields, { topicId, reqUserId }, transaction = null) => {
     const where = { id: topicId, deletedAt: { [Sequelize.Op.eq]: null } };
     return models.topics.update(
       Object.assign({}, updatedFields, { updatedBy: reqUserId }),
@@ -195,14 +199,14 @@ module.exports = (Sequelize, DataTypes) => {
         where,
         returning: true,
         plain: true,
-      })
-    .then((result) => {
-      models.logger.debug('topic updated...');
-      return adapter.adaptTopic({
-        dbTopic: result[1], // result is [x ,y] : x is number of rows affected, y is actual affected row
-        reqUserId,
+      }, { transaction })
+      .then((result) => {
+        models.logger.debug('topic updated...');
+        return adapter.adaptTopic({
+          dbTopic: result[1], // result is [x ,y] : x is number of rows affected, y is actual affected row
+          reqUserId,
+        });
       });
-    });
   };
 
   return Topic;

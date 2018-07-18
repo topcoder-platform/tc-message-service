@@ -27,6 +27,8 @@ module.exports = (req, res, next) => {
       version: 'v3',
     };
     res.json(resp);
+  } else if(req.method === 'POST' && req.path === '/auth0-m2m-token') {
+    res.json({ access_token: 'dummy' });
   } else if (req.method === 'GET' && req.path === '/members/_search') {
     const userIds = {};
     req.query.query.split(' OR ').forEach((query) => {

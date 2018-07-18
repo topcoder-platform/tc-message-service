@@ -13,6 +13,8 @@ const axios = require('axios');
 const sinon = require('sinon');
 const config = require('config');
 
+const m2m = server.m2m;
+
 const db = models(server, server.logger);
 
 require('should-sinon');
@@ -76,6 +78,8 @@ describe('GET /v4/topics/:topicId/posts', () => {
 
   it('should return 403 response when user does not have access to the project (403 in reference lookup)', (done) => {
     const getStub = sandbox.stub(axios, 'get').resolves();
+    // mocks the m2m token call
+    const m2mStub = sandbox.stub(m2m, 'getMachineToken').resolves('dummy_token');
 
     // rejects to reference endpoint in helper.callReferenceEndpoint
     getStub.withArgs('http://reftest/referenceId').resolves({
@@ -92,6 +96,8 @@ describe('GET /v4/topics/:topicId/posts', () => {
         if (err) {
           return done(err);
         }
+        // should call m2m.getMachineToken
+        m2mStub.should.have.be.calledOnce;
         // once for reference endpoint call
         sinon.assert.calledOnce(getStub);
         return done();
@@ -100,6 +106,8 @@ describe('GET /v4/topics/:topicId/posts', () => {
 
   it('should return 403 response when user does not have access to the project (not project member)', (done) => {
     const getStub = sandbox.stub(axios, 'get').resolves();
+    // mocks the m2m token call
+    const m2mStub = sandbox.stub(m2m, 'getMachineToken').resolves('dummy_token');
 
     // resolves call (with 200) to reference endpoint in helper.callReferenceEndpoint
     // but members does not have calling user's id
@@ -117,6 +125,8 @@ describe('GET /v4/topics/:topicId/posts', () => {
         if (err) {
           return done(err);
         }
+        // should call m2m.getMachineToken
+        m2mStub.should.have.be.calledOnce;
         // once for reference endpoint call
         sinon.assert.calledOnce(getStub);
         return done();
@@ -125,6 +135,8 @@ describe('GET /v4/topics/:topicId/posts', () => {
 
   it('should return 200 response if no matching posts', (done) => {
     const getStub = sandbox.stub(axios, 'get').resolves();
+    // mocks the m2m token call
+    const m2mStub = sandbox.stub(m2m, 'getMachineToken').resolves('dummy_token');
 
     // resolves call (with 200) to reference endpoint in helper.callReferenceEndpoint
     getStub.withArgs('http://reftest/referenceId').resolves({
@@ -140,6 +152,8 @@ describe('GET /v4/topics/:topicId/posts', () => {
         if (err) {
           return done(err);
         }
+        // should call m2m.getMachineToken
+        m2mStub.should.have.be.calledOnce;
         sinon.assert.calledOnce(getStub);
         res.body.result.content.should.be.of.length(0);
         return done();
@@ -148,6 +162,8 @@ describe('GET /v4/topics/:topicId/posts', () => {
 
   it('should return 200 response if postIds has non existing post ids along with valid ones', (done) => {
     const getStub = sandbox.stub(axios, 'get').resolves();
+    // mocks the m2m token call
+    const m2mStub = sandbox.stub(m2m, 'getMachineToken').resolves('dummy_token');
 
     // resolves call (with 200) to reference endpoint in helper.callReferenceEndpoint
     getStub.withArgs('http://reftest/referenceId').resolves({
@@ -164,6 +180,8 @@ describe('GET /v4/topics/:topicId/posts', () => {
         if (err) {
           return done(err);
         }
+        // should call m2m.getMachineToken
+        m2mStub.should.have.be.calledOnce;
         // once for reference endpoint call
         sinon.assert.calledOnce(getStub);
         // it should still return the two valid posts
@@ -174,6 +192,8 @@ describe('GET /v4/topics/:topicId/posts', () => {
 
   it('should return 200 response when postIds are valid', (done) => {
     const getStub = sandbox.stub(axios, 'get').resolves();
+    // mocks the m2m token call
+    const m2mStub = sandbox.stub(m2m, 'getMachineToken').resolves('dummy_token');
 
     // resolves call (with 200) to reference endpoint in helper.callReferenceEndpoint
     getStub.withArgs('http://reftest/referenceId').resolves({
@@ -190,6 +210,8 @@ describe('GET /v4/topics/:topicId/posts', () => {
         if (err) {
           return done(err);
         }
+        // should call m2m.getMachineToken
+        m2mStub.should.have.be.calledOnce;
         // once for reference endpoint call
         sinon.assert.calledOnce(getStub);
         res.body.result.content.should.be.of.length(2);
@@ -199,6 +221,8 @@ describe('GET /v4/topics/:topicId/posts', () => {
 
   it('should return 200 response when postIds are valid (manager access)', (done) => {
     const getStub = sandbox.stub(axios, 'get').resolves();
+    // mocks the m2m token call
+    const m2mStub = sandbox.stub(m2m, 'getMachineToken').resolves('dummy_token');
 
     // resolves call (with 200) to reference endpoint in helper.callReferenceEndpoint
     getStub.withArgs('http://reftest/referenceId').resolves({
@@ -215,6 +239,8 @@ describe('GET /v4/topics/:topicId/posts', () => {
         if (err) {
           return done(err);
         }
+        // should call m2m.getMachineToken
+        m2mStub.should.have.be.calledOnce;
         // once for reference endpoint call
         sinon.assert.calledOnce(getStub);
         res.body.result.content.should.be.of.length(2);
@@ -224,6 +250,8 @@ describe('GET /v4/topics/:topicId/posts', () => {
 
   it('should return 200 response when postIds are valid (admin access)', (done) => {
     const getStub = sandbox.stub(axios, 'get').resolves();
+    // mocks the m2m token call
+    const m2mStub = sandbox.stub(m2m, 'getMachineToken').resolves('dummy_token');
 
     // resolves call (with 200) to reference endpoint in helper.callReferenceEndpoint
     getStub.withArgs('http://reftest/referenceId').resolves({
@@ -240,6 +268,8 @@ describe('GET /v4/topics/:topicId/posts', () => {
         if (err) {
           return done(err);
         }
+        // should call m2m.getMachineToken
+        m2mStub.should.have.be.calledOnce;
         // once for reference endpoint call
         sinon.assert.calledOnce(getStub);
         res.body.result.content.should.be.of.length(2);
@@ -249,6 +279,8 @@ describe('GET /v4/topics/:topicId/posts', () => {
 
   it('should return 500 response if error to get posts', (done) => {
     const getStub = sandbox.stub(axios, 'get');
+    // mocks the m2m token call
+    const m2mStub = sandbox.stub(m2m, 'getMachineToken').resolves('dummy_token');
     // resolves call (with 200) to reference endpoint in helper.callReferenceEndpoint
     getStub.withArgs('http://reftest/referenceId').resolves({
       data: { result: { status: 200, content: { members: [{ userId: memberUser.userId }] } } },
@@ -265,6 +297,8 @@ describe('GET /v4/topics/:topicId/posts', () => {
         if (err) {
           return done(err);
         }
+        // should call m2m.getMachineToken
+        m2mStub.should.have.be.calledOnce;
         // should call findPosts on posts model
         findPostsStub.should.have.be.calledOnce;
         return done();
