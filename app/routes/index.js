@@ -33,6 +33,8 @@ const deletePostHandler = require('./posts/delete');
 const webhookPostHandler = require('./sendgrid/webhook');
 const discourseWebhookPostHandler = require('./discourse/webhook');
 
+const elasticSearchIndexHandler = require('./indexing/indexing');
+
 const SecurityHelper = require('../services/security');
 
 
@@ -122,13 +124,13 @@ module.exports = (logger, db, m2m) => {
 
   // Admin routes
   router.route(`${adminPrefix}/ownership/edit`)
-    .post(adminUpdateOwnershipHandler(db));
+    .post(adminUpdateOwnershipHandler(db, m2m));
   router.route(`${adminPrefix}/posts/:postId/stats/create`)
-    .post(adminCreateUserStatsHandler(db));
+    .post(adminCreateUserStatsHandler(db, m2m));
   router.route(`${adminPrefix}/posts/:postId/edit`)
-    .post(adminUpdatePostHandler(db));
+    .post(adminUpdatePostHandler(db, m2m));
   router.route(`${adminPrefix}/topics/:topicId/edit`)
-    .post(adminUpdateTopicHandler(db));
+    .post(adminUpdateTopicHandler(db, m2m));
 
   // Register all the routes
   router.route(`/${apiVersion}/topics/list`)
@@ -168,6 +170,9 @@ module.exports = (logger, db, m2m) => {
   router.use(`/${apiVersion}/topics/webhooks/sendgrid`, formidable());
   router.route(`/${apiVersion}/topics/webhooks/sendgrid`)
     .post(webhookPostHandler(db, m2m));
+  router.route(`/${apiVersion}/topics/esindex`)
+  .post(elasticSearchIndexHandler(db, m2m));
+
 
   // register error handler
   router.use((err, req, res, next) => { // eslint-disable-line

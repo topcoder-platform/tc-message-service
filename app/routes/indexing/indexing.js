@@ -63,9 +63,10 @@ function updateElasticSearchIndex(db, adapter, from, to, reference, referenceId)
 /**
  * Update the topics from database to elasticsearch
  * @param {Object} db sequelize db with all models loaded
+ * @param {Object} m2m machine to machine token helper object
  * @return {Objet} response
  */
-module.exports = db =>
+module.exports = (db, m2m) =>
   /**
    * Gets topics from database and update the elasticsearch index, and in the process it does:
    *  - Checks if the user is admin user
@@ -75,7 +76,7 @@ module.exports = db =>
   (req, resp, next) => { // eslint-disable-line
     const logger = req.log;
     const adapter = new Adapter(logger, db);
-    const helper = HelperService(logger, db);
+    const helper = HelperService(logger, db, m2m);
 
 
     // Validate request parameters
