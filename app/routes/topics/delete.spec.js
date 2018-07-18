@@ -36,7 +36,6 @@ describe('DELETE /v4/topics/:topicId ', () => {
     .then(() => {
       // expectedTopic = topic;
       // expectedTopicPosts = posts;
-      // console.log(expectedTopic, expectedTopicPosts);
       done();
     });
   });

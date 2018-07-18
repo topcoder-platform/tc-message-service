@@ -20,6 +20,21 @@ module.exports = (app, db, logger) => {
     }
   });
 
+  app.on(EVENT.TOPIC_UPDATED, ({ req, topic }) => {
+    logger.debug('recieve TOPIC_UPDATED event');
+    if (topic.reference.toLowerCase() === 'project') {
+      createEvent(BUS_API_EVENT.TOPIC_UPDATED, {
+        topicId: topic.id,
+        topicTitle: topic.title,
+        postContent: _.get(topic, 'posts[0].raw', ''),
+        userId: req.authUser.userId,
+        projectId: topic.referenceId,
+        initiatorUserId: req.authUser.userId,
+        migration: true,
+      }, logger);
+    }
+  });
+
   app.on(EVENT.TOPIC_DELETED, ({ req, topic }) => {
     if (topic && topic.reference.toLowerCase() === 'project') {
       createEvent(BUS_API_EVENT.TOPIC_DELETED, {

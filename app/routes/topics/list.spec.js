@@ -231,7 +231,6 @@ describe('GET /v4/topics ', () => {
         return assertTopicAndPost(1, (topic, topicPost) => {
           res.body.should.have.propertyByPath('result', 'content', '0', 'id').eql(topic.id);
           res.body.should.have.propertyByPath('result', 'content', '0', 'reference').eql('project');
-          // console.log(topicPost.updatedAt, 'updatedAt');
           res.body.should.have.propertyByPath('result', 'content', '0', 'lastActivityAt')
           .eql(topicPost.updatedAt);
         }, done);
@@ -271,7 +270,6 @@ describe('GET /v4/topics ', () => {
         return assertTopicAndPost(1, (topic, topicPost) => {
           res.body.should.have.propertyByPath('result', 'content', '0', 'id').eql(topic.id);
           res.body.should.have.propertyByPath('result', 'content', '0', 'reference').eql('project');
-          // console.log(topicPost.updatedAt, 'updatedAt');
           res.body.should.have.propertyByPath('result', 'content', '0', 'lastActivityAt')
           .eql(topicPost.updatedAt);
         }, done);
@@ -311,7 +309,6 @@ describe('GET /v4/topics ', () => {
         return assertTopicAndPost(1, (topic, topicPost) => {
           res.body.should.have.propertyByPath('result', 'content', '0', 'id').eql(topic.id);
           res.body.should.have.propertyByPath('result', 'content', '0', 'reference').eql('project');
-          // console.log(topicPost.updatedAt, 'updatedAt');
           res.body.should.have.propertyByPath('result', 'content', '0', 'lastActivityAt')
           .eql(topicPost.updatedAt);
         }, done);
@@ -352,7 +349,6 @@ describe('GET /v4/topics ', () => {
         return assertTopicAndPost(1, (topic, topicPost) => {
           res.body.should.have.propertyByPath('result', 'content', '0', 'id').eql(topic.id);
           res.body.should.have.propertyByPath('result', 'content', '0', 'reference').eql('project');
-          // console.log(topicPost.updatedAt, 'updatedAt');
           res.body.should.have.propertyByPath('result', 'content', '0', 'lastActivityAt')
           .eql(topicPost.updatedAt);
         }, done);
@@ -393,7 +389,6 @@ describe('GET /v4/topics ', () => {
         return assertTopicAndPost(1, (topic, topicPost) => {
           res.body.should.have.propertyByPath('result', 'content', '0', 'id').eql(topic.id);
           res.body.should.have.propertyByPath('result', 'content', '0', 'reference').eql('project');
-          // console.log(topicPost.updatedAt, 'updatedAt');
           res.body.should.have.propertyByPath('result', 'content', '0', 'lastActivityAt')
           .eql(topicPost.updatedAt);
         }, done);
@@ -435,7 +430,6 @@ describe('GET /v4/topics ', () => {
         return assertTopicAndPost(1, (topic, topicPost) => {
           res.body.should.have.propertyByPath('result', 'content', '0', 'id').eql(topic.id);
           res.body.should.have.propertyByPath('result', 'content', '0', 'reference').eql('project');
-          // console.log(topicPost.updatedAt, 'updatedAt');
           res.body.should.have.propertyByPath('result', 'content', '0', 'lastActivityAt')
           .eql(topicPost.updatedAt);
         }, done);
@@ -473,7 +467,6 @@ describe('GET /v4/topics ', () => {
         return assertTopicAndPost(1, (topic, topicPost) => {
           res.body.should.have.propertyByPath('result', 'content', '0', 'id').eql(topic.id);
           res.body.should.have.propertyByPath('result', 'content', '0', 'reference').eql('project');
-          // console.log(topicPost.updatedAt, 'updatedAt');
           res.body.should.have.propertyByPath('result', 'content', '0', 'lastActivityAt')
           .eql(topicPost.updatedAt);
         }, done);
@@ -511,7 +504,6 @@ describe('GET /v4/topics ', () => {
         return assertTopicAndPost(1, (topic, topicPost) => {
           res.body.should.have.propertyByPath('result', 'content', '0', 'id').eql(topic.id);
           res.body.should.have.propertyByPath('result', 'content', '0', 'reference').eql('project');
-          // console.log(topicPost.updatedAt, 'updatedAt');
           res.body.should.have.propertyByPath('result', 'content', '0', 'lastActivityAt')
           .eql(topicPost.updatedAt);
         }, done);
