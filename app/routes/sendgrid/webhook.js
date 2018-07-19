@@ -63,7 +63,7 @@ module.exports = (db, m2m) => (req, resp, next) => {
         userEmail: helper.sanitizeEmail(usr.email),
       };
       logger.debug('body', body);
-      const correctToken = jwt.sign(body, config.authSecret, { noTimestamp: true }).split('.')[2];
+      const correctToken = jwt.sign(body, config.AUTH_SECRET, { noTimestamp: true }).split('.')[2];
       logger.trace(`correctToken[${userId}]=> ${correctToken}`);
 
       return correctToken === token;
