@@ -146,9 +146,10 @@ module.exports = (Sequelize, DataTypes) => {
       }],
     }).then((topics) => {
       const topicIds = topics.map(t => t.id);
+      models.logger.info(`Found ${topics.length} topics`);
       return models.posts.getPostsCount(topicIds)
         .then((topicsPostsCount) => {
-          models.logger.debug('topicsPostsCount', topicsPostsCount);
+          models.logger.info('topicsPostsCount', topicsPostsCount);
           return adapter.adaptTopics({
             dbTopics: topics,
             topicsPostsCount: topicsPostsCount.map(tpc => tpc),

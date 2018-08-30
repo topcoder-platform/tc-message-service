@@ -44,6 +44,7 @@ function updateElasticSearchIndex(db, adapter, from, to, reference, referenceId)
 
       // const adaptedTopics = adapter.adaptTopics({ topics : dbTopics });
       _.each(dbTopics, (dbTopic) => {
+        db.logger.debug(`Indexing ${dbTopic.id}`);
         esClient.index({
           index: config.get('elasticsearchConfig.indexName'),
           id: dbTopic.id,
@@ -99,6 +100,7 @@ module.exports = (db, m2m) =>
     if (!helper.isAdmin(req)) {
       throw new errors.HttpStatusError(403, 'User doesn\'t have access to this operation');
     }
+    logger.debug('Indexing messages');
     // Get topics from the Postgres database
     updateElasticSearchIndex(db, adapter, req.query.from, req.query.to, req.query.reference, req.query.referenceId);
     resp.status(200).send('ok');
