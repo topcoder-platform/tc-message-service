@@ -63,55 +63,47 @@ module.exports = (db, m2m) => (req, resp, next) => {
         const err = new errors.HttpStatusError(404, 'Post does not exist');
         return next(err);
       }
-      return helper.callReferenceEndpoint(req.authToken, req.id, topic.reference, topic.referenceId)
-        .then((hasAccessResp) => {
-          const isAdmin = helper.isAdmin(req);
-          let promise;
-          if (!isAdmin) {
-            throw new errors.HttpStatusError(403, 'Must have Administrator role');
-          }
-          // If user has access
-          const hasAccess = helper.userHasAccessToEntity(userId, hasAccessResp, topic.reference);
-          if (!hasAccess) {
-            throw new errors.HttpStatusError(403, 'User doesn\'t have access to entity');
-          }
-          if (_.has(req.body.post, ['deletedBy', 'deletedAt'])) {
-            throw new errors.HttpStatusError(403, 'Not allowed, please use a different http method');
-          }
-          if (_.has(req.body.post, ['topicId'])) {
-            const lastPost = post;
-            promise = db.posts.update({
-              deletedAt: new Date(),
-              deletedBy: userId,
-            }, { where: { id: postId } })
-              .then(() => {
-                logger.info('updating topic post');
-                // create new post
-                return db.posts.createPost(db, lastPost.raw, dbTopic, null, userId)
-                  .then((createdTopicPost) => {
-                    if (!createdTopicPost) {
-                      return next(new errors.HttpStatusError(500, 'Error updating topic post'));
-                    }
-                    db.post_user_stats.createStats(db, logger, {
-                      post: createdTopicPost,
-                      userId,
-                      action: 'READ',
-                    }).then(() => logger.debug('post_user_stats entry created for post: ', createdTopicPost.id));
-                    delete req.body.post.topicId;
-                    const postUpdate = _.omit(req.body.post, ['topicId']);
-                    // update with new post values
-                    return db.posts.updatePost(db, adapter, postUpdate, { postId: createdTopicPost.id }, userId);
-                  })
-                  .catch(Promise.reject);
-              });
-          } else {
-            promise = db.posts.updatePost(db, adapter, content.post, { postId }, userId);
-          }
-          return Promise.all([promise])
-            .then(([updatedPost]) => {
-              req.app.emit(EVENT.POST_UPDATED, { post, req, topic });
-              resp.status(200).send(util.wrapResponse(req.id, updatedPost));
-            });
+      const isAdmin = helper.isAdmin(req);
+      let promise;
+      if (!isAdmin) {
+        throw new errors.HttpStatusError(403, 'Must have Administrator role');
+      }
+      if (_.has(req.body.post, ['deletedBy', 'deletedAt'])) {
+        throw new errors.HttpStatusError(403, 'Not allowed, please use a different http method');
+      }
+      if (_.has(req.body.post, ['topicId'])) {
+        const lastPost = post;
+        promise = db.posts.update({
+          deletedAt: new Date(),
+          deletedBy: userId,
+        }, { where: { id: postId } })
+          .then(() => {
+            logger.info('updating topic post');
+            // create new post
+            return db.posts.createPost(db, lastPost.raw, dbTopic, null, userId)
+              .then((createdTopicPost) => {
+                if (!createdTopicPost) {
+                  return next(new errors.HttpStatusError(500, 'Error updating topic post'));
+                }
+                db.post_user_stats.createStats(db, logger, {
+                  post: createdTopicPost,
+                  userId,
+                  action: 'READ',
+                }).then(() => logger.debug('post_user_stats entry created for post: ', createdTopicPost.id));
+                delete req.body.post.topicId;
+                const postUpdate = _.omit(req.body.post, ['topicId']);
+                // update with new post values
+                return db.posts.updatePost(db, adapter, postUpdate, { postId: createdTopicPost.id }, userId);
+              })
+              .catch(Promise.reject);
+          });
+      } else {
+        promise = db.posts.updatePost(db, adapter, content.post, { postId }, userId);
+      }
+      return Promise.all([promise])
+        .then(([updatedPost]) => {
+          req.app.emit(EVENT.POST_UPDATED, { post, req, topic });
+          resp.status(200).send(util.wrapResponse(req.id, updatedPost));
         });
     })
     .catch((error) => {

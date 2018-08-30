@@ -124,7 +124,7 @@ describe('POST /v4/topics/:topicId/posts ', () => {
         // should call m2m.getMachineToken
         m2mStub.should.have.be.calledOnce;
         res.body.result.content.should.not.be.null;
-        res.body.should.have.propertyByPath('result', 'content', 'id').eql(3);
+        res.body.should.have.propertyByPath('result', 'content', 'id').eql(4);
         return done();
       });
   });

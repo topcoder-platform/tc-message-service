@@ -14,6 +14,7 @@ const Adapter = require('../../services/adapter');
 const config = require('config');
 
 const adminPrefix = config.adminPrefix;
+const m2m = server.m2m;
 
 const db = models(server, server.logger);
 const adapter = new Adapter(server.logger, db);
@@ -146,6 +147,8 @@ describe('POST /v5/topics/admin/posts/:postId/edit ', () => {
   });
 
   it('should return 200 response for admin with valid jwt token and payload (body update)', (done) => {
+    // mocks the m2m token call
+    const m2mStub = sandbox.stub(m2m, 'getMachineToken').resolves('dummy_token');
     const getStub = sandbox.stub(axios, 'get');
     // resolves call (with 200) to reference endpoint in helper.callReferenceEndpoint
     getStub.withArgs('http://reftest/referenceId').resolves({
@@ -163,6 +166,8 @@ describe('POST /v5/topics/admin/posts/:postId/edit ', () => {
         if (err) {
           return done(err);
         }
+        // should call m2m.getMachineToken
+        m2mStub.should.have.be.calledOnce;
         const expectedCreatedBy = Number(expectedTopicPosts[0].createdBy);
         const expectedPostJson = _.assign({}, {
           id: expectedTopicPosts[0].id,
@@ -194,6 +199,8 @@ describe('POST /v5/topics/admin/posts/:postId/edit ', () => {
   });
 
   it('should return 200 response for admin with valid jwt token and payload (bulk update)', (done) => {
+    // mocks the m2m token call
+    const m2mStub = sandbox.stub(m2m, 'getMachineToken').resolves('dummy_token');
     const getStub = sandbox.stub(axios, 'get');
     // resolves call (with 200) to reference endpoint in helper.callReferenceEndpoint
     getStub.withArgs('http://reftest/referenceId').resolves({
@@ -211,6 +218,8 @@ describe('POST /v5/topics/admin/posts/:postId/edit ', () => {
         if (err) {
           return done(err);
         }
+        // should call m2m.getMachineToken
+        m2mStub.should.have.be.calledOnce;
         const expectedPost = expectedTopicPosts[0];
         // find updated post
         return db.posts.findPost(db, adapter, {
@@ -236,6 +245,8 @@ describe('POST /v5/topics/admin/posts/:postId/edit ', () => {
   });
 
   it('should return 200 response for manager with valid jwt token and payload (admin)', (done) => {
+    // mocks the m2m token call
+    const m2mStub = sandbox.stub(m2m, 'getMachineToken').resolves('dummy_token');
     const getStub = sandbox.stub(axios, 'get');
     // resolves call (with 200) to reference endpoint in helper.callReferenceEndpoint
     getStub.withArgs('http://reftest/referenceId').resolves({
@@ -253,6 +264,8 @@ describe('POST /v5/topics/admin/posts/:postId/edit ', () => {
         if (err) {
           return done(err);
         }
+        // should call m2m.getMachineToken
+        m2mStub.should.have.be.calledOnce;
         const expectedCreatedBy = Number(expectedTopicPosts[0].createdBy);
         const expectedPostJson = _.assign({}, {
           id: expectedTopicPosts[0].id,
@@ -280,6 +293,8 @@ describe('POST /v5/topics/admin/posts/:postId/edit ', () => {
   });
 
   it('should return 200 response for admin with valid jwt token and payload (update deletedAt & deletedBy)', (done) => {
+    // mocks the m2m token call
+    const m2mStub = sandbox.stub(m2m, 'getMachineToken').resolves('dummy_token');
     const getStub = sandbox.stub(axios, 'get');
     // resolves call (with 200) to reference endpoint in helper.callReferenceEndpoint
     getStub.withArgs('http://reftest/referenceId').resolves({
@@ -297,6 +312,8 @@ describe('POST /v5/topics/admin/posts/:postId/edit ', () => {
         if (err) {
           return done(err);
         }
+        // should call m2m.getMachineToken
+        m2mStub.should.have.be.calledOnce;
         // find updated post
         return db.posts.findPost(db, adapter, {
           topicId: testBody3.topicId,
@@ -310,6 +327,8 @@ describe('POST /v5/topics/admin/posts/:postId/edit ', () => {
   });
 
   it('should return 500 response with error in finding the topic of the post to be updated', (done) => {
+    // mocks the m2m token call
+    const m2mStub = sandbox.stub(m2m, 'getMachineToken').resolves('dummy_token');
     const getStub = sandbox.stub(axios, 'get');
     // resolves call (with 200) to reference endpoint in helper.callReferenceEndpoint
     getStub.withArgs('http://reftest/referenceId').resolves({
@@ -327,6 +346,8 @@ describe('POST /v5/topics/admin/posts/:postId/edit ', () => {
         if (err) {
           return done(err);
         }
+        // should call m2m.getMachineToken
+        m2mStub.should.have.be.calledOnce;
         // should call findTopic on posts model
         findTopicStub.should.have.be.calledOnce;
         res.body.should.have.propertyByPath('result', 'content', 'message')
@@ -336,6 +357,8 @@ describe('POST /v5/topics/admin/posts/:postId/edit ', () => {
   });
 
   it('should return 500 response with error in finding the post to be updated', (done) => {
+    // mocks the m2m token call
+    const m2mStub = sandbox.stub(m2m, 'getMachineToken').resolves('dummy_token');
     const getStub = sandbox.stub(axios, 'get');
     // resolves call (with 200) to reference endpoint in helper.callReferenceEndpoint
     getStub.withArgs('http://reftest/referenceId').resolves({
@@ -353,6 +376,8 @@ describe('POST /v5/topics/admin/posts/:postId/edit ', () => {
         if (err) {
           return done(err);
         }
+        // should call m2m.getMachineToken
+        m2mStub.should.have.be.calledOnce;
         // should call findPost on posts model
         findPostStub.should.have.be.calledOnce;
         res.body.should.have.propertyByPath('result', 'content', 'message')

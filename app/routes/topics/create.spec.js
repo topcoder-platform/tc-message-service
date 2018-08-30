@@ -227,7 +227,7 @@ describe('POST /v4/topics ', () => {
         m2mStub.should.have.be.calledOnce;
         // expected topic id = 2
         // expected post id = 3
-        return validateSuccessfulCreation(res, testBody, 2, 3, userId, now, done);
+        return validateSuccessfulCreation(res, testBody, 3, 4, userId, now, done);
       });
   });
 
@@ -256,7 +256,7 @@ describe('POST /v4/topics ', () => {
         m2mStub.should.have.be.calledOnce;
         // expected topic id = 2
         // expected post id = 3
-        return validateSuccessfulCreation(res, testBody, 2, 3, userId, now, done);
+        return validateSuccessfulCreation(res, testBody, 3, 4, userId, now, done);
       });
   });
 
@@ -285,7 +285,7 @@ describe('POST /v4/topics ', () => {
         m2mStub.should.have.be.calledOnce;
         // expected topic id = 2
         // expected post id = 3
-        return validateSuccessfulCreation(res, testBody, 2, 3, userId, now, done);
+        return validateSuccessfulCreation(res, testBody, 3, 4, userId, now, done);
       });
   });
 

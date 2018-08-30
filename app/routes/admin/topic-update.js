@@ -50,22 +50,14 @@ module.exports = (db, m2m) => (req, resp, next) => {
         const err = new errors.HttpStatusError(404, 'Topic does not exist');
         return next(err);
       }
-      return helper.callReferenceEndpoint(req.authToken, req.id, topic.reference, topic.referenceId)
-        .then((hasAccessResp) => {
-          const isAdmin = helper.isAdmin(req);
-          if (!isAdmin) {
-            throw new errors.HttpStatusError(403, 'Must have Administrator role');
-          }
-          // If user has access to entity
-          const hasAccess = helper.userHasAccessToEntity(userId, hasAccessResp, topic.reference);
-          if (!hasAccess) {
-            throw new errors.HttpStatusError(403, 'User doesn\'t have access to entity');
-          }
-          return db.topics.updateTopic(db, adapter, content.topic, { topicId, userId })
-            .then((updatedTopic) => {
-              req.app.emit(EVENT.TOPIC_UPDATED, { topic, req });
-              resp.status(200).send(util.wrapResponse(req.id, updatedTopic));
-            });
+      const isAdmin = helper.isAdmin(req);
+      if (!isAdmin) {
+        throw new errors.HttpStatusError(403, 'Must have Administrator role');
+      }
+      return db.topics.updateTopic(db, adapter, content.topic, { topicId, userId })
+        .then((updatedTopic) => {
+          req.app.emit(EVENT.TOPIC_UPDATED, { topic, req });
+          resp.status(200).send(util.wrapResponse(req.id, updatedTopic));
         });
     })
     .catch((error) => {

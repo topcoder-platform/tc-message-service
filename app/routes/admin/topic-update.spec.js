@@ -12,6 +12,7 @@ const Adapter = require('../../services/adapter');
 const models = require('../../models');
 
 const adminPrefix = config.adminPrefix;
+const m2m = server.m2m;
 
 require('should-sinon');
 const should = require('should');
@@ -99,6 +100,8 @@ describe('POST /v5/topics/admin/topics/:topicId/edit ', () => {
   });
 
   it('should return 403 response when user does not have access', (done) => {
+    // mocks the m2m token call
+    const m2mStub = sandbox.stub(m2m, 'getMachineToken').resolves('dummy_token');
     const getStub = sandbox.stub(axios, 'get');
     // resolves call (with 200) to reference endpoint in helper.callReferenceEndpoint
     getStub.withArgs('http://reftest/referenceId').resolves({
@@ -115,6 +118,8 @@ describe('POST /v5/topics/admin/topics/:topicId/edit ', () => {
         if (err) {
           return done(err);
         }
+        // should call m2m.getMachineToken
+        m2mStub.should.have.be.calledOnce;
         // should make GET to reference lookup endpoint on posts model
         getStub.should.have.be.calledOnce;
         return done();
@@ -123,6 +128,8 @@ describe('POST /v5/topics/admin/topics/:topicId/edit ', () => {
 
 
   it('should return 403 response for non-admin members', (done) => {
+    // mocks the m2m token call
+    const m2mStub = sandbox.stub(m2m, 'getMachineToken').resolves('dummy_token');
     const getStub = sandbox.stub(axios, 'get');
     // resolves call (with 200) to reference endpoint in helper.callReferenceEndpoint
     getStub.withArgs('http://reftest/referenceId').resolves({
@@ -139,6 +146,8 @@ describe('POST /v5/topics/admin/topics/:topicId/edit ', () => {
         if (err) {
           return done(err);
         }
+        // should call m2m.getMachineToken
+        m2mStub.should.have.be.calledOnce;
         // should make GET to reference lookup endpoint on posts model
         getStub.should.have.be.calledOnce;
         return done();
@@ -146,6 +155,8 @@ describe('POST /v5/topics/admin/topics/:topicId/edit ', () => {
   });
 
   it('should return 404 response with non existing topic', (done) => {
+    // mocks the m2m token call
+    const m2mStub = sandbox.stub(m2m, 'getMachineToken').resolves('dummy_token');
     const getStub = sandbox.stub(axios, 'get');
     // resolves call (with 200) to reference endpoint in helper.callReferenceEndpoint
     getStub.withArgs('http://reftest/referenceId').resolves({
@@ -162,6 +173,8 @@ describe('POST /v5/topics/admin/topics/:topicId/edit ', () => {
         if (err) {
           return done(err);
         }
+        // should call m2m.getMachineToken
+        m2mStub.should.have.be.calledOnce;
         // should call findById on posts model
         res.body.should.have.propertyByPath('result', 'content', 'message')
           .eql('Topic does not exist');
@@ -170,6 +183,8 @@ describe('POST /v5/topics/admin/topics/:topicId/edit ', () => {
   });
 
   it('should return 200 response for admin with valid jwt token and payload', (done) => {
+    // mocks the m2m token call
+    const m2mStub = sandbox.stub(m2m, 'getMachineToken').resolves('dummy_token');
     const getStub = sandbox.stub(axios, 'get');
     // resolves call (with 200) to reference endpoint in helper.callReferenceEndpoint
     getStub.withArgs('http://reftest/referenceId').resolves({
@@ -188,16 +203,19 @@ describe('POST /v5/topics/admin/topics/:topicId/edit ', () => {
         if (err) {
           return done(err);
         }
+        // should call m2m.getMachineToken
+        m2mStub.should.have.be.calledOnce;
         const expectedTopicJson = _.assign({}, {
           id: expectedTopic.id,
           reference: expectedTopic.reference,
           referenceId: expectedTopic.referenceId,
-          tag: expectedTopic.tag,
+          tag: expectedTopic.tags[0],
+          tags: expectedTopic.tags,
           date: res.body.result.content.date,
           updatedDate: res.body.result.content.updatedDate,
           lastActivityAt: res.body.result.content.lastActivityAt,
           userId: Number(expectedTopic.createdBy),
-          retrievedPosts: Number(expectedTopic.highestPostNumber),
+          retrievedPosts: 0, // Number(expectedTopic.highestPostNumber),
         });
         // unchanged elements keys
         const keys = _.keys(_.omit(res.body.result.content,
@@ -224,6 +242,8 @@ describe('POST /v5/topics/admin/topics/:topicId/edit ', () => {
   });
 
   it('should return 200 response for admin with valid jwt token and payload (bulk update)', (done) => {
+    // mocks the m2m token call
+    const m2mStub = sandbox.stub(m2m, 'getMachineToken').resolves('dummy_token');
     const getStub = sandbox.stub(axios, 'get');
     // resolves call (with 200) to reference endpoint in helper.callReferenceEndpoint
     getStub.withArgs('http://reftest/referenceId').resolves({
@@ -241,6 +261,8 @@ describe('POST /v5/topics/admin/topics/:topicId/edit ', () => {
         if (err) {
           return done(err);
         }
+        // should call m2m.getMachineToken
+        m2mStub.should.have.be.calledOnce;
         return db.topics.findTopic(db, adapter, {
           topicId: res.body.result.content.id,
           raw: true,
@@ -253,8 +275,11 @@ describe('POST /v5/topics/admin/topics/:topicId/edit ', () => {
                 'updatedBy',
                 'deletedAt',
                 'deletedBy',
-              ]));
+                'tag',
+              ])).concat(['tags']);
             keys.forEach((key) => {
+              console.log(key);
+              console.log(updatedTopic);
               updatedTopic[key].should.not.be.eql(expectedTopic[key]);
             });
             res.body.result.content.should.not.be.null;
@@ -267,6 +292,8 @@ describe('POST /v5/topics/admin/topics/:topicId/edit ', () => {
   });
 
   it('should return 200 response for admin with valid jwt token and payload (update deletedAt & deletedBy)', (done) => {
+    // mocks the m2m token call
+    const m2mStub = sandbox.stub(m2m, 'getMachineToken').resolves('dummy_token');
     const getStub = sandbox.stub(axios, 'get');
     // resolves call (with 200) to reference endpoint in helper.callReferenceEndpoint
     getStub.withArgs('http://reftest/referenceId').resolves({
@@ -283,6 +310,8 @@ describe('POST /v5/topics/admin/topics/:topicId/edit ', () => {
         if (err) {
           return done(err);
         }
+        // should call m2m.getMachineToken
+        m2mStub.should.have.be.calledOnce;
         return db.topics.findTopic(db, adapter, {
           topicId: res.body.result.content.id,
           raw: true,
@@ -295,6 +324,8 @@ describe('POST /v5/topics/admin/topics/:topicId/edit ', () => {
   });
 
   it('should return 200 response for manager with valid jwt token and payload', (done) => {
+    // mocks the m2m token call
+    const m2mStub = sandbox.stub(m2m, 'getMachineToken').resolves('dummy_token');
     const getStub = sandbox.stub(axios, 'get');
     // resolves call (with 200) to reference endpoint in helper.callReferenceEndpoint
     getStub.withArgs('http://reftest/referenceId').resolves({
@@ -313,16 +344,19 @@ describe('POST /v5/topics/admin/topics/:topicId/edit ', () => {
         if (err) {
           return done(err);
         }
+        // should call m2m.getMachineToken
+        m2mStub.should.have.be.calledOnce;
         const expectedTopicJson = _.assign({}, {
           id: expectedTopic.id,
           reference: expectedTopic.reference,
           referenceId: expectedTopic.referenceId,
-          tag: expectedTopic.tag,
+          tag: expectedTopic.tags[0],
+          tags: expectedTopic.tags,
           date: res.body.result.content.date,
           updatedDate: res.body.result.content.updatedDate,
           lastActivityAt: res.body.result.content.lastActivityAt,
           userId: Number(expectedTopic.createdBy),
-          retrievedPosts: Number(expectedTopic.highestPostNumber),
+          retrievedPosts: 0, //Number(expectedTopic.highestPostNumber),
         });
         // unchanged elements keys
         const keys = _.keys(_.omit(res.body.result.content,

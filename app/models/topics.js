@@ -196,8 +196,12 @@ module.exports = (Sequelize, DataTypes) => {
 
   Topic.updateTopic = (models, adapter, updatedFields, { topicId, reqUserId }, transaction = null) => {
     const where = { id: topicId, deletedAt: { [Sequelize.Op.eq]: null } };
+    const topic = Object.assign({}, updatedFields, { updatedBy: reqUserId });
+    if (topic.tag) {
+      topic.tags = [topic.tag];
+    }
     return models.topics.update(
-      Object.assign({}, updatedFields, { updatedBy: reqUserId }),
+      topic,
       {
         where,
         returning: true,

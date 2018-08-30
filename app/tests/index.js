@@ -72,62 +72,53 @@ function clearDB(done) {
 
 function prepareDB(done) {
   return clearDBPromise()
-    .then(() => {
-      const promises = [
-        db.sequelize.query('ALTER SEQUENCE topics_id_seq RESTART WITH 1;'),
-        db.sequelize.query('ALTER SEQUENCE posts_id_seq RESTART WITH 1;'),
-        db.topics.create({
-          // id: 1,
-          reference: 'project',
-          referenceId: 'referenceId',
-          discourseTopicId: 1,
-          tags: ['tag'],
-          title: 'Mock topic title',
-          createdBy: '123456789',
-        }),
-        db.topics.create({
-          // id: 1,
-          reference: 'project',
-          referenceId: 'referenceId1',
-          discourseTopicId: 100,
-          tag: 'tag',
-          title: 'Mock topic title2',
-          createdBy: '12345678910',
-        }),
-        db.reference_lookups.create({
-          id: 1,
-          reference: 'project',
-          endpoint: 'http://reftest/{id}', // eslint-disable-line
-        }),
-      ];
-      return Promise.all(promises).then((responses) => {
-        if (responses && responses.length > 1) {
-          const topic = responses[2];
-          const topicId = topic.id;
-          return Promise.mapSeries([
-            db.posts.create({
-              raw: 'Mock topic body',
-              topicId,
-              createdBy: '123456789',
-              postNumber: 1,
-            }),
-            db.posts.create({
-              raw: 'Mock topic post - logically first post',
-              topicId,
-              createdBy: '123456789',
-              postNumber: 2,
-            }),
-            db.posts.create({
-              raw: 'Mock topic post2',
-              topicId: 2,
-              createdBy: '123456789',
-              postNumber: 3,
-            }),
-          ], t => t)
-          .then(posts => ({ topic, posts }));
-        }
-        return responses;
-      });
+    .then(() => db.sequelize.query('ALTER SEQUENCE topics_id_seq RESTART WITH 1;'))
+    .then(() => db.sequelize.query('ALTER SEQUENCE posts_id_seq RESTART WITH 1;'))
+    .then(() => db.topics.bulkCreate([{
+      // id: 1,
+      reference: 'project',
+      referenceId: 'referenceId',
+      discourseTopicId: 1,
+      tags: ['tag'],
+      title: 'Mock topic title',
+      createdBy: '123456789',
+    },
+    {
+      // id: 1,
+      reference: 'project',
+      referenceId: 'referenceId1',
+      discourseTopicId: 100,
+      tags: ['tag'],
+      title: 'Mock topic title2',
+      createdBy: '12345678910',
+    }], { returning: true }))
+    .then(
+      topics => db.reference_lookups.create({
+        id: 1,
+        reference: 'project',
+        endpoint: 'http://reftest/{id}', // eslint-disable-line
+      }).then(() => Promise.resolve(topics)))
+    .then((topics) => {
+      const topic = topics.length > 0 ? topics[0] : null;
+      return db.posts.bulkCreate([{
+        raw: 'Mock topic body',
+        topicId: 1,
+        createdBy: '123456789',
+        postNumber: 1,
+      },
+      {
+        raw: 'Mock topic post - logically first post',
+        topicId: 1,
+        createdBy: '123456789',
+        postNumber: 2,
+      },
+      {
+        raw: 'Mock topic post2',
+        topicId: 2,
+        createdBy: '123456789',
+        postNumber: 3,
+      }], { returning: true })
+      .then(posts => ({ topic, posts }));
     })
     .then((responses) => {
       if (responses) {

@@ -12,6 +12,7 @@ const models = require('../../models');
 const config = require('config');
 
 const adminPrefix = config.adminPrefix;
+const m2m = server.m2m;
 
 const db = models(server, server.logger);
 
@@ -77,6 +78,8 @@ describe('POST /v5/topics/admin/posts/{postId}/stats/create ', () => {
   });
 
   it('should return 403 response when user is not member of the project', (done) => {
+    // mocks the m2m token call
+    const m2mStub = sandbox.stub(m2m, 'getMachineToken').resolves('dummy_token');
     const getStub = sandbox.stub(axios, 'get');
     // resolves call (with 200) to reference endpoint in helper.callReferenceEndpoint
     getStub.withArgs('http://reftest/referenceId').resolves({
@@ -88,7 +91,15 @@ describe('POST /v5/topics/admin/posts/{postId}/stats/create ', () => {
         Authorization: `Bearer ${jwts.member}`,
       })
       .send(testBody)
-      .expect(403, done);
+      .expect(403)
+      .end((err) => {
+        if (err) {
+          return done(err);
+        }
+        // should call m2m.getMachineToken
+        m2mStub.should.have.be.calledOnce;
+        return done();
+      });
   });
 
   it('should return 404 response if no matching topic', (done) => {
@@ -124,6 +135,8 @@ describe('POST /v5/topics/admin/posts/{postId}/stats/create ', () => {
   });
 
   it('should return 200 response for admin, creating user stats with valid jwt token and payload', (done) => {
+    // mocks the m2m token call
+    const m2mStub = sandbox.stub(m2m, 'getMachineToken').resolves('dummy_token');
     const getStub = sandbox.stub(axios, 'get');
     // resolves call (with 200) to reference endpoint in helper.callReferenceEndpoint
     getStub.withArgs('http://reftest/referenceId').resolves({
@@ -141,6 +154,8 @@ describe('POST /v5/topics/admin/posts/{postId}/stats/create ', () => {
           return done(err);
         }
 
+        // should call m2m.getMachineToken
+        m2mStub.should.have.be.calledOnce;
         res.body.result.content.should.not.be.null;
         res.body.result.content.postId.should.not.be.null;
         res.body.result.content.topicId.should.not.be.null;
@@ -152,6 +167,8 @@ describe('POST /v5/topics/admin/posts/{postId}/stats/create ', () => {
   });
 
   it('should return 200 response for manager, creating user stats with valid jwt token and payload', (done) => {
+    // mocks the m2m token call
+    const m2mStub = sandbox.stub(m2m, 'getMachineToken').resolves('dummy_token');
     const getStub = sandbox.stub(axios, 'get');
     // resolves call (with 200) to reference endpoint in helper.callReferenceEndpoint
     getStub.withArgs('http://reftest/referenceId').resolves({
@@ -169,6 +186,8 @@ describe('POST /v5/topics/admin/posts/{postId}/stats/create ', () => {
           return done(err);
         }
 
+        // should call m2m.getMachineToken
+        m2mStub.should.have.be.calledOnce;
         res.body.result.content.should.not.be.null;
         res.body.result.content.postId.should.not.be.null;
         res.body.result.content.topicId.should.not.be.null;
@@ -180,6 +199,8 @@ describe('POST /v5/topics/admin/posts/{postId}/stats/create ', () => {
   });
 
   it('should return 400 response with error creating user stats with uncomplete body parameters', (done) => {
+    // mocks the m2m token call
+    const m2mStub = sandbox.stub(m2m, 'getMachineToken').resolves('dummy_token');
     const getStub = sandbox.stub(axios, 'get');
     // resolves call (with 200) to reference endpoint in helper.callReferenceEndpoint
     getStub.withArgs('http://reftest/referenceId').resolves({
@@ -199,6 +220,8 @@ describe('POST /v5/topics/admin/posts/{postId}/stats/create ', () => {
         if (err) {
           return done(err);
         }
+        // should call m2m.getMachineToken
+        m2mStub.should.have.be.calledOnce;
         // should call findTopic on posts model
         findTopicStub.should.have.be.calledOnce;
         res.body.should.have.propertyByPath('result', 'content', 'message')
