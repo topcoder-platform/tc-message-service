@@ -146,9 +146,10 @@ module.exports = (Sequelize, DataTypes) => {
       }],
     }).then((topics) => {
       const topicIds = topics.map(t => t.id);
+      models.logger.info(`Found ${topics.length} topics`);
       return models.posts.getPostsCount(topicIds)
         .then((topicsPostsCount) => {
-          models.logger.debug('topicsPostsCount', topicsPostsCount);
+          models.logger.info('topicsPostsCount', topicsPostsCount);
           return adapter.adaptTopics({
             dbTopics: topics,
             topicsPostsCount: topicsPostsCount.map(tpc => tpc),
@@ -159,7 +160,7 @@ module.exports = (Sequelize, DataTypes) => {
     });
   };
 
-  Topic.findTopic = (models, adapter, { topicId, numberOfPosts = 4, fetchDeleted = false, raw = false, reqUserId }) => {
+  Topic.findTopic = (models, adapter, { topicId, numberOfPosts = 4, fetchDeleted = false, raw, reqUserId }) => {
     const where = { id: topicId };
     const postsWhere = {};
     if (!fetchDeleted) {
@@ -183,18 +184,25 @@ module.exports = (Sequelize, DataTypes) => {
     }).then((topic) => {
       if (!topic) return null;
       return models.posts.getTopicPostsCount(topicId)
-        .then(totalPosts => adapter.adaptTopic({
-          dbTopic: topic,
-          totalPosts,
-          reqUserId,
-        }));
+        .then((totalPosts) => {
+          const newTopic = {
+            dbTopic: topic,
+            totalPosts,
+            reqUserId,
+          };
+          return raw ? topic : adapter.adaptTopic(newTopic);
+        });
     });
   };
 
   Topic.updateTopic = (models, adapter, updatedFields, { topicId, reqUserId }, transaction = null) => {
     const where = { id: topicId, deletedAt: { [Sequelize.Op.eq]: null } };
+    const topic = Object.assign({}, updatedFields, { updatedBy: reqUserId });
+    if (topic.tag) {
+      topic.tags = [topic.tag];
+    }
     return models.topics.update(
-      Object.assign({}, updatedFields, { updatedBy: reqUserId }),
+      topic,
       {
         where,
         returning: true,

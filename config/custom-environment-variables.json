@@ -18,7 +18,8 @@
     "host": "MESSAGES_ES_URL",
     "apiVersion": "6.2",
     "indexName": "MESSAGES_ES_INDEX_NAME",
-    "docType": "messages"
+    "docType": "messages",
+    "pageSize": "MESSAGE_ES_PAGE_SIZE"
   },
   "defaultDiscoursePw": "DEFAULT_DISCOURSE_PW",
   "discourseApiKey": "DISCOURSE_API_KEY",

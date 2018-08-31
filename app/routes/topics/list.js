@@ -79,6 +79,7 @@ module.exports = (db, m2m) =>
         return esClient.search({
           index: config.get('elasticsearchConfig.indexName'),
           type: 'topic',
+          size: config.get('elasticsearchConfig.pageSize'),
           body: esFilter,
         })
           .then((dbTopicElastic) => {

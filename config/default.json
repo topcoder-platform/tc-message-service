@@ -18,12 +18,14 @@
     "host": "http://localhost:9200",
     "apiVersion": "6.2",
     "indexName": "messages",
-    "docType": "messages"
+    "docType": "messages",
+    "pageSize": 1000
   },
   "defaultDiscoursePw": "supersecretpw",
   "coderBotUsername": "system",
   "discourseWebhookSecret": "discourse",
   "memberServiceUrl": "http://local.topcoder-dev.com:3001/members",
+  "adminPrefix": "/v5/topics/admin",
   "discourseApiKey": "9a4ba22aaea1def205b61d1bfddc58d7205be61ee3447b7525ce5a191b8daed7",
   "AUTH_SECRET": "secret",
   "authDomain": "topcoder.com",

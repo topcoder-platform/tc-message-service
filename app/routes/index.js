@@ -5,6 +5,11 @@ const config = require('config');
 const util = require('tc-core-library-js').util(config);
 const tcCoreLib = require('tc-core-library-js');
 
+const adminUpdateOwnershipHandler = require('./admin/update-ownership');
+const adminCreateUserStatsHandler = require('./admin/user-stats');
+const adminUpdatePostHandler = require('./admin/post-update');
+const adminUpdateTopicHandler = require('./admin/topic-update');
+
 const createAttachmentHandler = require('./attachments/create');
 const getAttachmentHandler = require('./attachments/get');
 const deleteAttachmentHandler = require('./attachments/delete');
@@ -28,7 +33,10 @@ const deletePostHandler = require('./posts/delete');
 const webhookPostHandler = require('./sendgrid/webhook');
 const discourseWebhookPostHandler = require('./discourse/webhook');
 
+const elasticSearchIndexHandler = require('./indexing/indexing');
+
 const SecurityHelper = require('../services/security');
+
 
 const jwt = require('jsonwebtoken');
 
@@ -41,6 +49,7 @@ const jwt = require('jsonwebtoken');
  */
 module.exports = (logger, db, m2m) => {
   const apiVersion = config.apiVersion;
+  const adminPrefix = config.adminPrefix;
   // health check
   router.get(`/${apiVersion}/topics/health`, (req, res, next) => { // eslint-disable-line
     // TODO check if database connection is alive
@@ -78,7 +87,7 @@ module.exports = (logger, db, m2m) => {
     }
   });
 
-  router.all(RegExp(`\\/${apiVersion}\\/topics\\/(?!webhooks|!health).*`), (req, res, next) => {
+  router.all(RegExp(`\\/${apiVersion}\\/topics\\/|\\/topics\\/admin\\/(?!webhooks|!health).*`), (req, res, next) => {
     if (`${process.env.TC_MESSAGE_SERVICE_AUTH_LOOSE}` !== 'true') {
       jwtAuth()(req, res, next);
       return;
@@ -111,6 +120,16 @@ module.exports = (logger, db, m2m) => {
     req.authToken = req.get('authorization').split(' ')[1]; // eslint-disable-line
     next();
   });
+
+  // Admin routes
+  router.route(`${adminPrefix}/ownership/edit`)
+    .post(adminUpdateOwnershipHandler(db, m2m));
+  router.route(`${adminPrefix}/posts/:postId/stats/create`)
+    .post(adminCreateUserStatsHandler(db, m2m));
+  router.route(`${adminPrefix}/posts/:postId/edit`)
+    .post(adminUpdatePostHandler(db, m2m));
+  router.route(`${adminPrefix}/topics/:topicId/edit`)
+    .post(adminUpdateTopicHandler(db, m2m));
 
   // Register all the routes
   router.route(`/${apiVersion}/topics/list`)
@@ -150,6 +169,9 @@ module.exports = (logger, db, m2m) => {
   router.use(`/${apiVersion}/topics/webhooks/sendgrid`, formidable());
   router.route(`/${apiVersion}/topics/webhooks/sendgrid`)
     .post(webhookPostHandler(db, m2m));
+  router.route(`/${apiVersion}/topics/esindex`)
+  .post(elasticSearchIndexHandler(db, m2m));
+
 
   // register error handler
   router.use((err, req, res, next) => { // eslint-disable-line

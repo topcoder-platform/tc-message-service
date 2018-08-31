@@ -36,7 +36,6 @@ describe('DELETE /v4/topics/:topicId ', () => {
     .then(() => {
       // expectedTopic = topic;
       // expectedTopicPosts = posts;
-      // console.log(expectedTopic, expectedTopicPosts);
       done();
     });
   });
@@ -100,7 +99,7 @@ describe('DELETE /v4/topics/:topicId ', () => {
             where: { deletedAt: { [db.Sequelize.Op.eq]: null } },
             raw: true,
           }).then((topics) => {
-            topics.should.length(0);
+            topics.should.length(1);
             return done();
           });
         });
@@ -133,7 +132,7 @@ describe('DELETE /v4/topics/:topicId ', () => {
           where: { deletedAt: { [db.Sequelize.Op.eq]: null } },
           raw: true,
         }).then((topics) => {
-          topics.should.length(1);
+          topics.should.length(2);
           return done();
         });
       });
