@@ -18,7 +18,8 @@
     "host": "http://localhost:9200",
     "apiVersion": "6.2",
     "indexName": "messages",
-    "docType": "messages"
+    "docType": "messages",
+    "pageSize": 1000
   },
   "defaultDiscoursePw": "supersecretpw",
   "coderBotUsername": "system",
