@@ -39,6 +39,7 @@ module.exports = (app, db, logger) => {
     if (topic && topic.reference.toLowerCase() === 'project') {
       createEvent(BUS_API_EVENT.TOPIC_DELETED, {
         topicId: topic.id,
+        topicTitle: topic.title,
         userId: req.authUser.userId,
         projectId: topic.referenceId,
         initiatorUserId: req.authUser.userId,
@@ -66,6 +67,7 @@ module.exports = (app, db, logger) => {
     if (topic && topic.reference.toLowerCase() === 'project') {
       createEvent(BUS_API_EVENT.POST_DELETED, {
         topicId: topic.id,
+        topicTitle: topic.title,
         postId: req.params.postId,
         userId: req.authUser.userId,
         projectId: topic.referenceId,
@@ -79,7 +81,9 @@ module.exports = (app, db, logger) => {
     if (topic && topic.reference.toLowerCase() === 'project') {
       createEvent(BUS_API_EVENT.POST_UPDATED, {
         topicId: topic.id,
+        topicTitle: topic.title,
         postId: post.id,
+        postContent: post.raw,
         userId: req.authUser.userId,
         projectId: topic.referenceId,
         initiatorUserId: req.authUser.userId,
