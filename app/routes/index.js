@@ -87,7 +87,7 @@ module.exports = (logger, db, m2m) => {
     }
   });
 
-  router.all(RegExp(`\\/${apiVersion}\\/topics\\/|\\/topics\\/admin\\/(?!webhooks|!health).*`), (req, res, next) => {
+  router.all(RegExp(`\\/${apiVersion}\\/topics\\/(?!webhooks|!health).*`), (req, res, next) => {
     if (`${process.env.TC_MESSAGE_SERVICE_AUTH_LOOSE}` !== 'true') {
       jwtAuth()(req, res, next);
       return;

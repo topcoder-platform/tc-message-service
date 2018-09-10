@@ -1,5 +1,5 @@
 {
-  "apiVersion": "v4",
+  "apiVersion": "v5",
   "aws": {
     "config": {
       "accessKeyId": "xxxxxxxxxxxxxxxx",
