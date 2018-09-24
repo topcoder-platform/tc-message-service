@@ -24,11 +24,11 @@
   "defaultDiscoursePw": "DEFAULT_DISCOURSE_PW",
   "discourseApiKey": "DISCOURSE_API_KEY",
   "coderBotUsername": "CODERBOT_USERNAME",
+  "coderBotUserId": "CODERBOT_USER_ID",
   "discourseWebhookSecret": "DISCOURSE_WEBHOOK_SECRET",
   "authDomain": "AUTH_DOMAIN",
   "AUTH_SECRET": "AUTH_SECRET",
   "memberServiceUrl": "MEMBER_SERVICE_URL",
-  "captureLogs": "CAPTURE_LOGS",
   "dbConfig": {
     "masterUrl": "DB_MASTER_URL"
   },

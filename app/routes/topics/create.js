@@ -42,7 +42,7 @@ module.exports = (db, m2m) =>
       body: Joi.string().required(),
     });
 
-    const userId = req.authUser.isMachine ? config.get('coderBotUsername') : req.authUser.userId.toString();
+    const userId = req.authUser.isMachine ? config.get('coderBotUserId') : req.authUser.userId.toString();
     return helper.callReferenceEndpoint(req.authToken, req.id, params.reference, params.referenceId)
       .then((hasAccessResp) => {
         const hasAccess = helper.userHasAccessToEntity(userId, hasAccessResp, params.reference);
@@ -70,7 +70,7 @@ module.exports = (db, m2m) =>
               const topic = savedTopic.dataValues;
               const post = savedPost.dataValues;
               topic.posts = [post];
-              req.app.emit(EVENT.TOPIC_CREATED, { topic, req });
+              req.app.emit(EVENT.TOPIC_CREATED, { topic, req, userId });
               // creates an entry in post_user_stats table for tracking user actions against this post
               // right now it only creates entry for 'READ' action, in future we may create more entries
               // when we support more actions e.g. 'LIKE', 'BOOKMARK', 'FAVORITE' etc
