@@ -24,7 +24,7 @@ module.exports = (db, m2m) => (req, resp, next) => {
   });
   const postBody = req.body.post;
   const topicId = req.params.topicId;
-  const userId = req.authUser.userId.toString();
+  const userId = req.authUser.isMachine ? config.get('coderBotUserId') : req.authUser.userId.toString();
   return db.topics.findById(topicId)
   .then((topic) => { /* eslint no-param-reassign: ["error", { "props": true, "ignorePropertyModificationsFor": ["topic"] }] */
     if (!topic) {
@@ -53,7 +53,7 @@ module.exports = (db, m2m) => (req, resp, next) => {
         return adapter.adaptPost(savedPost)
         .then((post) => {
           // emit post creation event
-          req.app.emit(EVENT.POST_CREATED, { post: savedPost, topic, req });
+          req.app.emit(EVENT.POST_CREATED, { post: savedPost, topic, req, userId });
           return resp.status(200).send(util.wrapResponse(req.id, post));
         });
       });

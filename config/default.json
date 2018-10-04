@@ -23,6 +23,7 @@
   },
   "defaultDiscoursePw": "supersecretpw",
   "coderBotUsername": "system",
+  "coderBotUserId": "system",
   "discourseWebhookSecret": "discourse",
   "memberServiceUrl": "http://local.topcoder-dev.com:3001/members",
   "adminPrefix": "/v5/topics/admin",
