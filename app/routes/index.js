@@ -1,4 +1,5 @@
 import formidable from 'express-formidable';
+import compression from 'compression';
 
 const router = require('express').Router();
 const config = require('config');
@@ -132,8 +133,10 @@ module.exports = (logger, db, m2m) => {
     .post(adminUpdateTopicHandler(db, m2m));
 
   // Register all the routes
+  router.use(`/${apiVersion}/topics/list`, compression());
   router.route(`/${apiVersion}/topics/list`)
     .get(topicListHandler(db, m2m));
+  router.use(`/${apiVersion}/topics/list/db`, compression());
   router.route(`/${apiVersion}/topics/list/db`)
     .get(topicListDbHandler(db, m2m));
   router.route(`/${apiVersion}/topics/create`)
@@ -148,6 +151,7 @@ module.exports = (logger, db, m2m) => {
     .delete(topicDeleteHandler(db, m2m));
 
 
+  router.use(`/${apiVersion}/topics/:topicId/posts/list`, compression());
   router.route(`/${apiVersion}/topics/:topicId/posts/list`)
     .get(listPostsHandler(db, m2m));
   router.route(`/${apiVersion}/topics/:topicId/posts/create`)
