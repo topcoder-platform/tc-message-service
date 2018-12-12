@@ -76,7 +76,7 @@ workflows:
             - test
           filters:
             branches:
-              only: [dev]
+              only: [dev, 'feature/gzip_compression_message_list']
       - deployProd:
           requires:
             - test
