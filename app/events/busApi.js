@@ -16,6 +16,7 @@ module.exports = (app, db, logger) => {
         projectId: topic.referenceId,
         initiatorUserId: userId,
         migration: true,
+        tags: topic.tags,
       }, logger);
     }
   });
@@ -31,6 +32,7 @@ module.exports = (app, db, logger) => {
         projectId: topic.referenceId,
         initiatorUserId: req.authUser.userId,
         migration: true,
+        tags: topic.tags,
       }, logger);
     }
   });
@@ -44,6 +46,7 @@ module.exports = (app, db, logger) => {
         projectId: topic.referenceId,
         initiatorUserId: req.authUser.userId,
         migration: true,
+        tags: topic.tags,
       }, logger);
     }
   });
@@ -59,6 +62,7 @@ module.exports = (app, db, logger) => {
         projectId: topic.referenceId,
         initiatorUserId: userId,
         migration: true,
+        tags: topic.tags,
       }, logger);
     }
   });
@@ -73,6 +77,7 @@ module.exports = (app, db, logger) => {
         projectId: topic.referenceId,
         initiatorUserId: req.authUser.userId,
         migration: true,
+        tags: topic.tags,
       }, logger);
     }
   });
@@ -88,6 +93,7 @@ module.exports = (app, db, logger) => {
         projectId: topic.referenceId,
         initiatorUserId: req.authUser.userId,
         migration: true,
+        tags: topic.tags,
       }, logger);
     }
   });
