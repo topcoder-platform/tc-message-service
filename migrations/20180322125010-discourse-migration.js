@@ -1,14 +1,14 @@
 'use strict';
 module.exports = {
   up: function(queryInterface, Sequelize) {
-    return Promise.all([
+    return [
       queryInterface.dropTable('referenceLookups'),
       queryInterface.createTable('reference_lookups', {
-          reference: {
+          reference: {  
             type: Sequelize.STRING,
             primaryKey: true
           },
-          endpoint: {
+          endpoint: {  
             type: Sequelize.STRING,
             allowNull: false
           },
@@ -37,7 +37,7 @@ module.exports = {
           allowNull: true,
         },
         // discourse post id for mapping updates in posts via discourse webhook
-        discoursePostId: {
+        discoursePostId: {  
           type: Sequelize.BIGINT,
           allowNull: true,
         },
@@ -134,7 +134,7 @@ module.exports = {
         },
         updatedAt: {
           type: Sequelize.DATE,
-        },
+        },  
         rawText: {
           type: Sequelize.TEXT,
           allowNull: false,
@@ -228,18 +228,18 @@ module.exports = {
           type: Sequelize.STRING
         }
       ),
-    ]);
+    ]
   },
   down: function(queryInterface, Sequelize) {
-    return Promise.all([
+    return [
       queryInterface.createTable(
           'referenceLookups',
           {
-              reference: {
+              reference: {  
                   type: Sequelize.STRING,
                   primaryKey: true
               },
-              endpoint: {
+              endpoint: {  
                   type: Sequelize.STRING,
                   allowNull: false
               },
@@ -271,6 +271,6 @@ module.exports = {
           allowNull: false,
         }
       ),
-    ]);
+    ];
   }
 };
