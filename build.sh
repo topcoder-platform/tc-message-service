@@ -1,14 +1,32 @@
-#!/usr/bin/env bash
+#!/bin/bash
+set -eo pipefail
 
-# more bash-friendly output for jq
-JQ="jq --raw-output --exit-status"
+TAG="tc-message-service:latest"
+docker build -t $TAG .
 
-ENV=$1
-ACCOUNT_ID=$(eval "echo \$${ENV}_AWS_ACCOUNT_ID")
-AWS_REPOSITORY=$(eval "echo \$${ENV}_AWS_REPOSITORY")
+# Copies "node_modules" from the created image, if necessary for caching.
+docker create --name app $TAG
 
-build() {
-  docker build -t $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$AWS_REPOSITORY:$CIRCLE_SHA1 .
-}
+if [ -d node_modules ]
+then
+  # If "node_modules" directory already exists, we should compare
+  # "package-lock.json" from the code and from the container to decide,
+  # whether we need to re-cache, and thus to copy "node_modules" from
+  # the Docker container.
+  mv package-lock.json old-package-lock.json
+  docker cp app:/usr/src/app/package-lock.json package-lock.json
+ # docker cp .env app:/opt/app/
+  set +eo pipefail
+  UPDATE_CACHE=$(cmp package-lock.json old-package-lock.json)
+  set -eo pipefail
+else
+  # If "node_modules" does not exist, then cache must be created.
+  UPDATE_CACHE=1
+fi
 
-build
+if [ "$UPDATE_CACHE" == 1 ]
+then
+  docker cp app:/usr/src/app/node_modules .
+fi
+
+
