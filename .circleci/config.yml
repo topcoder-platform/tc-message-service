@@ -1,8 +1,7 @@
 version: 2
 defaults: &defaults
     docker:
-      - image: circleci/python:2.7-stretch-browsers
-      
+      - image: circleci/python:2.7-stretch-browsers  
 install_dependency: &install_dependency
           name: Installation of build and deployment dependencies.
           command: |
