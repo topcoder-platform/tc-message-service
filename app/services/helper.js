@@ -215,7 +215,7 @@ module.exports = (logger, db, m2m) => {
     if (hasAccess && reference.toLowerCase() === REFERENCE_LOOKUPS.PROJECT) {
       const projectMembers = _.get(hasAccessResp[1], 'members', []);
         // get users list
-      const isMember = _.filter(projectMembers, member => member.userId.toString() === userId).length > 0;
+      const isMember = _.filter(projectMembers, member => `${member.userId}` === userId).length > 0;
       logger.debug(isMember, 'isMember');
       return isMember;
     }

@@ -16,10 +16,10 @@ install_deploysuite: &install_deploysuite
             cp ./../buildscript/master_deploy.sh .
             cp ./../buildscript/buildenv.sh .
             cp ./../buildscript/awsconfiguration.sh .
+
 run_build: &run_build
           name: Build of Docker image
           command: ./build.sh
-
 jobs:
   test:
     docker:

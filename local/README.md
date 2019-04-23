@@ -143,8 +143,8 @@ CREATE DATABASE messages_test;
 We use sequelize to create and manage the database schema, to create the schema in Postgres, simply go into the tc-message-service folder and issue the following command:
 
 ```shell
-NODE_ENV=development sequelize db:migrate
-NODE_ENV=test sequelize db:migrate
+NODE_ENV=development npm run migrate
+NODE_ENV=test npm run migrate
 ```
 
 We will also need to create the dynamodb log table for the discourse webhooks.  To create this table, make sure you are at the project root and run:
