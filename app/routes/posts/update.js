@@ -23,11 +23,13 @@ module.exports = (db, m2m) => (req, resp, next) => {
   // Validate request parameters
   Joi.assert(req.body, {
     post: Joi.string().required(),
+    attachmentIds: Joi.array().items(Joi.number()).optional(),
   });
 
   const topicId = req.params.topicId;
   const postId = req.params.postId;
   const content = req.body.post;
+  const attachmentIds = req.body.attachmentIds;
   const userId = req.authUser.userId.toString();
 
   const promises = [
@@ -51,11 +53,12 @@ module.exports = (db, m2m) => (req, resp, next) => {
         throw new errors.HttpStatusError(403, 'User doesn\'t have access to the entity');
       }
 
-      return db.posts.updatePost(db, adapter, { raw: content }, { postId }, userId)
-      .then((updatedPost) => {
-        req.app.emit(EVENT.POST_UPDATED, { post, req, topic });
-        resp.status(200).send(util.wrapResponse(req.id, updatedPost));
-      });
+      return db.posts.updatePostAttachments(db, postId, attachmentIds)
+      .then(() => db.posts.updatePost(db, adapter, { raw: content }, { postId }, userId)
+        .then((updatedPost) => {
+          req.app.emit(EVENT.POST_UPDATED, { post, req, topic });
+          resp.status(200).send(util.wrapResponse(req.id, updatedPost));
+        }));
     });
   })
   .catch((error) => {

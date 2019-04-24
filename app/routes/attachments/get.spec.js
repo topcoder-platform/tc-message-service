@@ -16,9 +16,9 @@ const db = models(server, server.logger);
 
 require('should-sinon');
 
-describe('GET /v4/topics/:topicId/posts/:postId/attachments/:attachmentId', () => {
-  const apiPath = `/${config.apiVersion}/topics/1/posts/1/attachments/1/read?referenceId=1`;
-  const nonExistingAttachmentPath = `/${config.apiVersion}/topics/1/posts/1/attachments/2/read?referenceId=1`;
+describe('GET /v4/topics/attachments/:attachmentId', () => {
+  const apiPath = `/${config.apiVersion}/topics/attachments/1`;
+  const nonExistingAttachmentPath = `/${config.apiVersion}/topics/attachments/2`;
   const memberUser = {
     handle: getDecodedToken(jwts.member).handle,
     userId: getDecodedToken(jwts.member).userId,
@@ -57,8 +57,6 @@ describe('GET /v4/topics/:topicId/posts/:postId/attachments/:attachmentId', () =
         id: 1,
         postId: 1,
         originalFileName: 'aFileName.jpg',
-        fileSize: 123,
-        sha1: 'cf444a806626664bc9feee2737158fd312004ce5',
         url: 'https://s3.com/1/12123123-aFileName.jpg',
         createdBy: auth.handle,
         updatedBy: auth.handle,

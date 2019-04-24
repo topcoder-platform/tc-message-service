@@ -356,6 +356,102 @@ paths:
           $ref: "#/responses/NotFound"
         '500':
           $ref: "#/responses/UnexpectedFailure"
+  /topics/attachments:
+    post:
+      tags:
+        - Attachments
+      security:
+        - Bearer: []
+      summary: Create attachment
+      description: Creates new attachment. Copies the file from source bucket to the target bucket. Adds a new DB record with postId=null
+      parameters:
+        - in: header
+          name: Authorization
+          description: Authorization token
+          required: true
+          type: string
+        - in: body
+          name: CreateAttachmentBody
+          required: true
+          description: CreateAttachment payload
+          schema:
+            $ref: "#/definitions/CreateAttachmentBody"
+      responses:
+        '200':
+          $ref: "#/definitions/CreateAttachmentResponse"
+        '500':
+          $ref: "#/responses/UnexpectedFailure"
+          
+  /topics/attachments/{attachmentId}:
+    get:
+      tags:
+        - Attachments
+      security:
+        - Bearer: []
+      summary: Get attachment
+      description: Gets the request attachment
+      parameters:
+        - in: header
+          name: Authorization
+          description: Authorization token
+          required: true
+          type: string
+        - in: path
+          name: attachmentId
+          description: Requested Attachment ID
+          required: true
+          type: number
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: "#/definitions/getAttachmentBody"
+      responses:
+        '200':
+          description: Gets a signed URL and starts download
+        '404':
+          $ref: "#/responses/NotFound"
+        '403':
+          $ref: "#/responses/InvalidAccess"
+        '500':
+          $ref: "#/responses/UnexpectedFailure"
+    delete:
+      tags:
+        - Attachments
+      security:
+        - Bearer: []
+      summary: Delete attachment
+      description: Deletes the specified attachment
+      parameters:
+        - in: header
+          name: Authorization
+          description: Authorization token
+          required: true
+          type: string
+        - in: path
+          name: attachmentId
+          description: Attachment ID
+          required: true
+          type: number
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: "#/definitions/deleteAttachmentBody"
+      responses:
+        '200':
+          description: Success. 
+        '404':
+          $ref: "#/responses/NotFound"
+        '403':
+          $ref: "#/responses/InvalidAccess"
+        '400':
+          $ref: "#/responses/ValidationFailure"
+        '500':
+          $ref: "#/responses/UnexpectedFailure"
+    
+
+      
   /topics/webhooks/discourse:
     post:
       tags:
@@ -684,13 +780,114 @@ definitions:
       body:
         type: string
         description: content of the post (earlier it used to be cooked content i.e. markdown converted to HTML), however, with V5 release, it also returns the raw content as with `rawContent` field. Field is reatined for backward compatability
+      attachments:
+        $ref: "#/definitions/AttachmentObject" 
       rawContent:
         type: string
         description: content of the post in raw form i.e. no cooking done
       read:
         type: boolean
         description: flag to indicate that if the calling user has read this post in past or not
-      
+        
+  CreateAttachmentBody:
+    description: Create Attachment object
+    required: 
+    - "filename"
+    - "bucket"
+    properties: 
+      filename: 
+        description: The filename that will be copied from the source bucket
+        type: "string"
+        example: "test.txt"
+      bucket: 
+        description: The source bucket
+        type: "string"
+        example: "public-bucket"
+      path: 
+        description: The path to the file (in the source bucket)
+        type: "string"
+        example: "sub_directory"
+        
+  getAttachmentBody:
+    description: Get Attachment body
+    properties:
+      postId:
+        type: number
+  
+  deleteAttachmentBody:
+    properties:
+      postId:
+        type: number
+      hardDelete:
+        type: boolean
+
+  CreateAttachmentResponse:
+    type: object
+    description: Success.
+    properties:
+      id: 
+        type: "string"
+        example: "66f1ed89-b797-4995-a7f1-8385739923b9"
+      version: 
+        type: "string"
+        example: "v5"
+      result: 
+        properties: 
+          success: 
+            type: "boolean"
+            example: true
+          status: 
+            type: "number"
+            example: 200
+          content:
+            properties: 
+              id: 
+                type: "number"
+                example: 7
+              originalFileName: 
+                type: "string"
+                example: "test_under_dir.txt"
+              fileSize: 
+                type: "number"
+                example: 1048576
+              createdBy: 
+                type: "string"
+                example: "magrathean"
+              updatedBy: 
+                type: "string"
+                example: "magrathean"
+              updatedAt: 
+                type: "string"
+                example: "2019-04-15T06:55:57.671Z"
+              createdAt: 
+                type: "string"
+                example: "2019-04-15T06:55:57.671Z"
+          metadata: 
+            properties: 
+              totalCount: 
+                type: "number"
+                example: 1
+                
+  AttachmentObject:
+    type: object
+    properties: 
+      id: 
+        type: "number"
+        example: 1
+      date: 
+        type: "string"
+        example: "2019-04-15T03:21:48.030Z"
+      updatedDate: 
+        type: "string"
+        example: "2019-04-15T03:26:16.256Z"
+      originalFileName: 
+        type: "string"
+        example: "test.txt"
+      createdBy: 
+        type: "string"
+        example: "magrathean"
+
+    
 
   ErrorResponse:
     type: object

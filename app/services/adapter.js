@@ -35,16 +35,29 @@ function Adapter(logger, db, _discourseClient = null) {// eslint-disable-line
   function convertPost(input) {
     let userId = input.createdBy;
     userId = userId !== 'system' && userId !== CODERBOT_USERNAME ? parseInt(userId, 10) : userId;
-    return {
+    const post = {
       id: input.id,
+      topicId: input.topicId,
       date: input.createdAt,
       updatedDate: input.updatedAt,
       userId,
       read: true,
       body: input.raw,
       rawContent: input.raw,
+      attachments: [],
       type: 'post',
     };
+    _.each(input.postAttachments, (postAttachment) => {
+      const attachment = {
+        id: postAttachment.id,
+        date: postAttachment.createdAt,
+        updatedDate: postAttachment.updatedAt,
+        originalFileName: postAttachment.originalFileName,
+        createdBy: postAttachment.createdBy,
+      };
+      post.attachments.push(attachment);
+    });
+    return post;
   }
 
   this.adaptPosts = function a(posts) {
@@ -103,9 +116,20 @@ function Adapter(logger, db, _discourseClient = null) {// eslint-disable-line
           read: readStats ? readStats.userIds.indexOf(reqUserId) !== -1 : false,
           body: dbPost.raw,
           rawContent: dbPost.raw,
+          attachments: [],
           type: 'post',
         };
 
+        _.each(dbPost.postAttachments, (postAttachment) => {
+          const attachment = {
+            id: postAttachment.id,
+            date: postAttachment.createdAt,
+            updatedDate: postAttachment.updatedAt,
+            originalFileName: postAttachment.originalFileName,
+            createdBy: postAttachment.createdBy,
+          };
+          topicDetail.attachments.push(attachment);
+        });
         if (includeReadUserIds) {
           topicDetail.readUserIds = readStats ? readStats.userIds : [];
         }

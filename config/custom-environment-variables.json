@@ -11,7 +11,7 @@
       "elasticSearchIndexingLogsTable": "ES_INDEXING_LOGS_TABLE"
     },
     "S3": {
-      "bucket": "AWS_S3_BUCKET"
+      "targetBucket": "AWS_S3_BUCKET"
     }
   },
   "elasticsearchConfig": {

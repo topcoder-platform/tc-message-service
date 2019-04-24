@@ -1,18 +1,22 @@
 {
-  "apiVersion": "v4",
+  "apiVersion": "v5",
   "aws": {
     "config": {
-      "accessKeyId": "xxxxxxxxxxxxxxxx",
-      "region": "us-east-1",
-      "secretAccessKey": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+      "accessKeyId": "*******",
+      "region": "eu-west-1",
+      "secretAccessKey": "********"
     },
     "dynamodb": {
       "discourseWebhookLogsTable": "message-service-discourse-webhook-logs",
       "elasticSearchIndexingLogsTable": "MessageServiceESIndexingLogs"
     },
     "S3": {
-      "bucket": "tc-message-service-attachments"
+      "targetBucket": "tc-message-service-attachments",
+      "storageDir": "attachments"
     }
+  },
+  "attachmentConfig": {
+    "deleteAfter": "1 day"
   },
   "elasticsearchConfig": {
     "host": "http://localhost:9200",

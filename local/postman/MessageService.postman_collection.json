@@ -1,13 +1,80 @@
 {
 	"info": {
+		"_postman_id": "ad3448bb-e8d2-44d2-ad36-cbe5cb865a26",
 		"name": "Message Service",
-		"_postman_id": "f883f45c-fabc-e688-2056-9df8359c92d4",
-		"description": "",
-		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"item": [
 		{
-			"name": "Create Topic (magrathean, submission 455, PRIMARY)",
+			"name": "Upload attachment from root directory (magrathean)",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{magratheanToken}}"
+					},
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"filename\": \"test.txt\",\n\t\"bucket\": \"tc-dev-attachments-public-bucket\"\n}"
+				},
+				"url": {
+					"raw": "{{URL}}/v5/topics/attachments",
+					"host": [
+						"{{URL}}"
+					],
+					"path": [
+						"v5",
+						"topics",
+						"attachments"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Upload attachment from sub directory (magrathean)",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{magratheanToken}}"
+					},
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"filename\": \"test_under_dir.txt\",\n\t\"bucket\": \"tc-dev-attachments-public-bucket\",\n\t\"path\": \"directory\"\n}"
+				},
+				"url": {
+					"raw": "{{URL}}/v5/topics/attachments",
+					"host": [
+						"{{URL}}"
+					],
+					"path": [
+						"v5",
+						"topics",
+						"attachments"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create Topic with attachment (magrathean, submission 455, PRIMARY)",
 			"request": {
 				"method": "POST",
 				"header": [
@@ -22,139 +89,19 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"reference\": \"submission\",\n    \"referenceId\": \"455\",\n    \"tag\": \"PRIMARY\",\n    \"title\": \"Discussion for submission 455\",\n    \"body\": \"Discussion body for submission 455\"\n}"
-				},
-				"url": "{{URL}}/v4/topics",
-				"description": null
-			},
-			"response": []
-		},
-		{
-			"name": "Create Topic (test_user1, submission 455, PRIMARY) copy",
-			"request": {
-				"method": "POST",
-				"header": [
-					{
-						"key": "Authorization",
-						"value": "Bearer {{test_user1Token}}"
-					},
-					{
-						"key": "Content-Type",
-						"value": "application/json"
-					}
-				],
-				"body": {
-					"mode": "raw",
-					"raw": "{\n    \"reference\": \"submission\",\n    \"referenceId\": \"455\",\n    \"tag\": \"PRIMARY\",\n    \"title\": \"Discussion for submission 455 2\",\n    \"body\": \"Discussion body for submission 455\"\n}"
-				},
-				"url": "{{URL}}/v4/topics",
-				"description": null
-			},
-			"response": []
-		},
-		{
-			"name": "Get Topics (magrathean, submission 455, PRIMARY)",
-			"request": {
-				"method": "GET",
-				"header": [
-					{
-						"key": "Authorization",
-						"value": "Bearer {{magratheanToken}}"
-					}
-				],
-				"body": {
-					"mode": "raw",
-					"raw": ""
+					"raw": "{\n    \"reference\": \"submission\",\n    \"referenceId\": \"455\",\n    \"attachmentIds\": [1],\n    \"tag\": \"PRIMARY\",\n    \"title\": \"Discussion for submission 455\",\n    \"body\": \"Discussion body for submission 455\"\n}"
 				},
 				"url": {
-					"raw": "{{URL}}/v4/topics?filter=reference%3Dsubmission%26referenceId%3D455%26tag%3DPRIMARY",
+					"raw": "{{URL}}/v5/topics/create",
 					"host": [
 						"{{URL}}"
 					],
 					"path": [
-						"v4",
-						"topics"
-					],
-					"query": [
-						{
-							"key": "filter",
-							"value": "reference%3Dsubmission%26referenceId%3D455%26tag%3DPRIMARY"
-						}
+						"v5",
+						"topics",
+						"create"
 					]
-				},
-				"description": null
-			},
-			"response": []
-		},
-		{
-			"name": "Get Topics (test_user1, submission 455, PRIMARY) copy",
-			"request": {
-				"method": "GET",
-				"header": [
-					{
-						"key": "Authorization",
-						"value": "Bearer {{test_user1Token}}"
-					}
-				],
-				"body": {
-					"mode": "raw",
-					"raw": ""
-				},
-				"url": {
-					"raw": "{{URL}}/v4/topics?filter=reference%3Dsubmission%26referenceId%3D455%26tag%3DPRIMARY",
-					"host": [
-						"{{URL}}"
-					],
-					"path": [
-						"v4",
-						"topics"
-					],
-					"query": [
-						{
-							"key": "filter",
-							"value": "reference%3Dsubmission%26referenceId%3D455%26tag%3DPRIMARY"
-						}
-					]
-				},
-				"description": null
-			},
-			"response": []
-		},
-		{
-			"name": "Get Topic (magrathean, submission 455, PRIMARY)",
-			"request": {
-				"method": "GET",
-				"header": [
-					{
-						"key": "Authorization",
-						"value": "Bearer {{magratheanToken}}"
-					}
-				],
-				"body": {
-					"mode": "raw",
-					"raw": ""
-				},
-				"url": "{{URL}}/v4/topics/1",
-				"description": null
-			},
-			"response": []
-		},
-		{
-			"name": "Get Topic (test_user1, submission 455, PRIMARY)",
-			"request": {
-				"method": "GET",
-				"header": [
-					{
-						"key": "Authorization",
-						"value": "Bearer {{test_user1Token}}"
-					}
-				],
-				"body": {
-					"mode": "raw",
-					"raw": ""
-				},
-				"url": "{{URL}}/v4/topics/1",
-				"description": null
+				}
 			},
 			"response": []
 		},
@@ -174,40 +121,27 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n  \"title\": \"new title\",\n  \"postId\": 22,\n    \"content\": \"new content\"\n}"
+					"raw": "{\n  \"title\": \"new title\",\n  \"postId\": 1,\n  \"content\": \"new content\",\n  \"attachmentIds\": [1, 2]\n}"
 				},
-				"url": "{{URL}}/v4/topics/21/edit",
-				"description": null
+				"url": {
+					"raw": "{{URL}}/v5/topics/1/edit",
+					"host": [
+						"{{URL}}"
+					],
+					"path": [
+						"v5",
+						"topics",
+						"1",
+						"edit"
+					]
+				}
 			},
 			"response": []
 		},
 		{
-			"name": "Update Topic (test_user1, submission 455, PRIMARY)",
+			"name": "Get Topics (magrathean, submission 455, PRIMARY)",
 			"request": {
-				"method": "POST",
-				"header": [
-					{
-						"key": "Authorization",
-						"value": "Bearer {{test_user1Token}}"
-					},
-					{
-						"key": "Content-Type",
-						"value": "application/json"
-					}
-				],
-				"body": {
-					"mode": "raw",
-					"raw": "{\n  \"title\": \"new title\",\n  \"postId\": 23,\n    \"content\": \"new content\"\n}"
-				},
-				"url": "{{URL}}/v4/topics/22/edit",
-				"description": null
-			},
-			"response": []
-		},
-		{
-			"name": "Delete topic (magrathean, submission 455, PRIMARY)",
-			"request": {
-				"method": "DELETE",
+				"method": "GET",
 				"header": [
 					{
 						"key": "Authorization",
@@ -218,32 +152,57 @@
 					"mode": "raw",
 					"raw": ""
 				},
-				"url": "{{URL}}/v4/topics/21",
-				"description": null
+				"url": {
+					"raw": "{{URL}}/v5/topics/list?filter=reference%3Dsubmission%26referenceId%3D455%26tag%3DPRIMARY",
+					"host": [
+						"{{URL}}"
+					],
+					"path": [
+						"v5",
+						"topics",
+						"list"
+					],
+					"query": [
+						{
+							"key": "filter",
+							"value": "reference%3Dsubmission%26referenceId%3D455%26tag%3DPRIMARY"
+						}
+					]
+				}
 			},
 			"response": []
 		},
 		{
-			"name": "Delete topic (test_user1, submission 455, PRIMARY)",
+			"name": "Get Topic (magrathean, submission 455, PRIMARY)",
 			"request": {
-				"method": "DELETE",
+				"method": "GET",
 				"header": [
 					{
 						"key": "Authorization",
-						"value": "Bearer {{test_user1Token}}"
+						"value": "Bearer {{magratheanToken}}"
 					}
 				],
 				"body": {
 					"mode": "raw",
 					"raw": ""
 				},
-				"url": "{{URL}}/v4/topics/23",
-				"description": null
+				"url": {
+					"raw": "{{URL}}/v5/topics/1/read",
+					"host": [
+						"{{URL}}"
+					],
+					"path": [
+						"v5",
+						"topics",
+						"1",
+						"read"
+					]
+				}
 			},
 			"response": []
 		},
 		{
-			"name": "Create Post (magrathean, submission 455, PRIMARY)",
+			"name": "Create Post with attachment (magrathean, submission 455, PRIMARY)",
 			"request": {
 				"method": "POST",
 				"header": [
@@ -258,10 +217,21 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"post\": \"submission @test_user1 @magrathean hello\"\n}"
+					"raw": "{\n    \"post\": \"submission @test_user1 @magrathean hello\",\n    \"attachmentIds\": [3]\n}"
 				},
-				"url": "{{URL}}/v4/topics/38/posts",
-				"description": null
+				"url": {
+					"raw": "{{URL}}/v5/topics/1/posts/create",
+					"host": [
+						"{{URL}}"
+					],
+					"path": [
+						"v5",
+						"topics",
+						"1",
+						"posts",
+						"create"
+					]
+				}
 			},
 			"response": []
 		},
@@ -281,28 +251,27 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"post\": \"submission @test_user1 @magrathean hello\"\n}"
+					"raw": ""
 				},
 				"url": {
-					"raw": "{{URL}}/v4/topics/12/posts?postIds=20",
+					"raw": "{{URL}}/v5/topics/1/posts/list?postIds=1",
 					"host": [
 						"{{URL}}"
 					],
 					"path": [
-						"v4",
+						"v5",
 						"topics",
-						"12",
-						"posts"
+						"1",
+						"posts",
+						"list"
 					],
 					"query": [
 						{
 							"key": "postIds",
-							"value": "20",
-							"equals": true
+							"value": "1"
 						}
 					]
-				},
-				"description": null
+				}
 			},
 			"response": []
 		},
@@ -322,10 +291,22 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"post\": \"submission @test_user1 @magrathean hello\"\n}"
+					"raw": ""
 				},
-				"url": "{{URL}}/v4/topics/12/posts/20",
-				"description": null
+				"url": {
+					"raw": "{{URL}}/v5/topics/1/posts/1/read",
+					"host": [
+						"{{URL}}"
+					],
+					"path": [
+						"v5",
+						"topics",
+						"1",
+						"posts",
+						"1",
+						"read"
+					]
+				}
 			},
 			"response": []
 		},
@@ -347,8 +328,415 @@
 					"mode": "raw",
 					"raw": "{\n    \"post\": \"submission @test_user1 @magrathean hello\"\n}"
 				},
-				"url": "{{URL}}/v4/topics/21/posts/26/edit",
-				"description": null
+				"url": {
+					"raw": "{{URL}}/v5/topics/1/posts/2/edit",
+					"host": [
+						"{{URL}}"
+					],
+					"path": [
+						"v5",
+						"topics",
+						"1",
+						"posts",
+						"2",
+						"edit"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Update Post with attachment(magrathean, submission 455, PRIMARY)",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{magratheanToken}}"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"post\": \"submission @test_user1 @magrathean hello\",\n    \"attachmentIds\": [4]\n}"
+				},
+				"url": {
+					"raw": "{{URL}}/v5/topics/1/posts/2/edit",
+					"host": [
+						"{{URL}}"
+					],
+					"path": [
+						"v5",
+						"topics",
+						"1",
+						"posts",
+						"2",
+						"edit"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get attachment (magrathean)",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{magratheanToken}}"
+					},
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"postId\": 1\n}"
+				},
+				"url": {
+					"raw": "{{URL}}/v5/topics/attachments/1",
+					"host": [
+						"{{URL}}"
+					],
+					"path": [
+						"v5",
+						"topics",
+						"attachments",
+						"1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete attachment (hard) (magrathean)",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{magratheanToken}}"
+					},
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"postId\": 1,\n\t\"hardDelete\": true\n}"
+				},
+				"url": {
+					"raw": "{{URL}}/v5/topics/attachments/1",
+					"host": [
+						"{{URL}}"
+					],
+					"path": [
+						"v5",
+						"topics",
+						"attachments",
+						"1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete attachment (soft) (magrathean) (hardDelete)",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{magratheanTokenAdmin}}"
+					},
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"postId\": 2\n}"
+				},
+				"url": {
+					"raw": "{{URL}}/v5/topics/attachments/3",
+					"host": [
+						"{{URL}}"
+					],
+					"path": [
+						"v5",
+						"topics",
+						"attachments",
+						"3"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create Topic (magrathean, submission 455, PRIMARY)",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{magratheanToken}}"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"reference\": \"submission\",\n    \"referenceId\": \"455\",\n    \"tag\": \"PRIMARY\",\n    \"title\": \"Discussion for submission 455\",\n    \"body\": \"Discussion body for submission 455\"\n}"
+				},
+				"url": {
+					"raw": "{{URL}}/v5/topics/create",
+					"host": [
+						"{{URL}}"
+					],
+					"path": [
+						"v5",
+						"topics",
+						"create"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create Topic (test_user1, submission 455, PRIMARY) copy",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{test_user1Token}}"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"reference\": \"submission\",\n    \"referenceId\": \"455\",\n    \"tag\": \"PRIMARY\",\n    \"title\": \"Discussion for submission 455 2\",\n    \"body\": \"Discussion body for submission 455\"\n}"
+				},
+				"url": {
+					"raw": "{{URL}}/v5/topics/create",
+					"host": [
+						"{{URL}}"
+					],
+					"path": [
+						"v5",
+						"topics",
+						"create"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Topics (test_user1, submission 455, PRIMARY) copy",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{test_user1Token}}"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "{{URL}}/v5/topics/list?filter=reference%3Dsubmission%26referenceId%3D455%26tag%3DPRIMARY",
+					"host": [
+						"{{URL}}"
+					],
+					"path": [
+						"v5",
+						"topics",
+						"list"
+					],
+					"query": [
+						{
+							"key": "filter",
+							"value": "reference%3Dsubmission%26referenceId%3D455%26tag%3DPRIMARY"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Topic (test_user1, submission 455, PRIMARY)",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{test_user1Token}}"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "{{URL}}/v5/topics/1/read",
+					"host": [
+						"{{URL}}"
+					],
+					"path": [
+						"v5",
+						"topics",
+						"1",
+						"read"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Update Topic (test_user1, submission 455, PRIMARY)",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{test_user1Token}}"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"title\": \"new title\",\n  \"postId\": 23,\n    \"content\": \"new content\"\n}"
+				},
+				"url": {
+					"raw": "{{URL}}/v5/topics/1/edit",
+					"host": [
+						"{{URL}}"
+					],
+					"path": [
+						"v5",
+						"topics",
+						"1",
+						"edit"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete topic (magrathean, submission 455, PRIMARY)",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{magratheanToken}}"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "{{URL}}/v5/topics/1/remove",
+					"host": [
+						"{{URL}}"
+					],
+					"path": [
+						"v5",
+						"topics",
+						"1",
+						"remove"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete topic (test_user1, submission 455, PRIMARY)",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{test_user1Token}}"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "{{URL}}/v5/topics/1/remove",
+					"host": [
+						"{{URL}}"
+					],
+					"path": [
+						"v5",
+						"topics",
+						"1",
+						"remove"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create Post (magrathean, submission 455, PRIMARY)",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{magratheanToken}}"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"post\": \"submission @test_user1 @magrathean hello\"\n}"
+				},
+				"url": {
+					"raw": "{{URL}}/v5/topics/1/posts/create",
+					"host": [
+						"{{URL}}"
+					],
+					"path": [
+						"v5",
+						"topics",
+						"1",
+						"posts",
+						"create"
+					]
+				}
 			},
 			"response": []
 		},
@@ -366,173 +754,20 @@
 					"mode": "raw",
 					"raw": ""
 				},
-				"url": "{{URL}}/v4/topics/27/posts/36/",
-				"description": null
-			},
-			"response": []
-		},
-		{
-			"name": "Upload attachment (magrathean)",
-			"request": {
-				"method": "POST",
-				"header": [
-					{
-						"key": "Authorization",
-						"value": "Bearer {{magratheanToken}}"
-					},
-					{
-						"key": "Content-Type",
-						"value": "multipart/form-data"
-					}
-				],
-				"body": {
-					"mode": "formdata",
-					"formdata": [
-						{
-							"key": "file",
-							"type": "file",
-							"src": "0-weu-d1-4373bd180b68617cb3704b58e6add86c.jpg"
-						}
-					]
-				},
 				"url": {
-					"raw": "{{URL}}/v4/topics/1/posts/1/attachments?referenceId=1",
+					"raw": "{{URL}}/v5/topics/27/posts/36/remove",
 					"host": [
 						"{{URL}}"
 					],
 					"path": [
-						"v4",
+						"v5",
 						"topics",
-						"1",
+						"27",
 						"posts",
-						"1",
-						"attachments"
-					],
-					"query": [
-						{
-							"key": "referenceId",
-							"value": "1",
-							"equals": true
-						}
+						"36",
+						"remove"
 					]
-				},
-				"description": null
-			},
-			"response": []
-		},
-		{
-			"name": "Delete attachment (magrathean)",
-			"request": {
-				"method": "DELETE",
-				"header": [
-					{
-						"key": "Authorization",
-						"value": "Bearer {{magratheanToken}}"
-					}
-				],
-				"body": {},
-				"url": {
-					"raw": "{{URL}}/v4/topics/1/posts/1/attachments/1?referenceId=1",
-					"host": [
-						"{{URL}}"
-					],
-					"path": [
-						"v4",
-						"topics",
-						"1",
-						"posts",
-						"1",
-						"attachments",
-						"1"
-					],
-					"query": [
-						{
-							"key": "referenceId",
-							"value": "1",
-							"equals": true
-						}
-					]
-				},
-				"description": null
-			},
-			"response": []
-		},
-		{
-			"name": "Delete attachment (magrathean) (hardDelete)",
-			"request": {
-				"method": "DELETE",
-				"header": [
-					{
-						"key": "Authorization",
-						"value": "Bearer {{magratheanTokenAdmin}}"
-					}
-				],
-				"body": {},
-				"url": {
-					"raw": "{{URL}}/v4/topics/1/posts/1/attachments/7?referenceId=1&hardDelete=true",
-					"host": [
-						"{{URL}}"
-					],
-					"path": [
-						"v4",
-						"topics",
-						"1",
-						"posts",
-						"1",
-						"attachments",
-						"7"
-					],
-					"query": [
-						{
-							"key": "referenceId",
-							"value": "1",
-							"equals": true
-						},
-						{
-							"key": "hardDelete",
-							"value": "true",
-							"equals": true
-						}
-					]
-				},
-				"description": null
-			},
-			"response": []
-		},
-		{
-			"name": "Get attachment (magrathean)",
-			"request": {
-				"method": "GET",
-				"header": [
-					{
-						"key": "Authorization",
-						"value": "Bearer {{magratheanToken}}"
-					}
-				],
-				"body": {},
-				"url": {
-					"raw": "{{URL}}/v4/topics/1/posts/1/attachments/6?referenceId=1",
-					"host": [
-						"{{URL}}"
-					],
-					"path": [
-						"v4",
-						"topics",
-						"1",
-						"posts",
-						"1",
-						"attachments",
-						"6"
-					],
-					"query": [
-						{
-							"key": "referenceId",
-							"value": "1",
-							"equals": true
-						}
-					]
-				},
-				"description": null
+				}
 			},
 			"response": []
 		},
@@ -554,8 +789,17 @@
 					"mode": "raw",
 					"raw": "{\n  \"reference\": \"project\",\n    \"referenceId\": 1111\n}"
 				},
-				"url": "{{URL}}/v4/topics/syncUsers",
-				"description": null
+				"url": {
+					"raw": "{{URL}}/v4/topics/syncUsers",
+					"host": [
+						"{{URL}}"
+					],
+					"path": [
+						"v4",
+						"topics",
+						"syncUsers"
+					]
+				}
 			},
 			"response": []
 		},
@@ -577,8 +821,17 @@
 					"mode": "raw",
 					"raw": "{\n    \"reference\": \"project\",\n    \"referenceId\": \"2\",\n    \"tag\": \"PRIMARY\",\n    \"title\": \"Discussion for project 2\",\n    \"body\": \"Discussion body for project 2\"\n}"
 				},
-				"url": "{{URL}}/v4/topics",
-				"description": null
+				"url": {
+					"raw": "{{URL}}/v5/topics/create",
+					"host": [
+						"{{URL}}"
+					],
+					"path": [
+						"v5",
+						"topics",
+						"create"
+					]
+				}
 			},
 			"response": []
 		},
@@ -596,8 +849,18 @@
 					"mode": "raw",
 					"raw": ""
 				},
-				"url": "{{URL}}/v4/topics/26",
-				"description": null
+				"url": {
+					"raw": "{{URL}}/v5/topics/26/remove",
+					"host": [
+						"{{URL}}"
+					],
+					"path": [
+						"v5",
+						"topics",
+						"26",
+						"remove"
+					]
+				}
 			},
 			"response": []
 		},
@@ -619,8 +882,19 @@
 					"mode": "raw",
 					"raw": "{\n    \"post\": \"submission @test_user1 @magrathean 222\"\n}"
 				},
-				"url": "{{URL}}/v4/topics/27/posts",
-				"description": null
+				"url": {
+					"raw": "{{URL}}/v5/topics/27/posts/create",
+					"host": [
+						"{{URL}}"
+					],
+					"path": [
+						"v5",
+						"topics",
+						"27",
+						"posts",
+						"create"
+					]
+				}
 			},
 			"response": []
 		},
@@ -638,8 +912,20 @@
 					"mode": "raw",
 					"raw": ""
 				},
-				"url": "{{URL}}/v4/topics/27/posts/36/",
-				"description": null
+				"url": {
+					"raw": "{{URL}}/v5/topics/27/posts/36/remove",
+					"host": [
+						"{{URL}}"
+					],
+					"path": [
+						"v5",
+						"topics",
+						"27",
+						"posts",
+						"36",
+						"remove"
+					]
+				}
 			},
 			"response": []
 		},
@@ -661,8 +947,20 @@
 					"mode": "raw",
 					"raw": "{\n    \"post\": \"submission @test_user1 @magrathean hello\"\n}"
 				},
-				"url": "{{URL}}/v4/topics/21/posts/26/edit",
-				"description": null
+				"url": {
+					"raw": "{{URL}}/v5/topics/21/posts/26/edit",
+					"host": [
+						"{{URL}}"
+					],
+					"path": [
+						"v5",
+						"topics",
+						"21",
+						"posts",
+						"26",
+						"edit"
+					]
+				}
 			},
 			"response": []
 		}

@@ -1,8 +1,7 @@
 /* eslint-disable no-unused-expressions, newline-per-chained-call */
 
-import { clearDB, jwts, prepareDB, getDecodedToken } from '../../tests';
+import { clearDB, jwts, prepareDB } from '../../tests';
 
-const axios = require('axios');
 const request = require('supertest');
 const server = require('../../app');
 const models = require('../../models');
@@ -11,38 +10,14 @@ const s3UploadMock = require('./create.s3.upload.mock');
 const sinon = require('sinon');
 const config = require('config');
 
-const m2m = server.m2m;
 
 const db = models(server, server.logger);
 
 require('should-sinon');
 
-describe('POST /v4/topics/:topicId/posts/:postId/attachments', () => {
-  const apiPath = `/${config.apiVersion}/topics/1/posts/1/attachments/create?referenceId=1`;
-  const memberUser = {
-    handle: getDecodedToken(jwts.member).handle,
-    userId: getDecodedToken(jwts.member).userId,
-    firstName: 'fname',
-    lastName: 'lName',
-    email: 'some@abc.com',
-  };
+describe('POST /v5/topics/attachments', () => {
+  const apiPath = `/${config.apiVersion}/topics/attachments`;
   let sandbox;
-
-  const stubWithNoAccessToProject = () => {
-    // mocks the m2m token call
-    sandbox.stub(m2m, 'getMachineToken').resolves('dummy_token');
-    sandbox.stub(axios, 'get').withArgs('http://reftest/1').resolves({
-      data: { result: { status: 403, content: {} } },
-    });
-  };
-
-  const stubWithAccessToProject = () => {
-    // mocks the m2m token call
-    sandbox.stub(m2m, 'getMachineToken').resolves('dummy_token');
-    sandbox.stub(axios, 'get').withArgs('http://reftest/1').resolves({
-      data: { result: { status: 200, content: { members: [{ userId: memberUser.userId }] } } },
-    });
-  };
 
   beforeEach((done) => {
     sandbox = sinon.sandbox.create();
@@ -73,19 +48,7 @@ describe('POST /v4/topics/:topicId/posts/:postId/attachments', () => {
       .expect(403, done);
   });
 
-  it('should return 400 when reference id query parameter is missing', (done) => {
-    request(server)
-      .post(apiPath.split('?')[0])
-      .set({
-        Authorization: `Bearer ${jwts.admin}`,
-      })
-      .attach('file', 'app/tests/test.png')
-      .expect(400)
-      .end(done);
-  });
-
   it('should return 400 response when missing file', (done) => {
-    stubWithAccessToProject();
     request(server)
       .post(apiPath)
       .set({
@@ -102,49 +65,7 @@ describe('POST /v4/topics/:topicId/posts/:postId/attachments', () => {
       });
   });
 
-  it('should return 400 response when uploading non-image file', (done) => {
-    stubWithAccessToProject();
-    request(server)
-      .post(apiPath)
-      .set({
-        Authorization: `Bearer ${jwts.admin}`,
-      })
-      .attach('file', 'app/tests/post.json')
-      .expect(400)
-      .end((err, res) => {
-        if (err) {
-          return done(err);
-        }
-        res.body.should.have.propertyByPath('result', 'content', 'message')
-          .eql('Can only upload image file');
-        return done();
-      });
-  });
-
-  it('should return 403 response when not having access to the project', (done) => {
-    stubWithNoAccessToProject();
-    request(server)
-      .post(apiPath)
-      .set({
-        Authorization: `Bearer ${jwts.member}`,
-      })
-      .attach('file', 'app/tests/test.png')
-      .expect(403)
-      .end((err, res) => {
-        if (err) {
-          return done(err);
-        }
-        res.body.should.have.propertyByPath('result', 'content', 'message')
-          .eql('User doesn\'t have access to the project');
-        return done();
-      });
-  });
-
   describe('with valid jwt token and payload', () => {
-    beforeEach(() => {
-      stubWithAccessToProject();
-    });
-
     it('should return 200 response', (done) => {
       request(server)
         .post(apiPath)
@@ -154,23 +75,6 @@ describe('POST /v4/topics/:topicId/posts/:postId/attachments', () => {
         .attach('file', 'app/tests/test.png')
         .expect(200)
         .end(done);
-    });
-
-    it('should return the correct sha1 checksum', (done) => {
-      request(server)
-        .post(apiPath)
-        .set({
-          Authorization: `Bearer ${jwts.admin}`,
-        })
-        .attach('file', 'app/tests/test.png')
-        .expect(200)
-        .end((err, res) => {
-          if (err) {
-            return done(err);
-          }
-          res.body.result.content.sha1.should.equal('cf444a806626664bc9feee2737158fd312004ce5');
-          return done();
-        });
     });
 
     it('should return no url attribute', (done) => {

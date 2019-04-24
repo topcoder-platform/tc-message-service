@@ -278,8 +278,6 @@ describe('POST /v5/topics/admin/topics/:topicId/edit ', () => {
                 'tag',
               ])).concat(['tags']);
             keys.forEach((key) => {
-              console.log(key);
-              console.log(updatedTopic);
               updatedTopic[key].should.not.be.eql(expectedTopic[key]);
             });
             res.body.result.content.should.not.be.null;

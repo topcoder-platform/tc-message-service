@@ -17,7 +17,7 @@ const m2m = server.m2m;
 
 const db = models(server, server.logger);
 
-describe('POST /v4/topics ', () => {
+describe('POST /v5/topics ', () => {
   const apiPath = `/${config.apiVersion}/topics/create`;
   const testBody = {
     reference: 'project',
