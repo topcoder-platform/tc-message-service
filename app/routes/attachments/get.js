@@ -6,7 +6,6 @@ const HelperService = require('../../services/helper');
 const Joi = require('joi');
 const Adapter = require('../../services/adapter');
 
-const s3 = new aws.S3(config.get('aws.config'));
 const HttpStatusError = errors.HttpStatusError;
 
 /**
@@ -66,6 +65,7 @@ module.exports = (db, m2m) =>
                   throw new errors.HttpStatusError(403, 'User doesn\'t have access to the project');
                 }
                 // all is good, return the attachment
+                const s3 = new aws.S3(config.get('aws.config'));
                 const signedUrl = s3.getSignedUrl('getObject', {
                   Bucket: config.get('aws.S3.targetBucket'),
                   Key: helper.s3KeyFromUrl(attachment.url),

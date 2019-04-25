@@ -7,7 +7,7 @@ const Joi = require('joi');
 const HelperService = require('../../services/helper');
 const Adapter = require('../../services/adapter');
 
-const s3 = new aws.S3(config.get('aws.config'));
+
 const HttpStatusError = errors.HttpStatusError;
 
 /**
@@ -29,23 +29,27 @@ module.exports = (db, m2m) =>
     Joi.assert(req.authUser, Joi.object().keys({
       handle: Joi.string().required(),
     }).unknown());
-    const bodyParams = Joi.attempt(req.body, Joi.object().keys({
-      postId: Joi.number().required(),
-      hardDelete: Joi.boolean().optional(),
-    }).unknown());
     const reqParams = Joi.attempt(req.params, Joi.object().keys({
       attachmentId: Joi.number().required(),
     }).unknown());
 
     const params = {};
-    params.postId = bodyParams.postId;
-    params.hardDelete = bodyParams.hardDelete;
     params.attachmentId = reqParams.attachmentId;
 
     const userId = req.authUser.userId.toString();
     const isAdmin = helper.isAdmin(req);
+    let attachment;
 
-    return db.posts.findPosts(db, adapter, { id: params.postId })
+    return db.post_attachments.findOne({ where: { id: params.attachmentId } })
+    .then((att) => {
+      if (!att) {
+        throw new errors.HttpStatusError(404, 'Could not find the requested attachment');
+      }
+      attachment = att;
+      if (!attachment.postId) {
+        throw new errors.HttpStatusError(404, 'Can not delete requested attachment');
+      }
+      return db.posts.findPosts(db, adapter, { id: attachment.postId })
       .then((posts) => {
         if (!posts) {
           throw new errors.HttpStatusError(404, 'Requested post cannot be found');
@@ -62,49 +66,25 @@ module.exports = (db, m2m) =>
                   throw new errors.HttpStatusError(403, 'User doesn\'t have access to the project');
                 }
 
-                return db.post_attachments.findOne({ where: { id: params.attachmentId, postId: params.postId } });
-              })
-              .then((postAttachment) => {
-                if (!postAttachment || (!params.hardDelete && postAttachment.deletedAt && !isAdmin)) {
-                  // also take into account when a non admin user is trying to delete a soft deleted record, which he shouldn't
-                  // have access to.. return as if the attachment doesn't exist
-                  throw new errors.HttpStatusError(404, 'Could not find the requested attachment');
-                }
-                if (!isAdmin && params.hardDelete) {
-                  throw new errors.HttpStatusError(403, 'User cannot hard delete attachment');
-                }
-                if (!isAdmin && postAttachment.createdBy !== req.authUser.handle) {
+                if (!isAdmin && attachment.createdBy !== req.authUser.handle) {
                   throw new errors.HttpStatusError(403, 'User doesn\'t have delete access to the attachment');
                 }
-                if (params.hardDelete) {
-                  return Promise.all([
-                    s3.deleteObject({
-                      Bucket: config.get('aws.S3.targetBucket'),
-                      Key: helper.s3KeyFromUrl(postAttachment.url),
-                    }).promise(),
-                    postAttachment.destroy(),
-                  ]);
-                }
-                if (postAttachment.deletedAt) {
-                  // attachment is soft deleted
-                  if (isAdmin) {
-                    // soft deleting a soft deleted record doesn't make sense, return an error
-                    throw new errors.HttpStatusError(400, 'Attachment is already soft deleted');
-                  }
-                  // scenario when non admin, record is soft deleted and user wants to soft delete has already been handled,
-                  // return to prevent any future bugs
-                  return null;
-                }
-                return postAttachment.update({
-                  deletedAt: db.sequelize.fn('NOW'),
-                  deletedBy: req.authUser.handle,
-                });
-              })
+                // all good, we can delete the attachment
+                const s3 = new aws.S3(config.get('aws.config'));
+                return s3.deleteObject({
+                  Bucket: config.get('aws.S3.targetBucket'),
+                  Key: helper.s3KeyFromUrl(attachment.url),
+                }).promise();
+              }).then(() => attachment.update({
+                deletedAt: db.sequelize.fn('NOW'),
+                deletedBy: req.authUser.handle,
+              }))
               .then(() => {
                 resp.status(200).send(util.wrapResponse(req.id));
               });
           });
-      })
+      });
+    })
       .catch((error) => {
         logger.error(error);
         next(error instanceof HttpStatusError ? error : new HttpStatusError(500, 'Error deleting attachment'));

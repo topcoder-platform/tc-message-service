@@ -3,26 +3,46 @@
 import { clearDB, jwts, prepareDB } from '../../tests';
 
 const request = require('supertest');
-const server = require('../../app');
 const models = require('../../models');
-const aws = require('aws-sdk');
-const s3UploadMock = require('./create.s3.upload.mock');
+const AWS = require('aws-sdk');
 const sinon = require('sinon');
 const config = require('config');
 
-
-const db = models(server, server.logger);
 
 require('should-sinon');
 
 describe('POST /v5/topics/attachments', () => {
   const apiPath = `/${config.apiVersion}/topics/attachments`;
   let sandbox;
+  const validBody = { filename: 'test.txt', bucket: 'test' };
+  let server;
+  let s3;
+  let db;
+
 
   beforeEach((done) => {
     sandbox = sinon.sandbox.create();
-    const uploadStub = sandbox.stub(aws.S3.prototype, 'upload');
-    uploadStub.callsFake(s3UploadMock);
+    if (!s3) {
+      try {
+        s3 = {
+          copyObject: sinon.stub().callsArgWith(1, null, true),
+          deleteObject: () => ({
+            promise: () => Promise.resolve(),
+          }),
+          getSignedUrl: () => 'https://s3.com/1/attachment.jpg?signedParam=true',
+        };
+        const aws = sinon.stub(AWS, 'S3');
+        aws.returns(s3);
+      } catch (ex) {
+        // OK
+      }
+    }
+
+    if (!server) {
+      server = require('../../app'); // eslint-disable-line
+      db = models(server, server.logger);
+    }
+
     prepareDB(done);
   });
 
@@ -48,23 +68,6 @@ describe('POST /v5/topics/attachments', () => {
       .expect(403, done);
   });
 
-  it('should return 400 response when missing file', (done) => {
-    request(server)
-      .post(apiPath)
-      .set({
-        Authorization: `Bearer ${jwts.admin}`,
-      })
-      .expect(400)
-      .end((err, res) => {
-        if (err) {
-          return done(err);
-        }
-        res.body.should.have.propertyByPath('result', 'content', 'message')
-          .eql('Missing file');
-        return done();
-      });
-  });
-
   describe('with valid jwt token and payload', () => {
     it('should return 200 response', (done) => {
       request(server)
@@ -72,7 +75,7 @@ describe('POST /v5/topics/attachments', () => {
         .set({
           Authorization: `Bearer ${jwts.admin}`,
         })
-        .attach('file', 'app/tests/test.png')
+        .send(validBody)
         .expect(200)
         .end(done);
     });
@@ -83,7 +86,7 @@ describe('POST /v5/topics/attachments', () => {
         .set({
           Authorization: `Bearer ${jwts.admin}`,
         })
-        .attach('file', 'app/tests/test.png')
+        .send(validBody)
         .expect(200)
         .end((err, res) => {
           if (err) {
@@ -100,7 +103,7 @@ describe('POST /v5/topics/attachments', () => {
         .set({
           Authorization: `Bearer ${jwts.admin}`,
         })
-        .attach('file', 'app/tests/test.png')
+        .send(validBody)
         .expect(200)
         .end((err) => {
           if (err) {
@@ -110,8 +113,8 @@ describe('POST /v5/topics/attachments', () => {
           return db.post_attachments.findOne()
             .then((postAttachment) => {
               // check the s3 upload mock function to know where this url comes from
-              postAttachment.url.should.equal('mock-location');
-              done();
+              postAttachment.url.should.match(/.*test.txt/g);
+              return done();
             });
         });
     });

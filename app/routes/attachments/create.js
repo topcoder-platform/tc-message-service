@@ -74,12 +74,11 @@ const copyObject = (file, req) => new Promise((resolve, reject) => {
     CopySource: getSourceBucketPath(file),
     Key: targetS3Key,
   };
-  s3.copyObject(params, (err, data) => {
+  s3.copyObject(params, (err) => {
     if (err) {
       logger.error(err);
       reject(err);
     }
-    logger.info('Copy success', data);
     file.s3Bucket = targetBucket;
     file.s3Key = targetS3Key;
     resolve(file);
