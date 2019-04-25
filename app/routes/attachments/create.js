@@ -9,7 +9,7 @@ const Promise = require('bluebird');
 const HttpStatusError = errors.HttpStatusError;
 
 /**
- * Returns file path to be used in s3.copyObject function
+ * Returns file path to be used in s3.moveObject function
  * Supports both cases if file is in root directory or in subdirectory
  * (e.g. s3://bucket/subdir/file.ext)
  * (e.g. s3://bucket/file.ext)
@@ -59,7 +59,7 @@ const getS3URL = file => `s3://${file.s3Bucket}/${file.s3Key}`;
  * @param {Object} req Request
  * @return {Object} The same file object with additionally targetS3Key and targetBucket
  */
-const copyObject = (file, req) => new Promise((resolve, reject) => {
+const moveObject = (file, req) => new Promise((resolve, reject) => {
   const logger = req.log;
 
   const s3 = new aws.S3(config.get('aws.config'));
@@ -74,7 +74,7 @@ const copyObject = (file, req) => new Promise((resolve, reject) => {
     CopySource: getSourceBucketPath(file),
     Key: targetS3Key,
   };
-  s3.copyObject(params, (err) => {
+  s3.moveObject(params, (err) => {
     if (err) {
       logger.error(err);
       reject(err);
@@ -106,7 +106,7 @@ module.exports = db =>
       path: Joi.string().optional(),
     }).unknown());
 
-    copyObject(fileInfo, req)
+    moveObject(fileInfo, req)
       .then((file) => {
         logger.info('Attachment copied to the target bucket', file);
         return file;

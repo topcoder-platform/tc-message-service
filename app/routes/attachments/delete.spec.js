@@ -62,7 +62,7 @@ describe('DELETE /v4/topics/attachments/:attachmentId', () => {
     if (!s3) {
       try {
         s3 = {
-          copyObject: sinon.stub().callsArgWith(1, null, true),
+          moveObject: sinon.stub().callsArgWith(1, null, true),
           deleteObject: () => ({
             promise: () => Promise.resolve(),
           }),
