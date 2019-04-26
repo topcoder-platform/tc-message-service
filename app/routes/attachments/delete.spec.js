@@ -22,14 +22,14 @@ describe('DELETE /v4/topics/:topicId/posts/:postId/attachments/:attachmentId', (
   const nonExistingAttachmentPath = `/${config.apiVersion}/topics/1/posts/1/attachments/2/remove?referenceId=1`;
   const memberUser = {
     handle: getDecodedToken(jwts.member).handle,
-    userId: getDecodedToken(jwts.member).userId,
+    userId: parseInt(getDecodedToken(jwts.member).userId, 10),
     firstName: 'fname',
     lastName: 'lName',
     email: 'some@abc.com',
   };
   const otherMember = {
     handle: getDecodedToken(jwts.otherMember).handle,
-    userId: getDecodedToken(jwts.otherMember).userId,
+    userId: parseInt(getDecodedToken(jwts.otherMember).userId, 10),
     firstName: 'fname',
     lastName: 'lName',
     email: 'some@abc.com',

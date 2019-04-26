@@ -40,8 +40,8 @@ module.exports = (db, m2m) =>
     const isAdmin = helper.isAdmin(req);
 
     return helper.callReferenceEndpoint(req.authToken, req.id, REFERENCE_LOOKUPS.PROJECT, query.referenceId)
-      .then((hasAccessResp) => {
-        const hasAccess = helper.userHasAccessToEntity(userId, hasAccessResp, REFERENCE_LOOKUPS.PROJECT);
+      .then(async (hasAccessResp) => {
+        const hasAccess = await helper.userHasAccessToEntity(userId, hasAccessResp, REFERENCE_LOOKUPS.PROJECT);
         if (!hasAccess && !isAdmin) {
           throw new errors.HttpStatusError(403, 'User doesn\'t have access to the project');
         }

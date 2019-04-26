@@ -25,7 +25,7 @@ describe('GET /v4/topics/:topicId/posts/:postId', () => {
   const nonExistingPostPath = `/${config.apiVersion}/topics/1/posts/1000/read`;
   const memberUser = {
     handle: getDecodedToken(jwts.member).handle,
-    userId: getDecodedToken(jwts.member).userId,
+    userId: parseInt(getDecodedToken(jwts.member).userId, 10),
     firstName: 'fname',
     lastName: 'lName',
     email: 'some@abc.com',

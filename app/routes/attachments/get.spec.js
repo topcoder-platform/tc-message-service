@@ -21,7 +21,7 @@ describe('GET /v4/topics/:topicId/posts/:postId/attachments/:attachmentId', () =
   const nonExistingAttachmentPath = `/${config.apiVersion}/topics/1/posts/1/attachments/2/read?referenceId=1`;
   const memberUser = {
     handle: getDecodedToken(jwts.member).handle,
-    userId: getDecodedToken(jwts.member).userId,
+    userId: parseInt(getDecodedToken(jwts.member).userId, 10),
     firstName: 'fname',
     lastName: 'lName',
     email: 'some@abc.com',

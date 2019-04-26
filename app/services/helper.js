@@ -1,12 +1,11 @@
-
-
 const _ = require('lodash');
 const config = require('config');
 const axios = require('axios');
 const errors = require('common-errors');
+const { evaluate } = require('expression-evaluator');
 const util = require('../util');
 const { USER_ROLE } = require('../constants');
-const { REFERENCE_LOOKUPS, TOKEN_SCOPES } = require('../constants');
+const { TOKEN_SCOPES } = require('../constants');
 
 /**
  * Returns helper service containing common functions used in route handlers
@@ -209,17 +208,20 @@ module.exports = (logger, db, m2m) => {
     });
   }
 
-  function userHasAccessToEntity(userId, hasAccessResp, reference) {
+  async function userHasAccessToEntity(userId, hasAccessResp, reference) {
     logger.info('Checking if user has access to project');
     const hasAccess = hasAccessResp[0];
-    if (hasAccess && reference.toLowerCase() === REFERENCE_LOOKUPS.PROJECT) {
-      const projectMembers = _.get(hasAccessResp[1], 'members', []);
-        // get users list
-      const isMember = _.filter(projectMembers, member => `${member.userId}` === userId).length > 0;
-      logger.debug(isMember, 'isMember');
-      return isMember;
+    try {
+      const { accessCondition } = await db.reference_lookups.findOne({ where: { reference } });
+      if (!accessCondition) {
+        return hasAccess;
+      }
+      const statement = accessCondition.replace('{userId}', userId);
+      const isEvaluated = evaluate(statement, hasAccessResp[1]);
+      return hasAccess && isEvaluated;
+    } catch (err) {
+      return false;
     }
-    return false;
   }
 
   /**
@@ -233,7 +235,7 @@ module.exports = (logger, db, m2m) => {
    */
   function checkAccessAndProvision(authToken, requestId, userId, reference, referenceId) {
     return this.userHasAccessToEntity(authToken, requestId, reference, referenceId).then((resp) => {
-      const hasAccess = resp[0];
+      const hasAccess = resp;
       logger.debug(`hasAccess: ${hasAccess}`);
       if (!hasAccess) {
         throw new errors.HttpStatusError(403, 'User doesn\'t have access to the entity');

@@ -44,8 +44,8 @@ module.exports = (db, m2m) =>
 
     const userId = req.authUser.isMachine ? config.get('coderBotUserId') : req.authUser.userId.toString();
     return helper.callReferenceEndpoint(req.authToken, req.id, params.reference, params.referenceId)
-      .then((hasAccessResp) => {
-        const hasAccess = helper.userHasAccessToEntity(userId, hasAccessResp, params.reference);
+      .then(async (hasAccessResp) => {
+        const hasAccess = await helper.userHasAccessToEntity(userId, hasAccessResp, params.reference);
         if (!hasAccess && !helper.isAdmin(req)) {
           logger.info('should return after here');
           throw new errors.HttpStatusError(403, 'User doesn\'t have access to the entity');
