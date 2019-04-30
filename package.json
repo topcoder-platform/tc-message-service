@@ -52,6 +52,7 @@
     "express-list-routes": "^0.1.4",
     "express-request-id": "^1.1.0",
     "express-validation": "^1.0.0",
+    "expression-evaluator": "git+https://github.com/topcoder-platform/expression-evaluator.git#dev",
     "form-data": "^2.2.0",
     "http-aws-es": "^6.0.0",
     "joi": "^8.0.5",

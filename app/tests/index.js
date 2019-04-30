@@ -97,6 +97,7 @@ function prepareDB(done) {
         id: 1,
         reference: 'project',
         endpoint: 'http://reftest/{id}', // eslint-disable-line
+        accessCondition: 'members contains \'{"userId":{userId}}\'',
       }).then(() => Promise.resolve(topics)))
     .then((topics) => {
       const topic = topics.length > 0 ? topics[0] : null;

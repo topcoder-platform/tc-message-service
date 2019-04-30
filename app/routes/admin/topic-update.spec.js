@@ -41,9 +41,9 @@ describe('POST /v5/topics/admin/topics/:topicId/edit ', () => {
       discourseTopicId: 123456789,
       tag: 'tag2',
       createdAt: yesterday.toISOString(),
-      createdBy: getDecodedToken(jwts.manager).userId,
+      createdBy: parseInt(getDecodedToken(jwts.manager).userId, 10),
       updatedAt: today.toISOString(),
-      updatedBy: getDecodedToken(jwts.manager).userId,
+      updatedBy: parseInt(getDecodedToken(jwts.manager).userId, 10),
       highestPostNumber: 500,
       title: 'Test title2',
       closed: true,
@@ -51,20 +51,20 @@ describe('POST /v5/topics/admin/topics/:topicId/edit ', () => {
       archived: true,
       hiddenReason: 'test hidden reason',
       deletedAt: null,
-      deletedBy: getDecodedToken(jwts.manager).userId,
+      deletedBy: parseInt(getDecodedToken(jwts.manager).userId, 10),
     },
   };
   const testBody3 = {
     topic: {
       title: 'Test title3',
       deletedAt: today.toISOString(),
-      deletedBy: getDecodedToken(jwts.manager).userId,
+      deletedBy: parseInt(getDecodedToken(jwts.manager).userId, 10),
     },
   };
 
   const memberUser = {
     handle: getDecodedToken(jwts.admin).handle,
-    userId: getDecodedToken(jwts.admin).userId,
+    userId: parseInt(getDecodedToken(jwts.admin).userId, 10),
     firstName: 'fname',
     lastName: 'lName',
     email: 'some@abc.com',
@@ -278,8 +278,6 @@ describe('POST /v5/topics/admin/topics/:topicId/edit ', () => {
                 'tag',
               ])).concat(['tags']);
             keys.forEach((key) => {
-              console.log(key);
-              console.log(updatedTopic);
               updatedTopic[key].should.not.be.eql(expectedTopic[key]);
             });
             res.body.result.content.should.not.be.null;
