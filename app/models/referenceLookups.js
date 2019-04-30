@@ -18,7 +18,7 @@ module.exports = (Sequelize, DataTypes) => {
     },
     accessCondition: {
       type: DataTypes.STRING,
-      allowNull: true,
+      allowNull: false,
     },
   });
 

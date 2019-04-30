@@ -213,13 +213,16 @@ module.exports = (logger, db, m2m) => {
     const hasAccess = hasAccessResp[0];
     try {
       const { accessCondition } = await db.reference_lookups.findOne({ where: { reference } });
+      // if somehow cannot find a reference, don't allow access
       if (!accessCondition) {
-        return hasAccess;
+        logger.debug('Didn\'t find accessCondition.');
+        return false;
       }
       const statement = accessCondition.replace('{userId}', userId);
-      const isEvaluated = evaluate(statement, hasAccessResp[1]);
-      return hasAccess && isEvaluated;
+      const isPassAccessCondition = evaluate(statement, hasAccessResp[1]);
+      return hasAccess && isPassAccessCondition;
     } catch (err) {
+      logger.debug('Error during evaluation of the accessCondition.');
       return false;
     }
   }
