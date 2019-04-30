@@ -1,4 +1,4 @@
-import { clearDB } from '../tests';
+import { prepareDB, clearDB } from '../tests';
 
 const server = require('../app');
 const models = require('../models');
@@ -14,14 +14,9 @@ describe('TEST userHasAccessToEntity method', () => {
   const membersProject2 = [{ userId: 40051333 }];
   const hasAccessRespProject1 = [true, { members: membersProject1 }];
   const hasAccessRespProject2 = [true, { members: membersProject2 }];
-  beforeEach(done => db.reference_lookups.create({
-    id: 1,
-    reference: 'project',
-    endpoint: 'http://reftest/{id}', // eslint-disable-line
-    accessCondition: 'members contains \'{"userId":{userId}}\'',
-  }).then(() => {
-    done();
-  }));
+  beforeEach((done) => {
+    prepareDB(done);
+  });
   afterEach((done) => {
     clearDB(done);
   });
