@@ -26,16 +26,19 @@ module.exports = (db, m2m) => (req, resp, next) => {
     title: Joi.string().required(),
     postId: Joi.number().required(),
     content: Joi.string().required(),
+    attachmentIds: Joi.array().items(Joi.number()).optional(),
   });
   const topicId = req.params.topicId;
   const postId = req.body.postId;
   const title = req.body.title;
+  const attachmentIds = req.body.attachmentIds;
   const content = req.body.content;
   const userId = req.authUser.userId.toString();
 
   const database = new Sequelize(config.get('dbConfig.masterUrl'), {
-    logging: false,
+    logging: true,
   });
+  logger.debug('attachmentIds ', attachmentIds);
   return database.transaction(trans =>
     db.topics.findTopic(db, adapter, { topicId, numberOfPosts: -1, reqUserId: userId })
       .then((topic) => { /* eslint no-param-reassign: ["error", { "props": true, "ignorePropertyModificationsFor": ["topic"] }] */
@@ -53,28 +56,31 @@ module.exports = (db, m2m) => (req, resp, next) => {
             if (!contentPost || contentPost.id !== Number(postId)) {
               throw new errors.HttpStatusError(404, 'Post does not exist');
             }
-            const promises = [
-              db.topics.updateTopic(db, adapter, { title }, { topicId, reqUserId: userId }, trans)
-                .then((updatedTopic) => {
-                  logger.debug('Topic saved', updatedTopic);
-                  return updatedTopic;
-                }),
-              db.posts.updatePost(db, adapter, { raw: content }, { postId }, userId, trans)
-                .then((updatedPost) => {
-                  logger.info('Topic Post saved', updatedPost);
-                  return updatedPost;
-                }),
-            ];
-            return Promise.all(promises)
-              .then((response) => {
-                const t = response[0];
-                const p = response[1];
-                t.posts = topic.posts;
-                // update elastic search index
-                esIndex.updateElasticSearchIndex(db, adapter, topicId, topicId);
-                // TODO should get rid of post as seprate field in response
-                resp.status(200).send(util.wrapResponse(req.id, { topic: t, post: p }));
-              });
+            return db.posts.updatePostAttachments(db, postId, attachmentIds, trans).then(() => {
+              const promises = [
+                db.topics.updateTopic(db, adapter, { title }, { topicId, reqUserId: userId }, trans)
+                  .then((updatedTopic) => {
+                    logger.debug('Topic saved', updatedTopic);
+                    return updatedTopic;
+                  }),
+                db.posts.updatePost(db, adapter, { raw: content }, { postId }, userId, trans)
+                  .then((updatedPost) => {
+                    logger.info('Topic Post saved', updatedPost);
+                    return updatedPost;
+                  }),
+              ];
+
+              return Promise.all(promises)
+                .then((response) => {
+                  const t = response[0];
+                  const p = response[1];
+                  t.posts = topic.posts;
+                  // update elastic search index
+                  esIndex.updateElasticSearchIndex(db, adapter, topicId, topicId);
+                  // TODO should get rid of post as seprate field in response
+                  resp.status(200).send(util.wrapResponse(req.id, { topic: t, post: p }));
+                });
+            });
           });
       })).catch((error) => {
         logger.error(error);

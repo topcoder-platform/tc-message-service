@@ -177,6 +177,8 @@ describe('POST /v5/topics/admin/posts/:postId/edit ', () => {
           read: true,
           body: expectedTopicPosts[0].raw,
           rawContent: res.body.result.content.rawContent,
+          topicId: 1,
+          attachments: [],
           type: 'post',
         });
         // unchanged elements keys
@@ -275,6 +277,8 @@ describe('POST /v5/topics/admin/posts/:postId/edit ', () => {
           read: true,
           body: expectedTopicPosts[0].raw,
           rawContent: res.body.result.content.rawContent,
+          topicId: 1,
+          attachments: [],
           type: 'post',
         });
         // unchanged elements keys

@@ -32,7 +32,7 @@ module.exports = (db, m2m) => (req, resp, next) => {
       if (!hasAccess && !helper.isAdmin(req)) {
         throw new errors.HttpStatusError(403, 'User doesn\'t have access to the entity');
       }
-      return db.posts.findPost(db, adapter, { topicId, postId }, { raw: true })
+      return db.posts.findPost(db, adapter, { topicId, postId }, { raw: false })
       .then((post) => {
         if (!post) {
           throw new errors.HttpStatusError(404, 'Post does not exist');

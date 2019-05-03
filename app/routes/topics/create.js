@@ -37,6 +37,7 @@ module.exports = (db, m2m) =>
     Joi.assert(params, {
       reference: Joi.string().required(),
       referenceId: Joi.string().required(),
+      attachmentIds: Joi.array().items(Joi.number()).optional(),
       tag: Joi.string().required(),
       title: Joi.string().required(),
       body: Joi.string().required(),
@@ -70,7 +71,21 @@ module.exports = (db, m2m) =>
               const topic = savedTopic.dataValues;
               const post = savedPost.dataValues;
               topic.posts = [post];
+
+              // update postIds of attachments with the id of created post
+              if (params.attachmentIds) {
+                db.post_attachments.update({
+                  postId: post.id,
+                }, {
+                  where: {
+                    id: params.attachmentIds,
+                    postId: null,
+                  },
+                });
+              }
+
               req.app.emit(EVENT.TOPIC_CREATED, { topic, req, userId });
+
               // creates an entry in post_user_stats table for tracking user actions against this post
               // right now it only creates entry for 'READ' action, in future we may create more entries
               // when we support more actions e.g. 'LIKE', 'BOOKMARK', 'FAVORITE' etc

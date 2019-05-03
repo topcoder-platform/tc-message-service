@@ -4,21 +4,17 @@ import { clearDB, getDecodedToken, jwts, prepareDB } from '../../tests';
 
 const axios = require('axios');
 const request = require('supertest');
-const server = require('../../app');
 const models = require('../../models');
-const aws = require('aws-sdk');
+const AWS = require('aws-sdk');
 const sinon = require('sinon');
 const config = require('config');
 
-const m2m = server.m2m;
-
-const db = models(server, server.logger);
 
 require('should-sinon');
 
-describe('GET /v4/topics/:topicId/posts/:postId/attachments/:attachmentId', () => {
-  const apiPath = `/${config.apiVersion}/topics/1/posts/1/attachments/1/read?referenceId=1`;
-  const nonExistingAttachmentPath = `/${config.apiVersion}/topics/1/posts/1/attachments/2/read?referenceId=1`;
+describe('GET /v4/topics/attachments/:attachmentId', () => {
+  const apiPath = `/${config.apiVersion}/topics/attachments/1/read`;
+  const nonExistingAttachmentPath = `/${config.apiVersion}/topics/attachments/2/read`;
   const memberUser = {
     handle: getDecodedToken(jwts.member).handle,
     userId: parseInt(getDecodedToken(jwts.member).userId, 10),
@@ -27,11 +23,15 @@ describe('GET /v4/topics/:topicId/posts/:postId/attachments/:attachmentId', () =
     email: 'some@abc.com',
   };
   let sandbox;
+  let server;
+  let s3;
+  let db;
+  let m2m;
 
   const stubWithNoAccessToProject = () => {
     // mocks the m2m token call
     sandbox.stub(m2m, 'getMachineToken').resolves('dummy_token');
-    sandbox.stub(axios, 'get').withArgs('http://reftest/1').resolves({
+    sandbox.stub(axios, 'get').withArgs('http://reftest/referenceId').resolves({
       data: { result: { status: 403, content: {} } },
     });
   };
@@ -39,15 +39,37 @@ describe('GET /v4/topics/:topicId/posts/:postId/attachments/:attachmentId', () =
   const stubWithAccessToProject = () => {
     // mocks the m2m token call
     sandbox.stub(m2m, 'getMachineToken').resolves('dummy_token');
-    sandbox.stub(axios, 'get').withArgs('http://reftest/1').resolves({
+    sandbox.stub(axios, 'get').withArgs('http://reftest/referenceId').resolves({
       data: { result: { status: 200, content: { members: [{ userId: memberUser.userId }] } } },
     });
   };
 
   beforeEach((done) => {
     sandbox = sinon.sandbox.create();
-    const getSignedUrlStub = sandbox.stub(aws.S3.prototype, 'getSignedUrl');
-    getSignedUrlStub.returns('https://s3.com/1/attachment.jpg?signedParam=true');
+
+    if (!s3) {
+      try {
+        s3 = {
+          moveObject: sinon.stub().callsArgWith(1, null, true),
+          deleteObject: () => ({
+            promise: () => Promise.resolve(),
+          }),
+          getSignedUrl: () => 'https://s3.com/1/attachment.jpg?signedParam=true',
+        };
+        const aws = sinon.stub(AWS, 'S3');
+        aws.returns(s3);
+      } catch (ex) {
+        // OK
+      }
+    }
+
+    if (!server) {
+      server = require('../../app');// eslint-disable-line
+      m2m = server.m2m;
+      db = models(server, server.logger);
+    }
+
+
     prepareDB((err) => {
       if (err) {
         return done(err);
@@ -57,8 +79,6 @@ describe('GET /v4/topics/:topicId/posts/:postId/attachments/:attachmentId', () =
         id: 1,
         postId: 1,
         originalFileName: 'aFileName.jpg',
-        fileSize: 123,
-        sha1: 'cf444a806626664bc9feee2737158fd312004ce5',
         url: 'https://s3.com/1/12123123-aFileName.jpg',
         createdBy: auth.handle,
         updatedBy: auth.handle,
@@ -84,16 +104,6 @@ describe('GET /v4/topics/:topicId/posts/:postId/attachments/:attachmentId', () =
         Authorization: 'Bearer wrong',
       })
       .expect(403, done);
-  });
-
-  it('should return 400 when reference id query parameter is missing', (done) => {
-    request(server)
-      .get(apiPath.split('?')[0])
-      .set({
-        Authorization: `Bearer ${jwts.member}`,
-      })
-      .expect(400)
-      .end(done);
   });
 
   it('should return 403 response when not having access to the project', (done) => {
@@ -144,31 +154,6 @@ describe('GET /v4/topics/:topicId/posts/:postId/attachments/:attachmentId', () =
       });
     });
 
-    describe('for an existing attachment belonging to a different post', () => {
-      beforeEach(done => db.post_attachments.update({
-        postId: 2,
-      }, {
-        where: { id: 1 },
-      }).then(() => done()).catch(done));
-
-      it('should return a not found error', (done) => {
-        request(server)
-          .get(apiPath)
-          .set({
-            Authorization: `Bearer ${jwts.member}`,
-          })
-          .expect(404)
-          .end((err, res) => {
-            if (err) {
-              return done(err);
-            }
-            res.body.should.have.propertyByPath('result', 'content', 'message')
-              .eql('Could not find the requested attachment');
-            return done();
-          });
-      });
-    });
-
     describe('for a non existing attachment', () => {
       it('should return a not found error', (done) => {
         request(server)
@@ -189,18 +174,19 @@ describe('GET /v4/topics/:topicId/posts/:postId/attachments/:attachmentId', () =
     });
 
     describe('for an existing attachment', () => {
-      it('should return a response that redirects to the signed version of the url', (done) => {
+      it('should return a response that contains signed version of the url', (done) => {
         request(server)
           .get(apiPath)
           .set({
             Authorization: `Bearer ${jwts.member}`,
           })
-          .expect(302)
+          .expect(200)
           .end((err, res) => {
             if (err) {
               return done(err);
             }
-            res.headers.location.should.equal('https://s3.com/1/attachment.jpg?signedParam=true');
+            res.body.should.have.propertyByPath('result', 'content', 'url')
+            .eql('https://s3.com/1/attachment.jpg?signedParam=true');
             return done();
           });
       });

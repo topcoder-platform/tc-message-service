@@ -142,6 +142,10 @@ module.exports = (Sequelize, DataTypes) => {
           // order: [['postNumber', 'desc']],
           // where: userStatsWhere,
           // limit: numberOfPosts !== -1 ? numberOfPosts : null,
+        }, {
+          model: models.post_attachments,
+          as: 'postAttachments',
+          required: false,
         }],
       }],
     }).then((topics) => {
@@ -179,6 +183,9 @@ module.exports = (Sequelize, DataTypes) => {
         include: [{
           model: models.post_user_stats,
           as: 'userStats',
+        }, {
+          model: models.post_attachments,
+          as: 'postAttachments',
         }],
       }],
     }).then((topic) => {

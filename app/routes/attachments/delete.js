@@ -5,9 +5,9 @@ const util = require('tc-core-library-js').util(config);
 const errors = require('common-errors');
 const Joi = require('joi');
 const HelperService = require('../../services/helper');
-const { REFERENCE_LOOKUPS } = require('../../constants');
+const Adapter = require('../../services/adapter');
 
-const s3 = new aws.S3(config.get('aws.config'));
+
 const HttpStatusError = errors.HttpStatusError;
 
 /**
@@ -23,70 +23,68 @@ module.exports = (db, m2m) =>
   (req, resp, next) => {
     const logger = req.log;
     const helper = HelperService(logger, db, m2m);
+    const adapter = new Adapter(logger, db);
 
     // Validate request parameters
     Joi.assert(req.authUser, Joi.object().keys({
       handle: Joi.string().required(),
     }).unknown());
-    const params = Joi.attempt(req.params, Joi.object().keys({
+    const reqParams = Joi.attempt(req.params, Joi.object().keys({
       attachmentId: Joi.number().required(),
-      postId: Joi.number().required(),
     }).unknown());
-    const query = Joi.attempt(req.query, Joi.object().keys({
-      hardDelete: Joi.boolean(),
-      referenceId: Joi.string().required(),
-    }).unknown());
+
+    const params = {};
+    params.attachmentId = reqParams.attachmentId;
+
     const userId = req.authUser.userId.toString();
     const isAdmin = helper.isAdmin(req);
+    let attachment;
 
-    return helper.callReferenceEndpoint(req.authToken, req.id, REFERENCE_LOOKUPS.PROJECT, query.referenceId)
-      .then(async (hasAccessResp) => {
-        const hasAccess = await helper.userHasAccessToEntity(userId, hasAccessResp, REFERENCE_LOOKUPS.PROJECT);
-        if (!hasAccess && !isAdmin) {
-          throw new errors.HttpStatusError(403, 'User doesn\'t have access to the project');
+    return db.post_attachments.findOne({ where: { id: params.attachmentId } })
+    .then((att) => {
+      if (!att || att.deletedAt) {
+        throw new errors.HttpStatusError(404, 'Could not find the requested attachment');
+      }
+      attachment = att;
+      if (!attachment.postId) {
+        throw new errors.HttpStatusError(404, 'Can not delete requested attachment');
+      }
+      return db.posts.findPosts(db, adapter, { id: attachment.postId })
+      .then((posts) => {
+        if (!posts) {
+          throw new errors.HttpStatusError(404, 'Requested post cannot be found');
         }
 
-        return db.post_attachments.findOne({ where: { id: params.attachmentId, postId: params.postId } });
-      })
-      .then((postAttachment) => {
-        if (!postAttachment || (!query.hardDelete && postAttachment.deletedAt && !isAdmin)) {
-          // also take into account when a non admin user is trying to delete a soft deleted record, which he shouldn't
-          // have access to.. return as if the attachment doesn't exist
-          throw new errors.HttpStatusError(404, 'Could not find the requested attachment');
-        }
-        if (!isAdmin && query.hardDelete) {
-          throw new errors.HttpStatusError(403, 'User cannot hard delete attachment');
-        }
-        if (!isAdmin && postAttachment.createdBy !== req.authUser.handle) {
-          throw new errors.HttpStatusError(403, 'User doesn\'t have delete access to the attachment');
-        }
-        if (query.hardDelete) {
-          return Promise.all([
-            s3.deleteObject({
-              Bucket: config.get('aws.S3.bucket'),
-              Key: helper.s3KeyFromUrl(postAttachment.url),
-            }).promise(),
-            postAttachment.destroy(),
-          ]);
-        }
-        if (postAttachment.deletedAt) {
-          // attachment is soft deleted
-          if (isAdmin) {
-            // soft deleting a soft deleted record doesn't make sense, return an error
-            throw new errors.HttpStatusError(400, 'Attachment is already soft deleted');
-          }
-          // scenario when non admin, record is soft deleted and user wants to soft delete has already been handled,
-          // return to prevent any future bugs
-          return null;
-        }
-        return postAttachment.update({
-          deletedAt: db.sequelize.fn('NOW'),
-          deletedBy: req.authUser.handle,
-        });
-      })
-      .then(() => {
-        resp.status(200).send(util.wrapResponse(req.id));
-      })
+        const topicId = posts[0].topicId;
+        return db.topics.findTopic(db, adapter, { topicId })
+          .then((topic) => {
+            const referenceId = topic.referenceId;
+            return helper.callReferenceEndpoint(req.authToken, req.id, topic.reference, referenceId)
+              .then(async (hasAccessResp) => {
+                const hasAccess = await helper.userHasAccessToEntity(userId, hasAccessResp, topic.reference);
+                if (!hasAccess && !isAdmin) {
+                  throw new errors.HttpStatusError(403, 'User doesn\'t have access to the project');
+                }
+
+                if (!isAdmin && attachment.createdBy !== req.authUser.handle) {
+                  throw new errors.HttpStatusError(403, 'User doesn\'t have delete access to the attachment');
+                }
+                // all good, we can delete the attachment
+                const s3 = new aws.S3(config.get('aws.config'));
+                return s3.deleteObject({
+                  Bucket: config.get('aws.S3.targetBucket'),
+                  Key: helper.s3KeyFromUrl(attachment.url),
+                }).promise();
+              }).then(() => attachment.update({
+                deletedAt: db.sequelize.fn('NOW'),
+                deletedBy: req.authUser.handle,
+              }))
+              .then(() => {
+                resp.status(200).send(util.wrapResponse(req.id));
+              });
+          });
+      });
+    })
       .catch((error) => {
         logger.error(error);
         next(error instanceof HttpStatusError ? error : new HttpStatusError(500, 'Error deleting attachment'));

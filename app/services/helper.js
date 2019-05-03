@@ -275,7 +275,7 @@ module.exports = (logger, db, m2m) => {
   }
 
   function s3KeyFromUrl(url) {
-    return (url && url.replace(/http[s]?:\/\//, '').split('/').slice(1).join('/')) || '';
+    return (url && url.replace(/http[s]?:\/\//, '').split('/').slice(3).join('/')) || '';
   }
 
   return {
