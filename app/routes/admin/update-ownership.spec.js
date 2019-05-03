@@ -25,7 +25,7 @@ describe('POST /v5/topics/admin/ownership/edit ', () => {
 
   const memberUser = {
     handle: getDecodedToken(jwts.admin).handle,
-    userId: getDecodedToken(jwts.admin).userId,
+    userId: parseInt(getDecodedToken(jwts.admin).userId, 10),
     firstName: 'fname',
     lastName: 'lName',
     email: 'some@abc.com',

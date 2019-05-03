@@ -46,9 +46,9 @@ describe('POST /v5/topics/admin/posts/:postId/edit ', () => {
       hidden: true,
       hiddenReason: 'hidden reason',
       createdAt: yesterday.toISOString(),
-      createdBy: getDecodedToken(jwts.manager).userId,
+      createdBy: parseInt(getDecodedToken(jwts.manager).userId, 10),
       updatedAt: today.toISOString(),
-      updatedBy: getDecodedToken(jwts.manager).userId,
+      updatedBy: parseInt(getDecodedToken(jwts.manager).userId, 10),
       deletedAt: null,
       deletedBy: null,
     },
@@ -59,7 +59,7 @@ describe('POST /v5/topics/admin/posts/:postId/edit ', () => {
     post: {
       raw: 'post body - updated',
       deletedAt: today.toISOString(),
-      deletedBy: getDecodedToken(jwts.admin).userId,
+      deletedBy: parseInt(getDecodedToken(jwts.admin).userId, 10),
     },
   };
 
@@ -79,7 +79,7 @@ describe('POST /v5/topics/admin/posts/:postId/edit ', () => {
 
   const memberUser = {
     handle: getDecodedToken(jwts.admin).handle,
-    userId: getDecodedToken(jwts.admin).userId,
+    userId: parseInt(getDecodedToken(jwts.admin).userId, 10),
     firstName: 'fname',
     lastName: 'lName',
     email: 'some@abc.com',
