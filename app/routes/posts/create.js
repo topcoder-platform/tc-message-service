@@ -49,7 +49,7 @@ module.exports = (db, m2m) => (req, resp, next) => {
             postId: savedPost.id,
           }, {
             where: {
-              id: attachmentIds,
+              id: { $in: attachmentIds },
               postId: null,
             },
           });
