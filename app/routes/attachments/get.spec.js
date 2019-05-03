@@ -174,18 +174,19 @@ describe('GET /v4/topics/attachments/:attachmentId', () => {
     });
 
     describe('for an existing attachment', () => {
-      it('should return a response that redirects to the signed version of the url', (done) => {
+      it('should return a response that contains signed version of the url', (done) => {
         request(server)
           .get(apiPath)
           .set({
             Authorization: `Bearer ${jwts.member}`,
           })
-          .expect(302)
+          .expect(200)
           .end((err, res) => {
             if (err) {
               return done(err);
             }
-            res.headers.location.should.equal('https://s3.com/1/attachment.jpg?signedParam=true');
+            res.body.should.have.propertyByPath('result', 'content', 'url')
+            .eql('https://s3.com/1/attachment.jpg?signedParam=true');
             return done();
           });
       });

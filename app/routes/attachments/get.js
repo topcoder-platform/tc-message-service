@@ -1,6 +1,7 @@
 
 const aws = require('aws-sdk');
 const config = require('config');
+const util = require('tc-core-library-js').util(config);
 const errors = require('common-errors');
 const HelperService = require('../../services/helper');
 const Joi = require('joi');
@@ -70,9 +71,9 @@ module.exports = (db, m2m) =>
                   Bucket: config.get('aws.S3.targetBucket'),
                   Key: helper.s3KeyFromUrl(attachment.url),
                 });
-                logger.debug(attachment.url);
-                logger.debug(signedUrl);
-                resp.redirect(signedUrl);
+                ['deletedAt', 'deletedBy'].forEach(attribute => delete attachment[attribute]);
+                attachment.url = signedUrl;
+                resp.status(200).send(util.wrapResponse(req.id, attachment));
               });
           });
       })
