@@ -13,8 +13,8 @@ const config = require('config');
 require('should-sinon');
 
 describe('GET /v4/topics/attachments/:attachmentId', () => {
-  const apiPath = `/${config.apiVersion}/topics/attachments/1`;
-  const nonExistingAttachmentPath = `/${config.apiVersion}/topics/attachments/2`;
+  const apiPath = `/${config.apiVersion}/topics/attachments/1/read`;
+  const nonExistingAttachmentPath = `/${config.apiVersion}/topics/attachments/2/read`;
   const memberUser = {
     handle: getDecodedToken(jwts.member).handle,
     userId: parseInt(getDecodedToken(jwts.member).userId, 10),

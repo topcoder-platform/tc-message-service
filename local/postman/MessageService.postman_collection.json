@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "ad3448bb-e8d2-44d2-ad36-cbe5cb865a26",
+		"_postman_id": "08a97a09-bf2d-47c0-a58c-dda79837978f",
 		"name": "Message Service",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
@@ -23,17 +23,18 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n\t\"filename\": \"test.txt\",\n\t\"bucket\": \"tc-dev-attachments-public-bucket\"\n}"
+					"raw": "{\n\t\"filename\": \"test.json\",\n\t\"bucket\": \"messages-service-attachments-test-source\"\n}"
 				},
 				"url": {
-					"raw": "{{URL}}/v5/topics/attachments",
+					"raw": "{{URL}}/v5/topics/attachments/create",
 					"host": [
 						"{{URL}}"
 					],
 					"path": [
 						"v5",
 						"topics",
-						"attachments"
+						"attachments",
+						"create"
 					]
 				}
 			},
@@ -60,14 +61,15 @@
 					"raw": "{\n\t\"filename\": \"test_under_dir.txt\",\n\t\"bucket\": \"tc-dev-attachments-public-bucket\",\n\t\"path\": \"directory\"\n}"
 				},
 				"url": {
-					"raw": "{{URL}}/v5/topics/attachments",
+					"raw": "{{URL}}/v5/topics/attachments/create",
 					"host": [
 						"{{URL}}"
 					],
 					"path": [
 						"v5",
 						"topics",
-						"attachments"
+						"attachments",
+						"create"
 					]
 				}
 			},
@@ -401,10 +403,10 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n\t\"postId\": 1\n}"
+					"raw": ""
 				},
 				"url": {
-					"raw": "{{URL}}/v5/topics/attachments/1",
+					"raw": "{{URL}}/v5/topics/attachments/2/read",
 					"host": [
 						"{{URL}}"
 					],
@@ -412,14 +414,15 @@
 						"v5",
 						"topics",
 						"attachments",
-						"1"
+						"2",
+						"read"
 					]
 				}
 			},
 			"response": []
 		},
 		{
-			"name": "Delete attachment (hard) (magrathean)",
+			"name": "Delete attachment (magrathean)",
 			"request": {
 				"method": "DELETE",
 				"header": [
@@ -436,10 +439,10 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n\t\"postId\": 1,\n\t\"hardDelete\": true\n}"
+					"raw": "{\n\t\"postId\": 2,\n\t\"hardDelete\": false\n}"
 				},
 				"url": {
-					"raw": "{{URL}}/v5/topics/attachments/1",
+					"raw": "{{URL}}/v5/topics/attachments/2/delete",
 					"host": [
 						"{{URL}}"
 					],
@@ -447,42 +450,8 @@
 						"v5",
 						"topics",
 						"attachments",
-						"1"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Delete attachment (soft) (magrathean) (hardDelete)",
-			"request": {
-				"method": "DELETE",
-				"header": [
-					{
-						"key": "Authorization",
-						"value": "Bearer {{magratheanTokenAdmin}}"
-					},
-					{
-						"key": "Content-Type",
-						"name": "Content-Type",
-						"value": "application/json",
-						"type": "text"
-					}
-				],
-				"body": {
-					"mode": "raw",
-					"raw": "{\n\t\"postId\": 2\n}"
-				},
-				"url": {
-					"raw": "{{URL}}/v5/topics/attachments/3",
-					"host": [
-						"{{URL}}"
-					],
-					"path": [
-						"v5",
-						"topics",
-						"attachments",
-						"3"
+						"2",
+						"delete"
 					]
 				}
 			},

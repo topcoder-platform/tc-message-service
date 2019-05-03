@@ -12,7 +12,7 @@ const config = require('config');
 require('should-sinon');
 
 describe('POST /v5/topics/attachments', () => {
-  const apiPath = `/${config.apiVersion}/topics/attachments`;
+  const apiPath = `/${config.apiVersion}/topics/attachments/create`;
   let sandbox;
   const validBody = { filename: 'test.txt', bucket: 'test' };
   let server;

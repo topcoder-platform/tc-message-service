@@ -251,7 +251,7 @@ module.exports = (Sequelize, DataTypes) => {
       });
   };
 
-  Post.updatePostAttachments = (models, postId, attachmentIds) =>
+  Post.updatePostAttachments = (models, postId, attachmentIds, transaction = null) =>
     // remove attachments from the post
      models.post_attachments.update(
        {
@@ -260,19 +260,20 @@ module.exports = (Sequelize, DataTypes) => {
        {
          where: {
            postId,
+           id: { $notIn: attachmentIds || [] },
          },
-       }).then(() => {
-      // update postIds of attachments with the id of updated post
+       }, { transaction }).then(() => {
+          // update postIds of attachments with the id of updated post
          if (attachmentIds && attachmentIds.length) {
            return models.post_attachments.update({
              postId,
            }, {
              where: {
-               id: attachmentIds,
+               id: { $in: attachmentIds },
                postId: null,
              },
              returning: true,
-           }).then(result => result[1]);
+           }, { transaction }).then(result => result[1]);
          }
          return Promise.resolve();
        });

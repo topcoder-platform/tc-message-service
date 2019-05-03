@@ -52,13 +52,12 @@ module.exports = (db, m2m) => (req, resp, next) => {
       if (!hasAccess && !helper.isAdmin(req)) {
         throw new errors.HttpStatusError(403, 'User doesn\'t have access to the entity');
       }
-
-      return db.posts.updatePostAttachments(db, postId, attachmentIds)
-      .then(() => db.posts.updatePost(db, adapter, { raw: content }, { postId }, userId)
-        .then((updatedPost) => {
-          req.app.emit(EVENT.POST_UPDATED, { post, req, topic });
-          resp.status(200).send(util.wrapResponse(req.id, updatedPost));
-        }));
+      return db.sequelize.transaction(trans => db.posts.updatePostAttachments(db, postId, attachmentIds, trans)
+        .then(() => db.posts.updatePost(db, adapter, { raw: content }, { postId }, userId, trans)
+          .then((updatedPost) => {
+            req.app.emit(EVENT.POST_UPDATED, { post, req, topic });
+            resp.status(200).send(util.wrapResponse(req.id, updatedPost));
+          })));
     });
   })
   .catch((error) => {

@@ -5,6 +5,7 @@ const util = require('tc-core-library-js').util(config);
 const errors = require('common-errors');
 const Joi = require('joi');
 const Promise = require('bluebird');
+const moment = require('moment');
 
 const HttpStatusError = errors.HttpStatusError;
 
@@ -106,28 +107,42 @@ module.exports = db =>
       path: Joi.string().optional(),
     }).unknown());
 
-    moveObject(fileInfo, req)
-      .then((file) => {
-        logger.info('Attachment copied to the target bucket', file);
-        return file;
-      })
-      .then(file => db.post_attachments.create({
-        postId: null,
-        originalFileName: file.filename,
-        url: getS3URL(file),
+    // check rate limits
+    return db.post_attachments.count({
+      where: {
         createdBy: req.authUser.handle,
-          // follow sequelize on how it fills updatedAt on creation
-        updatedBy: req.authUser.handle,
-      }))
-      .then((createdPostAttachment) => {
-        const content = createdPostAttachment.toJSON();
-        logger.info('Attachment uploaded', content);
-        // remove excluded attributes from the response
-        ['deletedAt', 'deletedBy', 'url'].forEach(attribute => delete content[attribute]);
-        resp.status(200).send(util.wrapResponse(req.id, content));
-      })
-      .catch((error) => {
-        logger.error(error);
-        next(error instanceof HttpStatusError ? error : new HttpStatusError(500, 'Error copying attachment'));
-      });
+        postId: null,
+        createdAt: { $gt: moment().add(-1, 'hours') },
+      },
+    })
+    .then((count) => {
+      if (count > config.maximumUnassignedAttachments) {
+        throw new errors.HttpStatusError(429, 'Rate limit - too many unassigned attachments');
+      }
+      return Promise.resolve();
+    })
+    .then(() => moveObject(fileInfo, req))
+    .then((file) => {
+      logger.info('Attachment copied to the target bucket', file);
+      return file;
+    })
+    .then(file => db.post_attachments.create({
+      postId: null,
+      originalFileName: file.filename,
+      url: getS3URL(file),
+      createdBy: req.authUser.handle,
+        // follow sequelize on how it fills updatedAt on creation
+      updatedBy: req.authUser.handle,
+    }))
+    .then((createdPostAttachment) => {
+      const content = createdPostAttachment.toJSON();
+      logger.info('Attachment uploaded', content);
+      // remove excluded attributes from the response
+      ['deletedAt', 'deletedBy', 'url'].forEach(attribute => delete content[attribute]);
+      resp.status(200).send(util.wrapResponse(req.id, content));
+    })
+    .catch((error) => {
+      logger.error(error);
+      next(error instanceof HttpStatusError ? error : new HttpStatusError(500, 'Error copying attachment'));
+    });
   };

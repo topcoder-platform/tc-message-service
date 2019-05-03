@@ -163,11 +163,11 @@ module.exports = (logger, db, m2m) => {
   router.route(`/${apiVersion}/topics/:topicId/posts/:postId/remove`)
     .delete(deletePostHandler(db, m2m));
 
-  router.route(`/${apiVersion}/topics/attachments`)
+  router.route(`/${apiVersion}/topics/attachments/create`)
     .post(createAttachmentHandler(db, m2m));
-  router.route(`/${apiVersion}/topics/attachments/:attachmentId`)
+  router.route(`/${apiVersion}/topics/attachments/:attachmentId/read`)
     .get(getAttachmentHandler(db, m2m));
-  router.route(`/${apiVersion}/topics/attachments/:attachmentId`)
+  router.route(`/${apiVersion}/topics/attachments/:attachmentId/delete`)
     .delete(deleteAttachmentHandler(db, m2m));
 
   router.use(`/${apiVersion}/topics/webhooks/sendgrid`, formidable());

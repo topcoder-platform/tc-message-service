@@ -13,8 +13,8 @@ const config = require('config');
 require('should-sinon');
 
 describe('DELETE /v4/topics/attachments/:attachmentId', () => {
-  const apiPath = `/${config.apiVersion}/topics/attachments/1`;
-  const nonExistingAttachmentPath = `/${config.apiVersion}/topics/attachments/2`;
+  const apiPath = `/${config.apiVersion}/topics/attachments/1/delete`;
+  const nonExistingAttachmentPath = `/${config.apiVersion}/topics/attachments/2/delete`;
   const memberUser = {
     handle: getDecodedToken(jwts.member).handle,
     userId: parseInt(getDecodedToken(jwts.member).userId, 10),
@@ -240,6 +240,31 @@ describe('DELETE /v4/topics/attachments/:attachmentId', () => {
                 postAttachment.deletedAt.should.exist;
                 done();
               });
+          });
+      });
+    });
+
+    describe('for a deleted existing attachment', () => {
+      beforeEach(done => db.post_attachments.update({
+        deletedAt: db.sequelize.fn('NOW'), deletedBy: 'deletingUser',
+      }, {
+        where: { id: 1 },
+      }).then(() => done()).catch(done));
+
+      it('should return a not found error', (done) => {
+        request(server)
+          .delete(apiPath)
+          .set({
+            Authorization: `Bearer ${jwts.member}`,
+          })
+          .expect(404)
+          .end((err, res) => {
+            if (err) {
+              return done(err);
+            }
+            res.body.should.have.propertyByPath('result', 'content', 'message')
+              .eql('Could not find the requested attachment');
+            return done();
           });
       });
     });

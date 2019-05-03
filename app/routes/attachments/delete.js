@@ -42,7 +42,7 @@ module.exports = (db, m2m) =>
 
     return db.post_attachments.findOne({ where: { id: params.attachmentId } })
     .then((att) => {
-      if (!att) {
+      if (!att || att.deletedAt) {
         throw new errors.HttpStatusError(404, 'Could not find the requested attachment');
       }
       attachment = att;

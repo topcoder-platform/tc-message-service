@@ -56,7 +56,7 @@ module.exports = (db, m2m) => (req, resp, next) => {
             if (!contentPost || contentPost.id !== Number(postId)) {
               throw new errors.HttpStatusError(404, 'Post does not exist');
             }
-            return db.posts.updatePostAttachments(db, postId, attachmentIds).then(() => {
+            return db.posts.updatePostAttachments(db, postId, attachmentIds, trans).then(() => {
               const promises = [
                 db.topics.updateTopic(db, adapter, { title }, { topicId, reqUserId: userId }, trans)
                   .then((updatedTopic) => {
