@@ -1,5 +1,5 @@
 import elasticsearch from 'elasticsearch';
-import AWS from 'aws-sdk';
+// import AWS from 'aws-sdk';
 
 const _ = require('lodash');
 const config = require('config');
