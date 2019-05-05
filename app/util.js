@@ -66,10 +66,10 @@ _.assign(util, {
         apiVersion: config.get('elasticsearchConfig.apiVersion'),
         hosts: esHost,
         connectionClass: require('http-aws-es'), // eslint-disable-line global-require
-        amazonES: {
-          region: 'us-east-1',
-          credentials: new AWS.EnvironmentCredentials('AWS'),
-        },
+        // amazonES: {
+        //   region: 'us-east-1',
+        //   credentials: new AWS.EnvironmentCredentials('AWS'),
+        // },
       });
     } else {
       esClient = new elasticsearch.Client(_.cloneDeep(config.elasticsearchConfig));
