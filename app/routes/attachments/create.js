@@ -75,7 +75,7 @@ const moveObject = (file, req) => new Promise((resolve, reject) => {
     CopySource: getSourceBucketPath(file),
     Key: targetS3Key,
   };
-  s3.moveObject(params, (err) => {
+  s3.copyObject(params, (err) => {
     if (err) {
       logger.error(err);
       reject(err);

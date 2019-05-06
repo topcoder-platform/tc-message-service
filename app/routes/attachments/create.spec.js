@@ -25,7 +25,7 @@ describe('POST /v5/topics/attachments', () => {
     if (!s3) {
       try {
         s3 = {
-          moveObject: sinon.stub().callsArgWith(1, null, true),
+          copyObject: sinon.stub().callsArgWith(1, null, true),
           deleteObject: () => ({
             promise: () => Promise.resolve(),
           }),
