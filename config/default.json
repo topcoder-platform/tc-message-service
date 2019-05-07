@@ -11,8 +11,8 @@
       "elasticSearchIndexingLogsTable": "MessageServiceESIndexingLogs"
     },
     "S3": {
-      "targetBucket": "tc-message-service-attachments",
-      "storageDir": "attachments"
+      "targetBucket": "topcoder-dev-media",
+      "storageDir": "tc-message-service"
     }
   },
   "attachmentConfig": {
