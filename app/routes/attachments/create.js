@@ -63,7 +63,7 @@ const getS3URL = file => `s3://${file.s3Bucket}/${file.s3Key}`;
 const moveObject = (file, req) => new Promise((resolve, reject) => {
   const logger = req.log;
 
-  const s3 = new aws.S3(config.get('aws.config'));
+  const s3 = new aws.S3();
   const targetBucket = config.get('aws.S3.targetBucket');
   const storageDir = config.get('aws.S3.storageDir');
   const timeStamp = Date.now();
