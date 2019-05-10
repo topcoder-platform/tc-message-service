@@ -77,7 +77,7 @@ module.exports = (db, m2m) =>
                 }).promise();
               }).then(() => attachment.update({
                 deletedAt: db.sequelize.fn('NOW'),
-                deletedBy: req.authUser.handle,
+                deletedBy: req.authUser.userId.toString(),
               }))
               .then(() => {
                 resp.status(200).send(util.wrapResponse(req.id));

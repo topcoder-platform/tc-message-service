@@ -110,7 +110,7 @@ module.exports = db =>
     // check rate limits
     return db.post_attachments.count({
       where: {
-        createdBy: req.authUser.handle,
+        createdBy: req.authUser.userId.toString(),
         postId: null,
         createdAt: { $gt: moment().add(-1, 'hours') },
       },
@@ -130,9 +130,9 @@ module.exports = db =>
       postId: null,
       originalFileName: file.filename,
       url: getS3URL(file),
-      createdBy: req.authUser.handle,
+      createdBy: req.authUser.userId.toString(),
         // follow sequelize on how it fills updatedAt on creation
-      updatedBy: req.authUser.handle,
+      updatedBy: req.authUser.userId.toString(),
     }))
     .then((createdPostAttachment) => {
       const content = createdPostAttachment.toJSON();

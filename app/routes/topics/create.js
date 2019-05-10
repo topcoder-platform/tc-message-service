@@ -95,6 +95,11 @@ module.exports = (db, m2m) =>
                 action: 'READ',
               }).then(() => {
                 logger.debug('post_user_stats entry created for post: ', savedPost.id);
+                return db.post_attachments.findAll({ where: { postId: savedPost.id } }).then((att) => {
+                  topic.posts[0].postAttachments = att;
+                });
+              })
+              .then(() => {
                 // update elastic search index
                 esIndex.updateElasticSearchIndex(db, adapter, savedTopic.id, savedTopic.id);
                 return resp.status(200).send(util.wrapResponse(

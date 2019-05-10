@@ -61,6 +61,7 @@ Note that all these properties have their corresponding environment variables th
  - dynamodb - dynamodb config
   - discourseWebhookLogsTable - log table for discourse webhooks
 
+NOTE: accessKeyId and secretAccessKey have to be configured as environment variables
 # Local Setup
 
 ## Hosts

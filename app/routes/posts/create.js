@@ -27,6 +27,7 @@ module.exports = (db, m2m) => (req, resp, next) => {
   const topicId = req.params.topicId;
   const attachmentIds = req.body.attachmentIds;
   const userId = req.authUser.isMachine ? config.get('coderBotUserId') : req.authUser.userId.toString();
+  let savedPost;
   return db.topics.findById(topicId)
   .then((topic) => { /* eslint no-param-reassign: ["error", { "props": true, "ignorePropertyModificationsFor": ["topic"] }] */
     if (!topic) {
@@ -40,8 +41,9 @@ module.exports = (db, m2m) => (req, resp, next) => {
         throw new errors.HttpStatusError(403, 'User doesn\'t have access to the entity');
       }
 
-      return db.posts.createPost(db, postBody, topic, null, userId).then((savedPost) => {
+      return db.posts.createPost(db, postBody, topic, null, userId).then((updatedPost) => {
         logger.info('post created');
+        savedPost = updatedPost;
 
         // update postIds of attachments with the id of created post
         if (attachmentIds) {
@@ -65,7 +67,10 @@ module.exports = (db, m2m) => (req, resp, next) => {
           userId,
           action: 'READ',
         }).then(() => logger.debug('post_user_stats entry created for post: ', savedPost.id));
-        return adapter.adaptPost(savedPost)
+
+        return db.post_attachments.findAll({ where: { postId: savedPost.id } }).then((att) => {
+          savedPost.postAttachments = att;
+        }).then(() => adapter.adaptPost(savedPost))
         .then((post) => {
           // emit post creation event
           req.app.emit(EVENT.POST_CREATED, { post: savedPost, topic, req, userId });
