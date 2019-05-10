@@ -251,32 +251,36 @@ module.exports = (Sequelize, DataTypes) => {
       });
   };
 
-  Post.updatePostAttachments = (models, postId, attachmentIds, transaction = null) =>
+  Post.updatePostAttachments = (models, postId, attachmentIds, transaction = null) => {
+    if (!attachmentIds) {
+      return Promise.resolve();
+    }
     // remove attachments from the post
-     models.post_attachments.update(
-       {
-         postId: null,
-       },
-       {
-         where: {
-           postId,
-           id: { $notIn: attachmentIds || [] },
-         },
-       }, { transaction }).then(() => {
+    return models.post_attachments.update(
+      {
+        postId: null,
+      },
+      {
+        where: {
+          postId,
+          id: { $notIn: attachmentIds || [] },
+        },
+      }, { transaction }).then(() => {
           // update postIds of attachments with the id of updated post
-         if (attachmentIds && attachmentIds.length) {
-           return models.post_attachments.update({
-             postId,
-           }, {
-             where: {
-               id: { $in: attachmentIds },
-               postId: null,
-             },
-             returning: true,
-           }, { transaction }).then(result => result[1]);
-         }
-         return Promise.resolve();
-       });
+        if (attachmentIds && attachmentIds.length) {
+          return models.post_attachments.update({
+            postId,
+          }, {
+            where: {
+              id: { $in: attachmentIds },
+              postId: null,
+            },
+            returning: true,
+          }, { transaction }).then(result => result[1]);
+        }
+        return Promise.resolve();
+      });
+  };
 
   return Post;
 };
