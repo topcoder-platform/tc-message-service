@@ -208,7 +208,7 @@ module.exports = (logger, db, m2m) => {
     });
   }
 
-  async function userHasAccessToEntity(userId, hasAccessResp, reference) {
+  async function userHasAccessToEntity(userId, hasAccessResp, tags, reference) {
     logger.info('Checking if user has access to project');
     const hasAccess = hasAccessResp[0];
     try {
@@ -218,8 +218,10 @@ module.exports = (logger, db, m2m) => {
         logger.debug('Didn\'t find accessCondition.');
         return false;
       }
-      const statement = accessCondition.replace('{userId}', userId);
-      const isPassAccessCondition = evaluate(statement, hasAccessResp[1]);
+      const isPassAccessCondition = evaluate(accessCondition, _.extend({
+        userId,
+        tags,
+      }, hasAccessResp[1]));
       return hasAccess && isPassAccessCondition;
     } catch (err) {
       logger.debug('Error during evaluation of the accessCondition.');

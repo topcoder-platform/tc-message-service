@@ -36,6 +36,7 @@ function assertTopicAndPost(topicId, assertCallback, done) {
 describe('GET /v4/topics/:topicId', () => {
   const apiPathPrefix = `/${config.apiVersion}/topics/`;
   const apiPath = `${apiPathPrefix}1/read`;
+  const privateTopicPath = `${apiPathPrefix}2/read`;
   const nonExistingTopicPath = `${apiPathPrefix}1000/read`;
 
   const memberUser = {
@@ -101,6 +102,54 @@ describe('GET /v4/topics/:topicId', () => {
         Authorization: `Bearer ${jwts.member}`,
       })
       .expect(403)
+      .end((err) => {
+        if (err) {
+          return done(err);
+        }
+        // should call m2m.getMachineToken
+        m2mStub.should.have.be.calledOnce;
+        return done();
+      });
+  });
+
+  it('should return 403 response if customer tries to access private topic', (done) => {
+    const getStub = sandbox.stub(axios, 'get');
+    // mocks the m2m token call
+    const m2mStub = sandbox.stub(m2m, 'getMachineToken').resolves('dummy_token');
+    // resolves call (with 200) to reference endpoint in helper.callReferenceEndpoint
+    getStub.withArgs('http://reftest/referenceId1').resolves({
+      data: { result: { status: 200, content: { members: [{ userId: memberUser.userId, role: 'customer' }] } } },
+    });
+    request(server)
+      .get(privateTopicPath)
+      .set({
+        Authorization: `Bearer ${jwts.member}`,
+      })
+      .expect(403)
+      .end((err) => {
+        if (err) {
+          return done(err);
+        }
+        // should call m2m.getMachineToken
+        m2mStub.should.have.be.calledOnce;
+        return done();
+      });
+  });
+
+  it('should return 200 response if customer tries to access public topic', (done) => {
+    const getStub = sandbox.stub(axios, 'get');
+    // mocks the m2m token call
+    const m2mStub = sandbox.stub(m2m, 'getMachineToken').resolves('dummy_token');
+    // resolves call (with 200) to reference endpoint in helper.callReferenceEndpoint
+    getStub.withArgs('http://reftest/referenceId').resolves({
+      data: { result: { status: 200, content: { members: [{ userId: memberUser.userId, role: 'customer' }] } } },
+    });
+    request(server)
+      .get(apiPath)
+      .set({
+        Authorization: `Bearer ${jwts.member}`,
+      })
+      .expect(200)
       .end((err) => {
         if (err) {
           return done(err);

@@ -4,6 +4,7 @@ const config = require('config');
 const util = require('tc-core-library-js').util(config);
 const errors = require('common-errors');
 const Joi = require('joi');
+const _ = require('lodash');
 const HelperService = require('../../services/helper');
 const Adapter = require('../../services/adapter');
 
@@ -61,7 +62,8 @@ module.exports = (db, m2m) =>
             const referenceId = topic.referenceId;
             return helper.callReferenceEndpoint(req.authToken, req.id, topic.reference, referenceId)
               .then(async (hasAccessResp) => {
-                const hasAccess = await helper.userHasAccessToEntity(userId, hasAccessResp, topic.reference);
+                const hasAccess = await helper.userHasAccessToEntity(userId, hasAccessResp, _.split(topic.tag, ','),
+                  topic.reference);
                 if (!hasAccess && !isAdmin) {
                   throw new errors.HttpStatusError(403, 'User doesn\'t have access to the project');
                 }

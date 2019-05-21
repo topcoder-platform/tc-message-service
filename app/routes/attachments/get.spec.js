@@ -14,7 +14,8 @@ require('should-sinon');
 
 describe('GET /v4/topics/attachments/:attachmentId', () => {
   const apiPath = `/${config.apiVersion}/topics/attachments/1/read`;
-  const nonExistingAttachmentPath = `/${config.apiVersion}/topics/attachments/2/read`;
+  const privateTopicAttachmentPath = `/${config.apiVersion}/topics/attachments/2/read`;
+  const nonExistingAttachmentPath = `/${config.apiVersion}/topics/attachments/10/read`;
   const memberUser = {
     handle: getDecodedToken(jwts.member).handle,
     userId: parseInt(getDecodedToken(jwts.member).userId, 10),
@@ -33,6 +34,28 @@ describe('GET /v4/topics/attachments/:attachmentId', () => {
     sandbox.stub(m2m, 'getMachineToken').resolves('dummy_token');
     sandbox.stub(axios, 'get').withArgs('http://reftest/referenceId').resolves({
       data: { result: { status: 403, content: {} } },
+    });
+  };
+
+  const stubWithCustomerToProject = () => {
+    // mocks the m2m token call
+    sandbox.stub(m2m, 'getMachineToken').resolves('dummy_token');
+    const stub = sandbox.stub(axios, 'get');
+    stub.withArgs('http://reftest/referenceId').resolves({
+      data: {
+        result: {
+          status: 200,
+          content: { members: [{ userId: memberUser.userId, role: 'customer' }] },
+        },
+      },
+    });
+    stub.withArgs('http://reftest/referenceId1').resolves({
+      data: {
+        result: {
+          status: 200,
+          content: { members: [{ userId: memberUser.userId, role: 'customer' }] },
+        },
+      },
     });
   };
 
@@ -75,14 +98,21 @@ describe('GET /v4/topics/attachments/:attachmentId', () => {
         return done(err);
       }
       const auth = getDecodedToken(jwts.member);
-      return db.post_attachments.create({
+      return db.post_attachments.bulkCreate([{
         id: 1,
         postId: 1,
         originalFileName: 'aFileName.jpg',
         url: 'https://s3.com/1/12123123-aFileName.jpg',
         createdBy: auth.handle,
         updatedBy: auth.handle,
-      }).then(() => done()).catch(done);
+      }, {
+        id: 2,
+        postId: 3,
+        originalFileName: 'aFileName.jpg',
+        url: 'https://s3.com/1/12123123-aFileName.jpg',
+        createdBy: auth.handle,
+        updatedBy: auth.handle,
+      }]).then(() => done()).catch(done);
     });
   });
 
@@ -120,6 +150,41 @@ describe('GET /v4/topics/attachments/:attachmentId', () => {
         }
         res.body.should.have.propertyByPath('result', 'content', 'message')
           .eql('User doesn\'t have access to the project');
+        return done();
+      });
+  });
+
+  it('should return 403 response for customer and private topic', (done) => {
+    stubWithCustomerToProject();
+    request(server)
+      .get(privateTopicAttachmentPath)
+      .set({
+        Authorization: `Bearer ${jwts.member}`,
+      })
+      .expect(403)
+      .end((err, res) => {
+        if (err) {
+          return done(err);
+        }
+        res.body.should.have.propertyByPath('result', 'content', 'message')
+          .eql('User doesn\'t have access to the project');
+        return done();
+      });
+  });
+
+  it('should return 200 response for customer and public topic', (done) => {
+    stubWithCustomerToProject();
+    request(server)
+      .get(apiPath)
+      .set({
+        Authorization: `Bearer ${jwts.member}`,
+      })
+      .expect(200)
+      .end((err, res) => {
+        if (err) {
+          return done(err);
+        }
+        res.body.result.status.should.equal(200);
         return done();
       });
   });

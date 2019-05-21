@@ -39,6 +39,10 @@ describe('POST /v5/topics/admin/ownership/edit ', () => {
     topicId: 10,
     userId: memberUser.userId,
   };
+  const privateTopicBody = {
+    topicId: 2,
+    userId: memberUser.userId,
+  };
   const testBody = {
     topicId: 1,
     userId: memberUser.userId,
@@ -76,6 +80,8 @@ describe('POST /v5/topics/admin/ownership/edit ', () => {
   });
 
   it('should return 403 response when user is not member of the project', (done) => {
+    // mocks the m2m token call
+    sandbox.stub(m2m, 'getMachineToken').resolves('dummy_token');
     const getStub = sandbox.stub(axios, 'get');
     // resolves call (with 200) to reference endpoint in helper.callReferenceEndpoint
     getStub.withArgs('http://reftest/referenceId').resolves({
@@ -84,9 +90,26 @@ describe('POST /v5/topics/admin/ownership/edit ', () => {
     request(server)
       .post(apiPath)
       .set({
-        Authorization: `Bearer ${jwts.member}`,
+        Authorization: `Bearer ${jwts.admin}`,
       })
       .send(testBody)
+      .expect(403, done);
+  });
+
+  it('should return 403 response when we try to make a customer user as an owner of a private topic', (done) => {
+    // mocks the m2m token call
+    sandbox.stub(m2m, 'getMachineToken').resolves('dummy_token');
+    const getStub = sandbox.stub(axios, 'get');
+    // resolves call (with 200) to reference endpoint in helper.callReferenceEndpoint
+    getStub.withArgs('http://reftest/referenceId1').resolves({
+      data: { result: { status: 200, content: { members: [{ userId: memberUser.userId, role: 'customer' }] } } },
+    });
+    request(server)
+      .post(apiPath)
+      .set({
+        Authorization: `Bearer ${jwts.admin}`,
+      })
+      .send(privateTopicBody)
       .expect(403, done);
   });
 
@@ -251,6 +274,46 @@ describe('POST /v5/topics/admin/ownership/edit ', () => {
     // resolves call (with 200) to reference endpoint in helper.callReferenceEndpoint
     getStub.withArgs('http://reftest/referenceId').resolves({
       data: { result: { status: 200, content: { members: [{ userId: memberUser.userId }] } } },
+    });
+    const now = new Date();
+    const body = _.assign(testBody, {
+      postId: expectedTopicPosts.id,
+    });
+    request(server)
+      .post(apiPath)
+      .set({
+        Authorization: `Bearer ${jwts.manager}`,
+      })
+      .send(body)
+      .expect(200)
+      .end((err, res) => {
+        if (err) {
+          return done(err);
+        }
+
+        // should call m2m.getMachineToken
+        m2mStub.should.have.be.calledOnce;
+        res.body.result.content.should.not.be.null;
+        res.body.should.have.propertyByPath('result', 'content', 'id').eql(postId);
+        // udpatedBy should be null originally for the test data
+        should.not.exist(expectedTopicPosts[0].updatedBy);
+        // updatedDate should be null originally for the test data
+        should.not.exist(expectedTopicPosts[0].updatedDate);
+        // verify change of ownership
+        res.body.should.have.propertyByPath('result', 'content', 'userId').eql(Number(testBody.userId));
+        res.body.should.have.propertyByPath('result', 'content', 'updatedDate');
+        new Date(res.body.result.content.updatedDate).should.be.above(now);
+        return done();
+      });
+  });
+
+  it('should return 200 response for customer, change post ownership for public topic', (done) => {
+    // mocks the m2m token call
+    const m2mStub = sandbox.stub(m2m, 'getMachineToken').resolves('dummy_token');
+    const getStub = sandbox.stub(axios, 'get');
+    // resolves call (with 200) to reference endpoint in helper.callReferenceEndpoint
+    getStub.withArgs('http://reftest/referenceId').resolves({
+      data: { result: { status: 200, content: { members: [{ userId: memberUser.userId, role: 'customer' }] } } },
     });
     const now = new Date();
     const body = _.assign(testBody, {
