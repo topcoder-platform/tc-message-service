@@ -47,7 +47,7 @@ module.exports = (db, m2m) => (req, resp, next) => {
 
         // update postIds of attachments with the id of created post
         if (attachmentIds) {
-          db.post_attachments.update({
+          await db.post_attachments.update({
             postId: savedPost.id,
           }, {
             where: {
