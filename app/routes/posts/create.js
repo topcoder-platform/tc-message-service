@@ -41,7 +41,7 @@ module.exports = (db, m2m) => (req, resp, next) => {
         throw new errors.HttpStatusError(403, 'User doesn\'t have access to the entity');
       }
 
-      return db.posts.createPost(db, postBody, topic, null, userId).then((updatedPost) => {
+      return db.posts.createPost(db, postBody, topic, null, userId).then(async (updatedPost) => {
         logger.info('post created');
         savedPost = updatedPost;
 
