@@ -26,6 +26,13 @@ describe('POST /v5/topics ', () => {
     title: 'title',
     body: 'body',
   };
+  const testBodyPrivate = {
+    reference: 'project',
+    referenceId: 'referenceId1',
+    tag: 'MESSAGES',
+    title: 'title',
+    body: 'body',
+  };
   const testBody2 = {
     reference: 'notexist',
     referenceId: 'notexist',
@@ -315,6 +322,60 @@ describe('POST /v5/topics ', () => {
         createTopicStub.should.have.be.calledOnce;
         res.body.should.have.propertyByPath('result', 'content', 'message')
           .eql('Error creating topic');
+        return done();
+      });
+  });
+
+  it('should return 403 response when customer tries to create a private topic', (done) => {
+    const getStub = sandbox.stub(axios, 'get');
+    // mocks the m2m token call
+    const m2mStub = sandbox.stub(m2m, 'getMachineToken').resolves('dummy_token');
+    // resolves call (with 200) to reference endpoint in helper.callReferenceEndpoint
+    getStub.withArgs('http://reftest/referenceId1').resolves({
+      data: { result: { status: 200, content: { members: [{ userId: memberUser.userId, role: 'customer' }] } } },
+    });
+    request(server)
+      .post(apiPath)
+      .set({
+        Authorization: `Bearer ${jwts.member}`,
+      })
+      .send(testBodyPrivate)
+      .expect(403)
+      .end((err) => {
+        if (err) {
+          return done(err);
+        }
+        // should call m2m.getMachineToken
+        m2mStub.should.have.be.calledOnce;
+        // should make GET to reference lookup endpoint on posts model
+        getStub.should.have.be.calledOnce;
+        return done();
+      });
+  });
+
+  it('should return 200 response when customer tries to create public topic', (done) => {
+    const getStub = sandbox.stub(axios, 'get');
+    // mocks the m2m token call
+    const m2mStub = sandbox.stub(m2m, 'getMachineToken').resolves('dummy_token');
+    // resolves call (with 200) to reference endpoint in helper.callReferenceEndpoint
+    getStub.withArgs('http://reftest/referenceId').resolves({
+      data: { result: { status: 200, content: { members: [{ userId: memberUser.userId, role: 'customer' }] } } },
+    });
+    request(server)
+      .post(apiPath)
+      .set({
+        Authorization: `Bearer ${jwts.member}`,
+      })
+      .send(testBody)
+      .expect(200)
+      .end((err) => {
+        if (err) {
+          return done(err);
+        }
+        // should call m2m.getMachineToken
+        m2mStub.should.have.be.calledOnce;
+        // should make GET to reference lookup endpoint on posts model
+        getStub.should.have.be.calledOnce;
         return done();
       });
   });
