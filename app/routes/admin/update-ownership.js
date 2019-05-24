@@ -55,7 +55,7 @@ module.exports = (db, m2m) => (req, resp, next) => {
           }
           // If asignee exist and has access
           const asigneeId = content.userId;
-          const hasAccess = await helper.userHasAccessToEntity(asigneeId, hasAccessResp, topic.reference);
+          const hasAccess = await helper.userHasAccessToEntity(asigneeId, hasAccessResp, topic.tags, topic.reference);
           if (!hasAccess) {
             throw new errors.HttpStatusError(403, 'Asignee doesn\'t have access to entity');
           }

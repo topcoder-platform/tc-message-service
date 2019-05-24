@@ -18,6 +18,7 @@ describe('DELETE /v4/topics/:topicId/posts/:postId ', () => {
   const topicId = 1;
   const postId = 1;
   const apiPath = `/${config.apiVersion}/topics/${topicId}/posts/${postId}/remove`;
+  const privateTopicPath = `/${config.apiVersion}/topics/2/posts/3/remove`;
   const nonExistingTopicPath = `/${config.apiVersion}/topics/1000/posts/${postId}/remove`;
 
   const memberUser = {
@@ -58,6 +59,8 @@ describe('DELETE /v4/topics/:topicId/posts/:postId ', () => {
   });
 
   it('should return 403 response when user is not member of the project', (done) => {
+    // mocks the m2m token call
+    sandbox.stub(m2m, 'getMachineToken').resolves('dummy_token');
     const getStub = sandbox.stub(axios, 'get');
     // resolves call (with 200) to reference endpoint in helper.callReferenceEndpoint
     getStub.withArgs('http://reftest/referenceId').resolves({
@@ -69,6 +72,38 @@ describe('DELETE /v4/topics/:topicId/posts/:postId ', () => {
         Authorization: `Bearer ${jwts.member}`,
       })
       .expect(403, done);
+  });
+
+  it('should return 403 response when customer user tries to access private topic', (done) => {
+    const getStub = sandbox.stub(axios, 'get');
+    // mocks the m2m token call
+    sandbox.stub(m2m, 'getMachineToken').resolves('dummy_token');
+    // resolves call (with 200) to reference endpoint in helper.callReferenceEndpoint
+    getStub.withArgs('http://reftest/referenceId1').resolves({
+      data: { result: { status: 200, content: { members: [{ userId: memberUser.userId, role: 'customer' }] } } },
+    });
+    request(server)
+      .delete(privateTopicPath)
+      .set({
+        Authorization: `Bearer ${jwts.member}`,
+      })
+      .expect(403, done);
+  });
+
+  it('should return 200 response when customer user tries to access public topic', (done) => {
+    const getStub = sandbox.stub(axios, 'get');
+    // mocks the m2m token call
+    sandbox.stub(m2m, 'getMachineToken').resolves('dummy_token');
+    // resolves call (with 200) to reference endpoint in helper.callReferenceEndpoint
+    getStub.withArgs('http://reftest/referenceId').resolves({
+      data: { result: { status: 200, content: { members: [{ userId: memberUser.userId, role: 'customer' }] } } },
+    });
+    request(server)
+      .delete(apiPath)
+      .set({
+        Authorization: `Bearer ${jwts.member}`,
+      })
+      .expect(200, done);
   });
 
   it('should return 404 response if no matching topic', (done) => {

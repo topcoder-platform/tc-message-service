@@ -18,6 +18,7 @@ const m2m = server.m2m;
 describe('DELETE /v4/topics/:topicId ', () => {
   const topicId = 1;
   const apiPath = `/${config.apiVersion}/topics/${topicId}/remove`;
+  const privateTopicPath = `/${config.apiVersion}/topics/2/remove`;
   const nonExistingTopicPath = `/${config.apiVersion}/topics/2000/remove`;
   // let expectedTopic = null;
   // let expectedTopicPosts = null;
@@ -60,6 +61,8 @@ describe('DELETE /v4/topics/:topicId ', () => {
 
   it('should return 403 response when user is not member of the project', (done) => {
     const getStub = sandbox.stub(axios, 'get');
+    // mocks the m2m token call
+    sandbox.stub(m2m, 'getMachineToken').resolves('dummy_token');
     // resolves call (with 200) to reference endpoint in helper.callReferenceEndpoint
     getStub.withArgs('http://reftest/referenceId').resolves({
       data: { result: { status: 200, content: { members: [] } } },
@@ -70,6 +73,41 @@ describe('DELETE /v4/topics/:topicId ', () => {
         Authorization: `Bearer ${jwts.member}`,
       })
       .expect(403, done);
+  });
+
+  it('should return 403 response when customer tries to access private topic', (done) => {
+    const getStub = sandbox.stub(axios, 'get');
+    // mocks the m2m token call
+    sandbox.stub(m2m, 'getMachineToken').resolves('dummy_token');
+    // resolves call (with 200) to reference endpoint in helper.callReferenceEndpoint
+    getStub.withArgs('http://reftest/referenceId1').resolves({
+      data: { result: { status: 200, content: { members: [{ userId: memberUser.userId, role: 'customer' }] } } },
+    });
+    request(server)
+      .delete(privateTopicPath)
+      .set({
+        Authorization: `Bearer ${jwts.member}`,
+      })
+      .expect(403, done);
+  });
+
+  it('should return 200 response when customer tries to access public topic', (done) => {
+    const getStub = sandbox.stub(axios, 'get');
+    // mocks the m2m token call
+    sandbox.stub(m2m, 'getMachineToken').resolves('dummy_token');
+    // resolves call (with 200) to reference endpoint in helper.callReferenceEndpoint
+    getStub.withArgs('http://reftest/referenceId').resolves({
+      data: { result: { status: 200, content: { members: [{ userId: memberUser.userId, role: 'customer' }] } } },
+    });
+    return db.sequelize.query(`Update posts SET "deletedAt"=now() where "topicId"=${topicId};`)
+    .then(() => {
+      request(server)
+        .delete(apiPath)
+        .set({
+          Authorization: `Bearer ${jwts.member}`,
+        })
+        .expect(200, done);
+    });
   });
 
   it('should return 200 response with valid jwt token and payload', (done) => {
