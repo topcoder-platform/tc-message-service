@@ -209,22 +209,39 @@ module.exports = (logger, db, m2m) => {
   }
 
   async function userHasAccessToEntity(userId, hasAccessResp, tags, reference) {
-    logger.info('Checking if user has access to project');
+    logger.info('[userHasAccessToEntity] Checking if user has access to project');
+
     const hasAccess = hasAccessResp[0];
+    logger.debug(`[userHasAccessToEntity] Reference endpoint access is "${hasAccess}".`);
+
+    let referenceLookup;
+
     try {
-      const { accessCondition } = await db.reference_lookups.findOne({ where: { reference } });
+      referenceLookup = await db.reference_lookups.findOne({ where: { reference } });
       // if somehow cannot find a reference, don't allow access
-      if (!accessCondition) {
-        logger.debug('Didn\'t find accessCondition.');
+      if (!referenceLookup) {
+        logger.debug('[userHasAccessToEntity] Didn\'t find referenceLookup.');
         return false;
       }
-      const isPassAccessCondition = evaluate(accessCondition, _.extend({
-        userId,
-        tags,
-      }, hasAccessResp[1]));
+    } catch (err) {
+      logger.debug('[userHasAccessToEntity] Error during retrieving referenceLookup.', err);
+      return false;
+    }
+
+    const accessCondition = referenceLookup.accessCondition;
+    const evaluationData = _.extend({
+      userId,
+      tags,
+    }, hasAccessResp[1]);
+
+    try {
+      const isPassAccessCondition = evaluate(accessCondition, evaluationData);
+      logger.debug(`[userHasAccessToEntity] Access condition evaluated to "${isPassAccessCondition}".`);
       return hasAccess && isPassAccessCondition;
     } catch (err) {
-      logger.debug('Error during evaluation of the accessCondition.');
+      logger.debug('[userHasAccessToEntity] Error during evaluation of the accessCondition.', err);
+      logger.debug(`[userHasAccessToEntity] accessCondition = "${accessCondition}".`);
+      logger.debug(`[userHasAccessToEntity] evaluationData = "${JSON.stringify(evaluationData)}".`);
       return false;
     }
   }
