@@ -1,6 +1,6 @@
 /* eslint-disable no-unused-expressions, newline-per-chained-call */
 
-import { jwts, prepareDB, clearDB, getDecodedToken } from '../../tests';
+import { jwts, userIds, prepareDB, clearDB, getDecodedToken } from '../../tests';
 
 const request = require('supertest');
 const server = require('../../app');
@@ -57,6 +57,25 @@ describe('DELETE /v4/topics/:topicId ', () => {
         Authorization: 'Bearer wrong',
       })
       .expect(403, done);
+  });
+
+  it('should return 403 response when non-admin user is not creator of the topic', (done) => {
+    const getStub = sandbox.stub(axios, 'get');
+    // mocks the m2m token call
+    sandbox.stub(m2m, 'getMachineToken').resolves('dummy_token');
+    // resolves call (with 200) to reference endpoint in helper.callReferenceEndpoint
+    getStub.withArgs('http://reftest/referenceId').resolves({
+      data: { result: { status: 200, content: { members: [{ userId: userIds.otherMember }] } } },
+    });
+    return db.sequelize.query(`Update posts SET "deletedAt"=now() where "topicId"=${topicId};`)
+    .then(() => {
+      request(server)
+        .delete(apiPath)
+        .set({
+          Authorization: `Bearer ${jwts.otherMember}`,
+        })
+        .expect(403, done);
+    });
   });
 
   it('should return 403 response when user is not member of the project', (done) => {
@@ -124,6 +143,40 @@ describe('DELETE /v4/topics/:topicId ', () => {
         .delete(apiPath)
         .set({
           Authorization: `Bearer ${jwts.member}`,
+        })
+        .expect(200)
+        .end((err, res) => {
+          if (err) {
+            return done(err);
+          }
+          // should call m2m.getMachineToken
+          m2mStub.should.have.be.calledOnce;
+          res.body.result.success.should.eql(true);
+          return db.topics.findAll({
+            where: { deletedAt: { [db.Sequelize.Op.eq]: null } },
+            raw: true,
+          }).then((topics) => {
+            topics.should.length(1);
+            return done();
+          });
+        });
+    });
+  });
+
+  it('should return 200 response with valid jwt token and payload (admin)', (done) => {
+    const getStub = sandbox.stub(axios, 'get');
+    // mocks the m2m token call
+    const m2mStub = sandbox.stub(m2m, 'getMachineToken').resolves('dummy_token');
+    // resolves call (with 200) to reference endpoint in helper.callReferenceEndpoint
+    getStub.withArgs('http://reftest/referenceId').resolves({
+      data: { result: { status: 200, content: { members: [{ }] } } },
+    });
+    return db.sequelize.query(`Update posts SET "deletedAt"=now() where "topicId"=${topicId};`)
+    .then(() => {
+      request(server)
+        .delete(apiPath)
+        .set({
+          Authorization: `Bearer ${jwts.admin}`,
         })
         .expect(200)
         .end((err, res) => {
