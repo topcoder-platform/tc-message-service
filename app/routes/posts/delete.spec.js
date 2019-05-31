@@ -1,6 +1,6 @@
 /* eslint-disable no-unused-expressions, newline-per-chained-call */
 
-import { prepareDB, clearDB, jwts, getDecodedToken } from '../../tests';
+import { prepareDB, clearDB, jwts, userIds, getDecodedToken } from '../../tests';
 
 const request = require('supertest');
 const server = require('../../app');
@@ -33,11 +33,11 @@ describe('DELETE /v4/topics/:topicId/posts/:postId ', () => {
   beforeEach((done) => {
     sandbox = sinon.sandbox.create();
     prepareDB()
-    .then(() => {
-      // expectedTopic = topic;
-      // expectedTopicPosts = posts;
-      done();
-    });
+      .then(() => {
+        // expectedTopic = topic;
+        // expectedTopicPosts = posts;
+        done();
+      });
   });
   afterEach((done) => {
     sandbox.restore();
@@ -104,6 +104,28 @@ describe('DELETE /v4/topics/:topicId/posts/:postId ', () => {
         Authorization: `Bearer ${jwts.member}`,
       })
       .expect(200, done);
+  });
+
+  it('should return 403 response when non-admin user is not creator of the post', (done) => {
+    const getStub = sandbox.stub(axios, 'get');
+    // mocks the m2m token call
+    sandbox.stub(m2m, 'getMachineToken').resolves('dummy_token');
+    // resolves call (with 200) to reference endpoint in helper.callReferenceEndpoint
+    getStub.withArgs('http://reftest/referenceId').resolves({
+      data: { result: { status: 200, content: { members: [{ userId: userIds.otherMember }] } } },
+    });
+    request(server)
+      .delete(apiPath)
+      .set({
+        Authorization: `Bearer ${jwts.otherMember}`,
+      })
+      .expect(403)
+      .end((err) => {
+        if (err) {
+          return done(err);
+        }
+        return done();
+      });
   });
 
   it('should return 404 response if no matching topic', (done) => {

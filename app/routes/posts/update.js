@@ -52,6 +52,12 @@ module.exports = (db, m2m) => (req, resp, next) => {
       if (!hasAccess && !helper.isAdmin(req)) {
         throw new errors.HttpStatusError(403, 'User doesn\'t have access to the entity');
       }
+
+      if ((post.createdBy !== userId) && (!helper.isAdmin(req))) {
+        const err = new errors.HttpStatusError(403, 'You are not allowed to perform this action');
+        return next(err);
+      }
+
       return db.sequelize.transaction(trans => db.posts.updatePostAttachments(db, postId, attachmentIds, trans)
         .then(() => db.posts.updatePost(db, adapter, { raw: content }, { postId }, userId, trans)
           .then((updatedPost) => {
