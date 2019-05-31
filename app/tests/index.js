@@ -26,6 +26,14 @@ const jwts = {
   manager: 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJyb2xlcyI6WyJDb25uZWN0IE1hbmFnZXIiXSwiaXNzIjoiaHR0cHM6Ly9hcGkudG9wY29kZXItZGV2LmNvbSIsImhhbmRsZSI6InRlc3QxIiwiZXhwIjoyNTYzMDc2Njg5LCJ1c2VySWQiOiI0MDA1MTMzNCIsImlhdCI6MTQ2MzA3NjA4OSwiZW1haWwiOiJ0ZXN0QHRvcGNvZGVyLmNvbSIsImp0aSI6ImIzM2I3N2NkLWI1MmUtNDBmZS04MzdlLWJlYjhlMGFlNmE0YSJ9.YTYWbA5JmjdC_dVA1kQjcWtpKIeWs7FwDa8B-xsnhN0',
 };
 
+const userIds = {
+  member: '40051331',
+  otherMember: '40051371',
+  admin: '40051333',
+  otherAdmin: '40051339',
+  manager: '40051334',
+};
+
 function getDecodedToken(token) {
   return jwt.decode(token);
 }
@@ -81,7 +89,7 @@ function prepareDB(done) {
       discourseTopicId: 1,
       tags: ['tag'],
       title: 'Mock topic title',
-      createdBy: '123456789',
+      createdBy: userIds.member,
     },
     {
       // id: 1,
@@ -90,7 +98,7 @@ function prepareDB(done) {
       discourseTopicId: 100,
       tags: ['tag'],
       title: 'Mock topic title2',
-      createdBy: '12345678910',
+      createdBy: userIds.admin,
     }], { returning: true }))
     .then(
       topics => db.reference_lookups.create({
@@ -103,19 +111,19 @@ function prepareDB(done) {
       return db.posts.bulkCreate([{
         raw: 'Mock topic body',
         topicId: 1,
-        createdBy: '123456789',
+        createdBy: userIds.member,
         postNumber: 1,
       },
       {
         raw: 'Mock topic post - logically first post',
         topicId: 1,
-        createdBy: '123456789',
+        createdBy: userIds.member,
         postNumber: 2,
       },
       {
         raw: 'Mock topic post2',
         topicId: 2,
-        createdBy: '123456789',
+        createdBy: userIds.member,
         postNumber: 3,
       }], { returning: true })
       .then(posts => ({ topic, posts }));
@@ -157,6 +165,7 @@ module.exports = {
   prepareDB,
   clearDB,
   jwts,
+  userIds,
   getDecodedToken,
   findLast,
 };

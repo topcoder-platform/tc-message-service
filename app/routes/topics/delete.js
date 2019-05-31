@@ -32,12 +32,19 @@ module.exports = (db, m2m) => (req, resp, next) => {
       const err = new errors.HttpStatusError(404, 'Topic does not exist');
       return next(err);
     }
+
     return helper.callReferenceEndpoint(req.authToken, req.id, topic.reference, topic.referenceId)
     .then((hasAccessResp) => {
       const hasAccess = helper.userHasAccessToEntity(userId, hasAccessResp, topic.reference);
       if (!hasAccess && !helper.isAdmin(req)) {
         throw new errors.HttpStatusError(403, 'User doesn\'t have access to the entity');
       }
+
+      if (((topic.createdBy !== userId) && (!helper.isAdmin(req)))) {
+        const err = errors.HttpStatusError(403, 'You are not allowed to perform this action');
+        return next(err);
+      }
+
       return db.posts.getTopicPostsCount(topic.id)
       .then((totalPosts) => {
         if (totalPosts > 1) {

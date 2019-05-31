@@ -51,6 +51,11 @@ module.exports = (db, m2m) => (req, resp, next) => {
         throw new errors.HttpStatusError(403, 'User doesn\'t have access to the entity');
       }
 
+      if ((post.createdBy !== userId) && (!helper.isAdmin(req))) {
+        const err = new errors.HttpStatusError(403, 'You are not allowed to perform this action');
+        return next(err);
+      }
+
       return db.posts.updatePost(db, adapter, { raw: content }, { postId }, userId)
       .then((updatedPost) => {
         req.app.emit(EVENT.POST_UPDATED, { post, req, topic });

@@ -1,6 +1,6 @@
 /* eslint-disable no-unused-expressions, newline-per-chained-call */
 
-import { prepareDB, clearDB, jwts, getDecodedToken } from '../../tests';
+import { prepareDB, clearDB, jwts, userIds, getDecodedToken } from '../../tests';
 
 const request = require('supertest');
 const server = require('../../app');
@@ -61,6 +61,23 @@ describe('POST /v4/topics/:topicId/posts/:postId/edit ', () => {
       })
       .send(testBody)
       .expect(403, done);
+  });
+
+  it('should return 403 response when non-admin user is not creator of the post', (done) => {
+    const getStub = sandbox.stub(axios, 'get');
+    // mocks the m2m token call
+    sandbox.stub(m2m, 'getMachineToken').resolves('dummy_token');
+    // resolves call (with 200) to reference endpoint in helper.callReferenceEndpoint
+    getStub.withArgs('http://reftest/referenceId').resolves({
+      data: { result: { status: 200, content: { members: [{ userId: userIds.otherMember }] } } },
+    });
+    request(server)
+        .post(apiPath)
+        .set({
+          Authorization: `Bearer ${jwts.otherMember}`,
+        })
+        .send(testBody)
+        .expect(403, done);
   });
 
   it('should return 403 response when user is not member of the project', (done) => {

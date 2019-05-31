@@ -1,6 +1,6 @@
 /* eslint-disable no-unused-expressions, newline-per-chained-call */
 
-import { clearDB, prepareDB, jwts, getDecodedToken } from '../../tests';
+import { clearDB, prepareDB, jwts, userIds, getDecodedToken } from '../../tests';
 
 const request = require('supertest');
 const server = require('../../app');
@@ -62,6 +62,23 @@ describe('POST /v4/topics/:topicId/edit ', () => {
       .post(apiPath)
       .set({
         Authorization: 'Bearer wrong',
+      })
+      .send(testBody)
+      .expect(403, done);
+  });
+
+  it('should return 403 response when non-admin user is not creator of the topic', (done) => {
+    const getStub = sandbox.stub(axios, 'get');
+    // mocks the m2m token call
+    sandbox.stub(m2m, 'getMachineToken').resolves('dummy_token');
+    // resolves call (with 200) to reference endpoint in helper.callReferenceEndpoint
+    getStub.withArgs('http://reftest/referenceId').resolves({
+      data: { result: { status: 200, content: { members: [{ userId: userIds.otherMember }] } } },
+    });
+    request(server)
+      .post(apiPath)
+      .set({
+        Authorization: `Bearer ${jwts.otherMember}`,
       })
       .send(testBody)
       .expect(403, done);
@@ -171,6 +188,24 @@ describe('POST /v4/topics/:topicId/edit ', () => {
         new Date(res.body.result.content.post.updatedDate).should.be.above(now);
         return done();
       });
+  });
+
+
+  it('should return 200 response with valid jwt token and payload (admin)', (done) => {
+    const getStub = sandbox.stub(axios, 'get');
+    // mocks the m2m token call
+    sandbox.stub(m2m, 'getMachineToken').resolves('dummy_token');
+    // resolves call (with 200) to reference endpoint in helper.callReferenceEndpoint
+    getStub.withArgs('http://reftest/referenceId').resolves({
+      data: { result: { status: 200, content: { members: [] } } },
+    });
+    request(server)
+      .post(apiPath)
+      .set({
+        Authorization: `Bearer ${jwts.admin}`,
+      })
+      .send(testBody)
+      .expect(200, done);
   });
 
   it('should return 500 response if error updating post', (done) => {
