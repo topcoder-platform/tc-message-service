@@ -67,8 +67,7 @@ module.exports = (db, m2m) =>
                 if (!hasAccess && !isAdmin) {
                   throw new errors.HttpStatusError(403, 'User doesn\'t have access to the project');
                 }
-
-                if (!isAdmin && attachment.createdBy !== req.authUser.userId) {
+                if (!isAdmin && attachment.createdBy !== userId) {
                   throw new errors.HttpStatusError(403, 'User doesn\'t have delete access to the attachment');
                 }
                 // all good, we can delete the attachment
