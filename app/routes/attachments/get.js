@@ -1,12 +1,13 @@
 
 const aws = require('aws-sdk');
 const config = require('config');
+const util = require('tc-core-library-js').util(config);
 const errors = require('common-errors');
 const HelperService = require('../../services/helper');
 const Joi = require('joi');
-const { REFERENCE_LOOKUPS } = require('../../constants');
+const _ = require('lodash');
+const Adapter = require('../../services/adapter');
 
-const s3 = new aws.S3(config.get('aws.config'));
 const HttpStatusError = errors.HttpStatusError;
 
 /**
@@ -24,37 +25,59 @@ module.exports = (db, m2m) =>
   (req, resp, next) => {
     const logger = req.log;
     const helper = HelperService(logger, db, m2m);
+    const adapter = new Adapter(logger, db);
 
     // Validate request parameters
     Joi.assert(req.authUser, Joi.object().keys({
       handle: Joi.string().required(),
     }).unknown());
-    const params = Joi.attempt(req.params, Joi.object().keys({
-      postId: Joi.number().required(),
-    }).unknown());
-    const query = Joi.attempt(req.query, {
-      referenceId: Joi.number().required(),
-    });
+    const reqParams = Joi.attempt(req.params, Joi.object().keys({
+      attachmentId: Joi.number().required(),
+    }));
+
+    const params = {};
+    params.attachmentId = reqParams.attachmentId;
     const userId = req.authUser.userId.toString();
+    let attachment;
 
-    return helper.callReferenceEndpoint(req.authToken, req.id, REFERENCE_LOOKUPS.PROJECT, query.referenceId)
-      .then((hasAccessResp) => {
-        const hasAccess = helper.userHasAccessToEntity(userId, hasAccessResp, REFERENCE_LOOKUPS.PROJECT);
-        if (!hasAccess && !helper.isAdmin(req)) {
-          throw new errors.HttpStatusError(403, 'User doesn\'t have access to the project');
-        }
-
-        return db.post_attachments.findOne({ where: { id: params.attachmentId, postId: params.postId } });
-      })
+    return db.post_attachments.findOne({ where: { id: params.attachmentId } })
       .then((postAttachment) => {
         if (!postAttachment || postAttachment.deletedAt) {
           throw new errors.HttpStatusError(404, 'Could not find the requested attachment');
         }
-        const signedUrl = s3.getSignedUrl('getObject', {
-          Bucket: config.get('aws.S3.bucket'),
-          Key: helper.s3KeyFromUrl(postAttachment.url),
-        });
-        resp.redirect(signedUrl);
+        if (!postAttachment.postId) {
+          throw new errors.HttpStatusError(404, 'Attachment is not available');
+        }
+        attachment = postAttachment;
+        return db.posts.findPosts(db, adapter, { id: attachment.postId });
+      })
+      .then((posts) => {
+        if (!posts) {
+          throw new errors.HttpStatusError(404, 'Attachment post cannot be found');
+        }
+
+        const topicId = posts[0].topicId;
+        return db.topics.findTopic(db, adapter, { topicId })
+          .then((topic) => {
+            const referenceId = topic.referenceId;
+            return helper.callReferenceEndpoint(req.authToken, req.id, topic.reference, referenceId)
+              .then(async (hasAccessResp) => {
+                const hasAccess = await helper.userHasAccessToEntity(userId, hasAccessResp, _.split(topic.tag, ','),
+                  topic.reference);
+                if (!hasAccess && !helper.isAdmin(req)) {
+                  throw new errors.HttpStatusError(403, 'User doesn\'t have access to the project');
+                }
+                // all is good, return the attachment
+                const s3 = new aws.S3();
+                const signedUrl = s3.getSignedUrl('getObject', {
+                  Bucket: config.get('aws.S3.targetBucket'),
+                  Key: helper.s3KeyFromUrl(attachment.url),
+                });
+                ['deletedAt', 'deletedBy'].forEach(attribute => delete attachment[attribute]);
+                attachment.url = signedUrl;
+                resp.status(200).send(util.wrapResponse(req.id, attachment));
+              });
+          });
       })
       .catch((error) => {
         logger.error(error);

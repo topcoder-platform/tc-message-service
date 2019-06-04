@@ -48,14 +48,14 @@ module.exports = (db, m2m) => (req, resp, next) => {
         return next(err);
       }
       return helper.callReferenceEndpoint(req.authToken, req.id, topic.reference, topic.referenceId)
-        .then((hasAccessResp) => {
+        .then(async (hasAccessResp) => {
           const isAdmin = helper.isAdmin(req);
           if (!isAdmin) {
             throw new errors.HttpStatusError(403, 'Must have Administrator role');
           }
           // If asignee exist and has access
           const asigneeId = content.userId;
-          const hasAccess = helper.userHasAccessToEntity(asigneeId, hasAccessResp, topic.reference);
+          const hasAccess = await helper.userHasAccessToEntity(asigneeId, hasAccessResp, topic.tags, topic.reference);
           if (!hasAccess) {
             throw new errors.HttpStatusError(403, 'Asignee doesn\'t have access to entity');
           }

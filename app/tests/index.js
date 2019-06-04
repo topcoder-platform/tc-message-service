@@ -26,6 +26,14 @@ const jwts = {
   manager: 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJyb2xlcyI6WyJDb25uZWN0IE1hbmFnZXIiXSwiaXNzIjoiaHR0cHM6Ly9hcGkudG9wY29kZXItZGV2LmNvbSIsImhhbmRsZSI6InRlc3QxIiwiZXhwIjoyNTYzMDc2Njg5LCJ1c2VySWQiOiI0MDA1MTMzNCIsImlhdCI6MTQ2MzA3NjA4OSwiZW1haWwiOiJ0ZXN0QHRvcGNvZGVyLmNvbSIsImp0aSI6ImIzM2I3N2NkLWI1MmUtNDBmZS04MzdlLWJlYjhlMGFlNmE0YSJ9.YTYWbA5JmjdC_dVA1kQjcWtpKIeWs7FwDa8B-xsnhN0',
 };
 
+const userIds = {
+  member: '40051331',
+  otherMember: '40051371',
+  admin: '40051333',
+  otherAdmin: '40051339',
+  manager: '40051334',
+};
+
 function getDecodedToken(token) {
   return jwt.decode(token);
 }
@@ -81,59 +89,73 @@ function prepareDB(done) {
       discourseTopicId: 1,
       tags: ['tag'],
       title: 'Mock topic title',
-      createdBy: '123456789',
+      createdBy: userIds.member,
     },
     {
       // id: 1,
       reference: 'project',
       referenceId: 'referenceId1',
       discourseTopicId: 100,
-      tags: ['tag'],
+      tags: ['tag', 'MESSAGES'],
       title: 'Mock topic title2',
-      createdBy: '12345678910',
+      createdBy: userIds.admin,
     }], { returning: true }))
     .then(
       topics => db.reference_lookups.create({
         id: 1,
         reference: 'project',
         endpoint: 'http://reftest/{id}', // eslint-disable-line
+        accessCondition:
+          '((!(tags contains \'MESSAGES\')) && (members contains (\'{"userId":\' + userId + \'}\'))) ' +
+          '|| ((tags contains \'MESSAGES\') && (members contains (\'{"userId":\' + userId + \'}\')) &&' +
+          ' (!(members contains (\'{"userId":\' + userId + \',"role":"customer"}\'))))',
       }).then(() => Promise.resolve(topics)))
     .then((topics) => {
       const topic = topics.length > 0 ? topics[0] : null;
       return db.posts.bulkCreate([{
         raw: 'Mock topic body',
-        topicId: 1,
-        createdBy: '123456789',
+        topicId: topic.id,
+        createdBy: userIds.member,
         postNumber: 1,
       },
       {
         raw: 'Mock topic post - logically first post',
-        topicId: 1,
-        createdBy: '123456789',
+        topicId: topic.id,
+        createdBy: userIds.member,
         postNumber: 2,
       },
       {
         raw: 'Mock topic post2',
         topicId: 2,
-        createdBy: '123456789',
+        createdBy: userIds.member,
         postNumber: 3,
       }], { returning: true })
-      .then(posts => ({ topic, posts }));
+      .then(posts => ({ topic, topics, posts }));
     })
     .then((responses) => {
       if (responses) {
-        const tpc = JSON.parse(JSON.stringify(responses.topic));
-        tpc.tag = tpc.tags.join(',');
-        delete tpc.tags;
+        const tpc1 = JSON.parse(JSON.stringify(responses.topics[0]));
+        const tpc2 = JSON.parse(JSON.stringify(responses.topics[1]));
+        tpc1.tag = tpc1.tags.join(',');
+        delete tpc1.tags;
+        tpc2.tag = tpc2.tags.join(',');
+        delete tpc2.tags;
         esClient.index({
           index: config.get('elasticsearchConfig.indexName'),
-          id: responses.topic.id,
+          id: tpc1.id,
           type: 'topic',
-          body: tpc,
+          body: tpc1,
         }, () => {
-          if (done && typeof done === 'function') {
-            done();
-          }
+          esClient.index({
+            index: config.get('elasticsearchConfig.indexName'),
+            id: tpc2.id,
+            type: 'topic',
+            body: tpc2,
+          }, () => {
+            if (done && typeof done === 'function') {
+              done();
+            }
+          });
         });
       }
       return responses;
@@ -157,6 +179,7 @@ module.exports = {
   prepareDB,
   clearDB,
   jwts,
+  userIds,
   getDecodedToken,
   findLast,
 };

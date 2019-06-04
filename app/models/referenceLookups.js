@@ -16,6 +16,10 @@ module.exports = (Sequelize, DataTypes) => {
       type: DataTypes.STRING,
       allowNull: false,
     },
+    accessCondition: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
   });
 
   return ReferenceLookup;

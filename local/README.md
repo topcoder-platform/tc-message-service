@@ -61,6 +61,7 @@ Note that all these properties have their corresponding environment variables th
  - dynamodb - dynamodb config
   - discourseWebhookLogsTable - log table for discourse webhooks
 
+NOTE: accessKeyId and secretAccessKey have to be configured as environment variables
 # Local Setup
 
 ## Hosts
@@ -181,8 +182,8 @@ psql messages coder -h local.topcoder-dev.com
 And execute the following statements:
 
 ```sql
-INSERT INTO "reference_lookups" (reference, endpoint, "createdAt", "updatedAt") VALUES ('submission', 'http://local.topcoder-dev.com:3001/submissions/{id}', now(), now());
-INSERT INTO "reference_lookups" (reference, endpoint, "createdAt", "updatedAt") VALUES ('project', 'https://api.topcoder-dev.com/v4/projects/{id}', now(), now());
+INSERT INTO "reference_lookups" (reference, endpoint, "accessCondition", "createdAt", "updatedAt") VALUES ('submission', 'http://local.topcoder-dev.com:3001/submissions/{id}', 'members contains ''{"userId":{userId}}''', now(), now());
+INSERT INTO "reference_lookups" (reference, endpoint, "accessCondition", "createdAt", "updatedAt") VALUES ('project', 'https://api.topcoder-dev.com/v4/projects/{id}', 'members contains ''{"userId":{userId}}''', now(), now());
 ```
 
 ## Obtaining a JWT token

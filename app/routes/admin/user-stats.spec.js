@@ -23,7 +23,7 @@ describe('POST /v5/topics/admin/posts/{postId}/stats/create ', () => {
 
   const memberUser = {
     handle: getDecodedToken(jwts.admin).handle,
-    userId: getDecodedToken(jwts.admin).userId,
+    userId: parseInt(getDecodedToken(jwts.admin).userId, 10),
     firstName: 'fname',
     lastName: 'lName',
     email: 'some@abc.com',
@@ -161,7 +161,7 @@ describe('POST /v5/topics/admin/posts/{postId}/stats/create ', () => {
         res.body.result.content.topicId.should.not.be.null;
         res.body.should.have.propertyByPath('result', 'content', 'action').eql(testBody.action);
         res.body.should.have.propertyByPath('result', 'content', 'postId').eql(postId);
-        res.body.result.content.userIds[0].should.eql(testBody.userId);
+        res.body.result.content.userIds[0].should.eql(testBody.userId.toString());
         return done();
       });
   });
@@ -193,7 +193,7 @@ describe('POST /v5/topics/admin/posts/{postId}/stats/create ', () => {
         res.body.result.content.topicId.should.not.be.null;
         res.body.should.have.propertyByPath('result', 'content', 'action').eql(testBody.action);
         res.body.should.have.propertyByPath('result', 'content', 'postId').eql(postId);
-        res.body.result.content.userIds[0].should.eql(testBody.userId);
+        res.body.result.content.userIds[0].should.eql(testBody.userId.toString());
         return done();
       });
   });

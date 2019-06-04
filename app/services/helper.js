@@ -1,12 +1,11 @@
-
-
 const _ = require('lodash');
 const config = require('config');
 const axios = require('axios');
 const errors = require('common-errors');
+const { evaluate } = require('expression-evaluator');
 const util = require('../util');
 const { USER_ROLE } = require('../constants');
-const { REFERENCE_LOOKUPS, TOKEN_SCOPES } = require('../constants');
+const { TOKEN_SCOPES } = require('../constants');
 
 /**
  * Returns helper service containing common functions used in route handlers
@@ -209,17 +208,42 @@ module.exports = (logger, db, m2m) => {
     });
   }
 
-  function userHasAccessToEntity(userId, hasAccessResp, reference) {
-    logger.info('Checking if user has access to project');
+  async function userHasAccessToEntity(userId, hasAccessResp, tags, reference) {
+    logger.info('[userHasAccessToEntity] Checking if user has access to project');
+
     const hasAccess = hasAccessResp[0];
-    if (hasAccess && reference.toLowerCase() === REFERENCE_LOOKUPS.PROJECT) {
-      const projectMembers = _.get(hasAccessResp[1], 'members', []);
-        // get users list
-      const isMember = _.filter(projectMembers, member => `${member.userId}` === userId).length > 0;
-      logger.debug(isMember, 'isMember');
-      return isMember;
+    logger.debug(`[userHasAccessToEntity] Reference endpoint access is "${hasAccess}".`);
+
+    let referenceLookup;
+
+    try {
+      referenceLookup = await db.reference_lookups.findOne({ where: { reference } });
+      // if somehow cannot find a reference, don't allow access
+      if (!referenceLookup) {
+        logger.debug('[userHasAccessToEntity] Didn\'t find referenceLookup.');
+        return false;
+      }
+    } catch (err) {
+      logger.debug('[userHasAccessToEntity] Error during retrieving referenceLookup.', err);
+      return false;
     }
-    return false;
+
+    const accessCondition = referenceLookup.accessCondition;
+    const evaluationData = _.extend({
+      userId,
+      tags,
+    }, hasAccessResp[1]);
+
+    try {
+      const isPassAccessCondition = evaluate(accessCondition, evaluationData);
+      logger.debug(`[userHasAccessToEntity] Access condition evaluated to "${isPassAccessCondition}".`);
+      return hasAccess && isPassAccessCondition;
+    } catch (err) {
+      logger.debug('[userHasAccessToEntity] Error during evaluation of the accessCondition.', err);
+      logger.debug(`[userHasAccessToEntity] accessCondition = "${accessCondition}".`);
+      logger.debug(`[userHasAccessToEntity] evaluationData = "${JSON.stringify(evaluationData)}".`);
+      return false;
+    }
   }
 
   /**
@@ -233,7 +257,7 @@ module.exports = (logger, db, m2m) => {
    */
   function checkAccessAndProvision(authToken, requestId, userId, reference, referenceId) {
     return this.userHasAccessToEntity(authToken, requestId, reference, referenceId).then((resp) => {
-      const hasAccess = resp[0];
+      const hasAccess = resp;
       logger.debug(`hasAccess: ${hasAccess}`);
       if (!hasAccess) {
         throw new errors.HttpStatusError(403, 'User doesn\'t have access to the entity');
@@ -270,7 +294,7 @@ module.exports = (logger, db, m2m) => {
   }
 
   function s3KeyFromUrl(url) {
-    return (url && url.replace(/http[s]?:\/\//, '').split('/').slice(1).join('/')) || '';
+    return (url && url.replace(/http[s]?:\/\//, '').split('/').slice(3).join('/')) || '';
   }
 
   return {

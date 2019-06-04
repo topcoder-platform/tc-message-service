@@ -37,6 +37,7 @@ module.exports = (db, m2m) =>
     Joi.assert(params, {
       reference: Joi.string().required(),
       referenceId: Joi.string().required(),
+      attachmentIds: Joi.array().items(Joi.number()).optional(),
       tag: Joi.string().required(),
       title: Joi.string().required(),
       body: Joi.string().required(),
@@ -44,13 +45,13 @@ module.exports = (db, m2m) =>
 
     const userId = req.authUser.isMachine ? config.get('coderBotUserId') : req.authUser.userId.toString();
     return helper.callReferenceEndpoint(req.authToken, req.id, params.reference, params.referenceId)
-      .then((hasAccessResp) => {
-        const hasAccess = helper.userHasAccessToEntity(userId, hasAccessResp, params.reference);
+      .then(async (hasAccessResp) => {
+        const tags = params.tag.split(',');
+        const hasAccess = await helper.userHasAccessToEntity(userId, hasAccessResp, tags, params.reference);
         if (!hasAccess && !helper.isAdmin(req)) {
           logger.info('should return after here');
           throw new errors.HttpStatusError(403, 'User doesn\'t have access to the entity');
         }
-        const tags = params.tag.split(',');
         const pgTopic = {
           reference: params.reference,
           referenceId: params.referenceId,
@@ -70,7 +71,21 @@ module.exports = (db, m2m) =>
               const topic = savedTopic.dataValues;
               const post = savedPost.dataValues;
               topic.posts = [post];
+
+              // update postIds of attachments with the id of created post
+              if (params.attachmentIds) {
+                db.post_attachments.update({
+                  postId: post.id,
+                }, {
+                  where: {
+                    id: params.attachmentIds,
+                    postId: null,
+                  },
+                });
+              }
+
               req.app.emit(EVENT.TOPIC_CREATED, { topic, req, userId });
+
               // creates an entry in post_user_stats table for tracking user actions against this post
               // right now it only creates entry for 'READ' action, in future we may create more entries
               // when we support more actions e.g. 'LIKE', 'BOOKMARK', 'FAVORITE' etc
@@ -80,6 +95,11 @@ module.exports = (db, m2m) =>
                 action: 'READ',
               }).then(() => {
                 logger.debug('post_user_stats entry created for post: ', savedPost.id);
+                return db.post_attachments.findAll({ where: { postId: savedPost.id } }).then((att) => {
+                  topic.posts[0].postAttachments = att;
+                });
+              })
+              .then(() => {
                 // update elastic search index
                 esIndex.updateElasticSearchIndex(db, adapter, savedTopic.id, savedTopic.id);
                 return resp.status(200).send(util.wrapResponse(

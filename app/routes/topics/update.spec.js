@@ -1,6 +1,6 @@
 /* eslint-disable no-unused-expressions, newline-per-chained-call */
 
-import { clearDB, prepareDB, jwts, getDecodedToken } from '../../tests';
+import { clearDB, prepareDB, jwts, userIds, getDecodedToken } from '../../tests';
 
 const request = require('supertest');
 const server = require('../../app');
@@ -20,6 +20,7 @@ describe('POST /v4/topics/:topicId/edit ', () => {
   const topicId = 1;
   const postId = 1;
   const apiPath = `/${config.apiVersion}/topics/${topicId}/edit`;
+  const privateTopicPath = `/${config.apiVersion}/topics/2/edit`;
   const nonExistingTopicPath = `/${config.apiVersion}/topics/1000/edit`;
   let expectedTopic = null;
   let expectedTopicPosts = null;
@@ -31,7 +32,7 @@ describe('POST /v4/topics/:topicId/edit ', () => {
 
   const memberUser = {
     handle: getDecodedToken(jwts.member).handle,
-    userId: getDecodedToken(jwts.member).userId,
+    userId: parseInt(getDecodedToken(jwts.member).userId, 10),
     firstName: 'fname',
     lastName: 'lName',
     email: 'some@abc.com',
@@ -67,6 +68,23 @@ describe('POST /v4/topics/:topicId/edit ', () => {
       .expect(403, done);
   });
 
+  it('should return 403 response when non-admin user is not creator of the topic', (done) => {
+    const getStub = sandbox.stub(axios, 'get');
+    // mocks the m2m token call
+    sandbox.stub(m2m, 'getMachineToken').resolves('dummy_token');
+    // resolves call (with 200) to reference endpoint in helper.callReferenceEndpoint
+    getStub.withArgs('http://reftest/referenceId').resolves({
+      data: { result: { status: 200, content: { members: [{ userId: userIds.otherMember }] } } },
+    });
+    request(server)
+      .post(apiPath)
+      .set({
+        Authorization: `Bearer ${jwts.otherMember}`,
+      })
+      .send(testBody)
+      .expect(403, done);
+  });
+
   it('should return 403 response when user does not have access', (done) => {
     const getStub = sandbox.stub(axios, 'get');
     // mocks the m2m token call
@@ -82,6 +100,60 @@ describe('POST /v4/topics/:topicId/edit ', () => {
       })
       .send(testBody)
       .expect(403)
+      .end((err) => {
+        if (err) {
+          return done(err);
+        }
+        // should call m2m.getMachineToken
+        m2mStub.should.have.be.calledOnce;
+        // should make GET to reference lookup endpoint on posts model
+        getStub.should.have.be.calledOnce;
+        return done();
+      });
+  });
+
+  it('should return 403 response when customer tries to access private topic', (done) => {
+    const getStub = sandbox.stub(axios, 'get');
+    // mocks the m2m token call
+    const m2mStub = sandbox.stub(m2m, 'getMachineToken').resolves('dummy_token');
+    // resolves call (with 200) to reference endpoint in helper.callReferenceEndpoint
+    getStub.withArgs('http://reftest/referenceId1').resolves({
+      data: { result: { status: 200, content: { members: [{ userId: memberUser.userId, role: 'customer' }] } } },
+    });
+    request(server)
+      .post(privateTopicPath)
+      .set({
+        Authorization: `Bearer ${jwts.member}`,
+      })
+      .send(testBody)
+      .expect(403)
+      .end((err) => {
+        if (err) {
+          return done(err);
+        }
+        // should call m2m.getMachineToken
+        m2mStub.should.have.be.calledOnce;
+        // should make GET to reference lookup endpoint on posts model
+        getStub.should.have.be.calledOnce;
+        return done();
+      });
+  });
+
+  it('should return 200 response when customer tries to access public topic', (done) => {
+    const getStub = sandbox.stub(axios, 'get');
+    // mocks the m2m token call
+    const m2mStub = sandbox.stub(m2m, 'getMachineToken').resolves('dummy_token');
+    // resolves call (with 200) to reference endpoint in helper.callReferenceEndpoint
+    getStub.withArgs('http://reftest/referenceId').resolves({
+      data: { result: { status: 200, content: { members: [{ userId: memberUser.userId, role: 'customer' }] } } },
+    });
+    request(server)
+      .post(apiPath)
+      .set({
+        Authorization: `Bearer ${jwts.member}`,
+      })
+      .send(testBody)
+      .expect(200)
       .end((err) => {
         if (err) {
           return done(err);
@@ -171,6 +243,24 @@ describe('POST /v4/topics/:topicId/edit ', () => {
         new Date(res.body.result.content.post.updatedDate).should.be.above(now);
         return done();
       });
+  });
+
+
+  it('should return 200 response with valid jwt token and payload (admin)', (done) => {
+    const getStub = sandbox.stub(axios, 'get');
+    // mocks the m2m token call
+    sandbox.stub(m2m, 'getMachineToken').resolves('dummy_token');
+    // resolves call (with 200) to reference endpoint in helper.callReferenceEndpoint
+    getStub.withArgs('http://reftest/referenceId').resolves({
+      data: { result: { status: 200, content: { members: [] } } },
+    });
+    request(server)
+      .post(apiPath)
+      .set({
+        Authorization: `Bearer ${jwts.admin}`,
+      })
+      .send(testBody)
+      .expect(200, done);
   });
 
   it('should return 500 response if error updating post', (done) => {

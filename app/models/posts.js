@@ -80,6 +80,7 @@ module.exports = (Sequelize, DataTypes) => {
 
   Post.associate = (models) => {
     Post.hasMany(models.post_user_stats, { as: 'userStats', foreignKey: 'postId' });
+    Post.hasMany(models.post_attachments, { as: 'postAttachments', foreignKey: 'postId' });
   };
 
   /**
@@ -169,6 +170,10 @@ module.exports = (Sequelize, DataTypes) => {
     }
     return Post.findAll({
       where,
+      include: [{
+        model: models.post_attachments,
+        as: 'postAttachments',
+      }],
     }).then((posts) => {
       if (!posts || posts.length === 0) return null;
       return adapter.adaptPosts(posts);
@@ -197,6 +202,10 @@ module.exports = (Sequelize, DataTypes) => {
     return Post.findOne({
       where,
       raw,
+      include: [{
+        model: models.post_attachments,
+        as: 'postAttachments',
+      }],
     }).then((post) => {
       if (!post) return null;
       return raw ? post : adapter.adaptPost(post);
@@ -234,7 +243,42 @@ module.exports = (Sequelize, DataTypes) => {
       }, { transaction })
       .then((result) => { // result is [x ,y] : x is number of rows affected, y is actual affected row
         models.logger.debug('post updated...');
-        return adapter.adaptPost(result[1]);
+        return models.post_attachments.findAll({ where: { postId } }).then((att) => {
+          models.logger.debug('got attachments ', att);
+          result[1].postAttachments = att;
+          return adapter.adaptPost(result[1]);
+        });
+      });
+  };
+
+  Post.updatePostAttachments = (models, postId, attachmentIds, transaction = null) => {
+    if (!attachmentIds) {
+      return Promise.resolve();
+    }
+    // remove attachments from the post
+    return models.post_attachments.update(
+      {
+        postId: null,
+      },
+      {
+        where: {
+          postId,
+          id: { $notIn: attachmentIds || [] },
+        },
+      }, { transaction }).then(() => {
+          // update postIds of attachments with the id of updated post
+        if (attachmentIds && attachmentIds.length) {
+          return models.post_attachments.update({
+            postId,
+          }, {
+            where: {
+              id: { $in: attachmentIds },
+              postId: null,
+            },
+            returning: true,
+          }, { transaction }).then(result => result[1]);
+        }
+        return Promise.resolve();
       });
   };
 

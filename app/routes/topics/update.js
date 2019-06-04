@@ -26,16 +26,19 @@ module.exports = (db, m2m) => (req, resp, next) => {
     title: Joi.string().required(),
     postId: Joi.number().required(),
     content: Joi.string().required(),
+    attachmentIds: Joi.array().items(Joi.number()).optional(),
   });
   const topicId = req.params.topicId;
   const postId = req.body.postId;
   const title = req.body.title;
+  const attachmentIds = req.body.attachmentIds;
   const content = req.body.content;
   const userId = req.authUser.userId.toString();
 
   const database = new Sequelize(config.get('dbConfig.masterUrl'), {
-    logging: false,
+    logging: true,
   });
+  logger.debug('attachmentIds ', attachmentIds);
   return database.transaction(trans =>
     db.topics.findTopic(db, adapter, { topicId, numberOfPosts: -1, reqUserId: userId })
       .then((topic) => { /* eslint no-param-reassign: ["error", { "props": true, "ignorePropertyModificationsFor": ["topic"] }] */
@@ -43,38 +46,49 @@ module.exports = (db, m2m) => (req, resp, next) => {
           const err = new errors.HttpStatusError(404, 'Topic does not exist');
           return next(err);
         }
+
         return helper.callReferenceEndpoint(req.authToken, req.id, topic.reference, topic.referenceId)
-          .then((hasAccessResp) => {
-            const hasAccess = helper.userHasAccessToEntity(userId, hasAccessResp, topic.reference);
+          .then(async (hasAccessResp) => {
+            const hasAccess = await helper.userHasAccessToEntity(userId, hasAccessResp, _.split(topic.tag, ','),
+              topic.reference);
             if (!hasAccess && !helper.isAdmin(req)) {
               throw new errors.HttpStatusError(403, 'User doesn\'t have access to the entity');
             }
+
+            if (((topic.userId.toString() !== userId) && (!helper.isAdmin(req)))) {
+              const err = new errors.HttpStatusError(403, 'You are not allowed to perform this action');
+              return next(err);
+            }
+
             const contentPost = _.get(topic, 'posts[0]', null);
             if (!contentPost || contentPost.id !== Number(postId)) {
               throw new errors.HttpStatusError(404, 'Post does not exist');
             }
-            const promises = [
-              db.topics.updateTopic(db, adapter, { title }, { topicId, reqUserId: userId }, trans)
-                .then((updatedTopic) => {
-                  logger.debug('Topic saved', updatedTopic);
-                  return updatedTopic;
-                }),
-              db.posts.updatePost(db, adapter, { raw: content }, { postId }, userId, trans)
-                .then((updatedPost) => {
-                  logger.info('Topic Post saved', updatedPost);
-                  return updatedPost;
-                }),
-            ];
-            return Promise.all(promises)
-              .then((response) => {
-                const t = response[0];
-                const p = response[1];
-                t.posts = topic.posts;
-                // update elastic search index
-                esIndex.updateElasticSearchIndex(db, adapter, topicId, topicId);
-                // TODO should get rid of post as seprate field in response
-                resp.status(200).send(util.wrapResponse(req.id, { topic: t, post: p }));
-              });
+            return db.posts.updatePostAttachments(db, postId, attachmentIds, trans).then(() => {
+              const promises = [
+                db.topics.updateTopic(db, adapter, { title }, { topicId, reqUserId: userId }, trans)
+                  .then((updatedTopic) => {
+                    logger.debug('Topic saved', updatedTopic);
+                    return updatedTopic;
+                  }),
+                db.posts.updatePost(db, adapter, { raw: content }, { postId }, userId, trans)
+                  .then((updatedPost) => {
+                    logger.info('Topic Post saved', updatedPost);
+                    return updatedPost;
+                  }),
+              ];
+
+              return Promise.all(promises)
+                .then((response) => {
+                  const t = response[0];
+                  const p = response[1];
+                  t.posts = topic.posts;
+                  // update elastic search index
+                  esIndex.updateElasticSearchIndex(db, adapter, topicId, topicId);
+                  // TODO should get rid of post as seprate field in response
+                  resp.status(200).send(util.wrapResponse(req.id, { topic: t, post: p }));
+                });
+            });
           });
       })).catch((error) => {
         logger.error(error);

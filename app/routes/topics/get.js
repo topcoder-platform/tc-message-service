@@ -61,8 +61,9 @@ module.exports = (db, m2m) =>
       }
 
       return helper.callReferenceEndpoint(req.authToken, req.id, dbTopic.reference, dbTopic.referenceId)
-      .then((hasAccessResp) => {
-        const hasAccess = helper.userHasAccessToEntity(userId, hasAccessResp, dbTopic.reference);
+      .then(async (hasAccessResp) => {
+        const tags = _.split(dbTopic.tag, ',');
+        const hasAccess = await helper.userHasAccessToEntity(userId, hasAccessResp, tags, dbTopic.reference);
         if (!hasAccess && !helper.isAdmin(req)) {
           throw new errors.HttpStatusError(403, 'User doesn\'t have access to the entity');
         }

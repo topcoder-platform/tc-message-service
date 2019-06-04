@@ -17,21 +17,10 @@ module.exports = (Sequelize, DataTypes) =>
     // The post id
     postId: {
       type: DataTypes.BIGINT,
-      allowNull: false,
     },
     // The original file name
     originalFileName: {
       type: DataTypes.STRING(512),
-      allowNull: false,
-    },
-    // The file size
-    fileSize: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-    },
-    // The sha1 checksum
-    sha1: {
-      type: DataTypes.STRING(40),
       allowNull: false,
     },
     // The unsigned S3 resource URL

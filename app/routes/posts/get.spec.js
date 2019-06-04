@@ -21,11 +21,12 @@ require('should-sinon');
 
 describe('GET /v4/topics/:topicId/posts/:postId', () => {
   const apiPath = `/${config.apiVersion}/topics/1/posts/1/read`;
+  const privateTopicPath = `/${config.apiVersion}/topics/2/posts/3/read`;
   const nonExistingTopicPath = `/${config.apiVersion}/topics/1000/posts/1/read`;
   const nonExistingPostPath = `/${config.apiVersion}/topics/1/posts/1000/read`;
   const memberUser = {
     handle: getDecodedToken(jwts.member).handle,
-    userId: getDecodedToken(jwts.member).userId,
+    userId: parseInt(getDecodedToken(jwts.member).userId, 10),
     firstName: 'fname',
     lastName: 'lName',
     email: 'some@abc.com',
@@ -56,6 +57,8 @@ describe('GET /v4/topics/:topicId/posts/:postId', () => {
   });
 
   it('should return 403 response when user is not member of the project', (done) => {
+    // mocks the m2m token call
+    sandbox.stub(m2m, 'getMachineToken').resolves('dummy_token');
     const getStub = sandbox.stub(axios, 'get');
     // resolves call (with 200) to reference endpoint in helper.callReferenceEndpoint
     getStub.withArgs('http://reftest/referenceId').resolves({
@@ -67,6 +70,38 @@ describe('GET /v4/topics/:topicId/posts/:postId', () => {
         Authorization: `Bearer ${jwts.member}`,
       })
       .expect(403, done);
+  });
+
+  it('should return 403 response when customer tries to access private topic', (done) => {
+    const getStub = sandbox.stub(axios, 'get');
+    // mocks the m2m token call
+    sandbox.stub(m2m, 'getMachineToken').resolves('dummy_token');
+    // resolves call (with 200) to reference endpoint in helper.callReferenceEndpoint
+    getStub.withArgs('http://reftest/referenceId1').resolves({
+      data: { result: { status: 200, content: { members: [{ userId: memberUser.userId, role: 'customer' }] } } },
+    });
+    request(server)
+      .get(privateTopicPath)
+      .set({
+        Authorization: `Bearer ${jwts.member}`,
+      })
+      .expect(403, done);
+  });
+
+  it('should return 200 response when customer tries to access public topic', (done) => {
+    const getStub = sandbox.stub(axios, 'get');
+    // mocks the m2m token call
+    sandbox.stub(m2m, 'getMachineToken').resolves('dummy_token');
+    // resolves call (with 200) to reference endpoint in helper.callReferenceEndpoint
+    getStub.withArgs('http://reftest/referenceId').resolves({
+      data: { result: { status: 200, content: { members: [{ userId: memberUser.userId, role: 'customer' }] } } },
+    });
+    request(server)
+      .get(apiPath)
+      .set({
+        Authorization: `Bearer ${jwts.member}`,
+      })
+      .expect(200, done);
   });
 
   it('should return 404 response if no matching topic', (done) => {

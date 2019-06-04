@@ -1,6 +1,6 @@
 /* eslint-disable no-unused-expressions, newline-per-chained-call */
 
-import { prepareDB, clearDB, jwts, getDecodedToken } from '../../tests';
+import { prepareDB, clearDB, jwts, userIds, getDecodedToken } from '../../tests';
 
 const request = require('supertest');
 const server = require('../../app');
@@ -19,6 +19,7 @@ describe('POST /v4/topics/:topicId/posts/:postId/edit ', () => {
   const topicId = 1;
   const postId = 1;
   const apiPath = `/${config.apiVersion}/topics/${topicId}/posts/${postId}/edit`;
+  const privateTopicPath = `/${config.apiVersion}/topics/2/posts/3/edit`;
   const nonExistingTopicPath = `/${config.apiVersion}/topics/1000/posts/${postId}/edit`;
   let expectedTopicPosts = null;
   const testBody = {
@@ -27,7 +28,7 @@ describe('POST /v4/topics/:topicId/posts/:postId/edit ', () => {
 
   const memberUser = {
     handle: getDecodedToken(jwts.member).handle,
-    userId: getDecodedToken(jwts.member).userId,
+    userId: parseInt(getDecodedToken(jwts.member).userId, 10),
     firstName: 'fname',
     lastName: 'lName',
     email: 'some@abc.com',
@@ -63,8 +64,27 @@ describe('POST /v4/topics/:topicId/posts/:postId/edit ', () => {
       .expect(403, done);
   });
 
+  it('should return 403 response when non-admin user is not creator of the post', (done) => {
+    const getStub = sandbox.stub(axios, 'get');
+    // mocks the m2m token call
+    sandbox.stub(m2m, 'getMachineToken').resolves('dummy_token');
+    // resolves call (with 200) to reference endpoint in helper.callReferenceEndpoint
+    getStub.withArgs('http://reftest/referenceId').resolves({
+      data: { result: { status: 200, content: { members: [{ userId: userIds.otherMember }] } } },
+    });
+    request(server)
+        .post(apiPath)
+        .set({
+          Authorization: `Bearer ${jwts.otherMember}`,
+        })
+        .send(testBody)
+        .expect(403, done);
+  });
+
   it('should return 403 response when user is not member of the project', (done) => {
     const getStub = sandbox.stub(axios, 'get');
+    // mocks the m2m token call
+    sandbox.stub(m2m, 'getMachineToken').resolves('dummy_token');
     // resolves call (with 200) to reference endpoint in helper.callReferenceEndpoint
     getStub.withArgs('http://reftest/referenceId').resolves({
       data: { result: { status: 200, content: { members: [] } } },
@@ -76,6 +96,48 @@ describe('POST /v4/topics/:topicId/posts/:postId/edit ', () => {
       })
       .send(testBody)
       .expect(403, done);
+  });
+
+  it('should return 403 response when customer user tries to access private topic', (done) => {
+    const getStub = sandbox.stub(axios, 'get');
+    // mocks the m2m token call
+    sandbox.stub(m2m, 'getMachineToken').resolves('dummy_token');
+    // resolves call (with 200) to reference endpoint in helper.callReferenceEndpoint
+    getStub.withArgs('http://reftest/referenceId1').resolves({
+      data: { result: { status: 200, content: { members: [{ userId: memberUser.userId, role: 'customer' }] } } },
+    });
+    request(server)
+      .post(privateTopicPath)
+      .set({
+        Authorization: `Bearer ${jwts.member}`,
+      })
+      .send(testBody)
+      .expect(403, done);
+  });
+
+  it('should return 200 response when customer user tries to access public topic', (done) => {
+    const getStub = sandbox.stub(axios, 'get');
+    // mocks the m2m token call
+    const m2mStub = sandbox.stub(m2m, 'getMachineToken').resolves('dummy_token');
+    // resolves call (with 200) to reference endpoint in helper.callReferenceEndpoint
+    getStub.withArgs('http://reftest/referenceId').resolves({
+      data: { result: { status: 200, content: { members: [{ userId: memberUser.userId, role: 'customer' }] } } },
+    });
+    request(server)
+      .post(apiPath)
+      .set({
+        Authorization: `Bearer ${jwts.member}`,
+      })
+      .send(testBody)
+      .expect(200)
+      .end((err) => {
+        if (err) {
+          return done(err);
+        }
+        // should call m2m.getMachineToken
+        m2mStub.should.have.be.calledOnce;
+        return done();
+      });
   });
 
   it('should return 404 response if no matching topic', (done) => {

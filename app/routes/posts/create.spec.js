@@ -18,6 +18,7 @@ require('should-sinon');
 describe('POST /v4/topics/:topicId/posts ', () => {
   const topicId = 1;
   const apiPath = `/${config.apiVersion}/topics/${topicId}/posts/create`;
+  const privateTopicPath = `/${config.apiVersion}/topics/2/posts/create`;
   const nonExistingTopicPath = `/${config.apiVersion}/topics/1000/posts/create`;
   const testBody = {
     post: 'test post',
@@ -27,7 +28,7 @@ describe('POST /v4/topics/:topicId/posts ', () => {
   };
   const memberUser = {
     handle: getDecodedToken(jwts.member).handle,
-    userId: getDecodedToken(jwts.member).userId,
+    userId: parseInt(getDecodedToken(jwts.member).userId, 10),
     firstName: 'fname',
     lastName: 'lName',
     email: 'some@abc.com',
@@ -59,6 +60,8 @@ describe('POST /v4/topics/:topicId/posts ', () => {
   });
 
   it('should return 403 response when user is not member of the project', (done) => {
+    // mocks the m2m token call
+    sandbox.stub(m2m, 'getMachineToken').resolves('dummy_token');
     const getStub = sandbox.stub(axios, 'get');
     // resolves call (with 200) to reference endpoint in helper.callReferenceEndpoint
     getStub.withArgs('http://reftest/referenceId').resolves({
@@ -66,6 +69,23 @@ describe('POST /v4/topics/:topicId/posts ', () => {
     });
     request(server)
       .post(apiPath)
+      .set({
+        Authorization: `Bearer ${jwts.member}`,
+      })
+      .send(testBody)
+      .expect(403, done);
+  });
+
+  it('should return 403 response when customer tries to access private topic', (done) => {
+    const getStub = sandbox.stub(axios, 'get');
+    // mocks the m2m token call
+    sandbox.stub(m2m, 'getMachineToken').resolves('dummy_token');
+    // resolves call (with 200) to reference endpoint in helper.callReferenceEndpoint
+    getStub.withArgs('http://reftest/referenceId1').resolves({
+      data: { result: { status: 200, content: { members: [{ userId: memberUser.userId, role: 'customer' }] } } },
+    });
+    request(server)
+      .post(privateTopicPath)
       .set({
         Authorization: `Bearer ${jwts.member}`,
       })
@@ -96,6 +116,46 @@ describe('POST /v4/topics/:topicId/posts ', () => {
     // resolves call (with 200) to reference endpoint in helper.callReferenceEndpoint
     getStub.withArgs('http://reftest/referenceId').resolves({
       data: { result: { status: 200, content: { members: [{ userId: memberUser.userId }] } } },
+    });
+    // resolves with user data for user mention lookup
+    getStub.withArgs(`${config.get('memberServiceUrl')}/_search`).resolves({
+      data: { result: { status: 200, content: [{ handle: 'testuser' }] } },
+    });
+    // resolves with user data for user mention lookup
+    getStub.withArgs(`${config.memberServiceUrl}/testuser`).resolves({
+      data: { result: { status: 200, content: { handle: 'testuser' } } },
+    });
+    const postStub = sandbox.stub(axios, 'post');
+    postStub.withArgs(`${config.get('identityServiceEndpoint')}authorizations/`).resolves({
+      data: { result: { status: 200, content: { token: 'mock' } } },
+    });
+
+    request(server)
+      .post(apiPath)
+      .set({
+        Authorization: `Bearer ${jwts.member}`,
+      })
+      .send(testBodyWithHandle)
+      .expect(200)
+      .end((err, res) => {
+        if (err) {
+          return done(err);
+        }
+        // should call m2m.getMachineToken
+        m2mStub.should.have.be.calledOnce;
+        res.body.result.content.should.not.be.null;
+        res.body.should.have.propertyByPath('result', 'content', 'id').eql(4);
+        return done();
+      });
+  });
+
+  it('should return 200 response with valid jwt token and payload for customer user', (done) => {
+    const getStub = sandbox.stub(axios, 'get');
+    // mocks the m2m token call
+    const m2mStub = sandbox.stub(m2m, 'getMachineToken').resolves('dummy_token');
+    // resolves call (with 200) to reference endpoint in helper.callReferenceEndpoint
+    getStub.withArgs('http://reftest/referenceId').resolves({
+      data: { result: { status: 200, content: { members: [{ userId: memberUser.userId, role: 'customer' }] } } },
     });
     // resolves with user data for user mention lookup
     getStub.withArgs(`${config.get('memberServiceUrl')}/_search`).resolves({

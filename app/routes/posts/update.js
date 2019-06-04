@@ -23,11 +23,13 @@ module.exports = (db, m2m) => (req, resp, next) => {
   // Validate request parameters
   Joi.assert(req.body, {
     post: Joi.string().required(),
+    attachmentIds: Joi.array().items(Joi.number()).optional(),
   });
 
   const topicId = req.params.topicId;
   const postId = req.params.postId;
   const content = req.body.post;
+  const attachmentIds = req.body.attachmentIds;
   const userId = req.authUser.userId.toString();
 
   const promises = [
@@ -45,17 +47,23 @@ module.exports = (db, m2m) => (req, resp, next) => {
       return next(err);
     }
     return helper.callReferenceEndpoint(req.authToken, req.id, topic.reference, topic.referenceId)
-    .then((hasAccessResp) => {
-      const hasAccess = helper.userHasAccessToEntity(userId, hasAccessResp, topic.reference);
+    .then(async (hasAccessResp) => {
+      const hasAccess = await helper.userHasAccessToEntity(userId, hasAccessResp, topic.tags, topic.reference);
       if (!hasAccess && !helper.isAdmin(req)) {
         throw new errors.HttpStatusError(403, 'User doesn\'t have access to the entity');
       }
 
-      return db.posts.updatePost(db, adapter, { raw: content }, { postId }, userId)
-      .then((updatedPost) => {
-        req.app.emit(EVENT.POST_UPDATED, { post, req, topic });
-        resp.status(200).send(util.wrapResponse(req.id, updatedPost));
-      });
+      if ((post.createdBy !== userId) && (!helper.isAdmin(req))) {
+        const err = new errors.HttpStatusError(403, 'You are not allowed to perform this action');
+        return next(err);
+      }
+
+      return db.sequelize.transaction(trans => db.posts.updatePostAttachments(db, postId, attachmentIds, trans)
+        .then(() => db.posts.updatePost(db, adapter, { raw: content }, { postId }, userId, trans)
+          .then((updatedPost) => {
+            req.app.emit(EVENT.POST_UPDATED, { post, req, topic });
+            resp.status(200).send(util.wrapResponse(req.id, updatedPost));
+          })));
     });
   })
   .catch((error) => {

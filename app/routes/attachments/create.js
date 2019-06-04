@@ -1,114 +1,148 @@
 
 const aws = require('aws-sdk');
 const config = require('config');
-const digestStream = require('digest-stream');
 const util = require('tc-core-library-js').util(config);
-const HelperService = require('../../services/helper');
 const errors = require('common-errors');
 const Joi = require('joi');
 const Promise = require('bluebird');
-const multer = require('multer');
-const multerS3 = require('multer-s3');
+const moment = require('moment');
 
 const HttpStatusError = errors.HttpStatusError;
 
-const upload = Promise.promisify(multer({
-  storage: multerS3({
-    s3: new aws.S3(config.get('aws.config')),
-    bucket: config.get('aws.S3.bucket'),
-    contentType: (req, file, cb) => {
-      // we use this function to provide a replacement stream, which is the original stream piped to a
-      // stream that calculates the sha checksum on the fly (with a low memory footprint) and can be used as a source
-      // stream to feed data to a Writable
-      const stream = digestStream('sha1', 'hex', (checksum) => {
-        // eslint-disable-next-line no-param-reassign
-        file.sha1 = checksum;
-      });
-      file.stream.pipe(stream);
-      cb(null, file.mimetype, stream);
-    },
-    key: (req, file, cb) => cb(null, `${req.params.postId}/${Date.now()}-${file.originalname}`),
-  }),
-  limits: { fileSize: 1024 * 1024 },
-  fileFilter: (req, file, cb) => {
-    if (/image/.test(file.mimetype)) {
-      cb(null, true);
-      return;
+/**
+ * Returns file path to be used in s3.moveObject function
+ * Supports both cases if file is in root directory or in subdirectory
+ * (e.g. s3://bucket/subdir/file.ext)
+ * (e.g. s3://bucket/file.ext)
+ *
+ * Supports all path types of 'subdir', 'subdir/', '/subdir' ...
+ *
+ * @param {Object} file The file object containing filename, bucket, path
+ * @return {string} URL-encoded path of the file
+ */
+const getSourceBucketPath = (file) => {
+  // file is in path
+  if (file.path && file.path !== '/') {
+    // handles 'subdir/' case
+    if (file.path.substr(-1) === '/') {
+      file.path = file.path.substr(0, file.path.length - 1);
     }
-    cb(new errors.HttpStatusError(400, 'Can only upload image file'));
-  },
-}).single('file'));
+
+    // handles '/subdir' case
+    if (file.path.substr(0, 1) === '/') {
+      file.path = file.path.substr(1, file.path.length - 1);
+    }
+
+    return encodeURI(`/${file.bucket}/${file.path}/${file.filename}`);
+  }
+  // file is in the root directory
+  return encodeURI(`/${file.bucket}/${file.filename}`);
+};
+
+/**
+ * Returns unsigned S3 resource URL for the given file
+ *
+ * @param {Object} file File object with s3Bucket and s3Key properties
+ * @return {string} Unsigned S3 resource URL
+ */
+const getS3URL = file => `s3://${file.s3Bucket}/${file.s3Key}`;
+
+/**
+ * Copies the given object from source (public) bucket to target bucket
+ *
+ * Configuration parameters in the config/default.json
+ * aws.S3.targetBucket - the object will be copied to this bucket
+ * aws.S3.storageDir - the object will be stored in this directory (in the target bucket)
+ *
+ * File name format: TIMESTAMP_originalFileName.ext
+ *
+ * @param {Object} file The file object containing filename, bucket, path
+ * @param {Object} req Request
+ * @return {Object} The same file object with additionally targetS3Key and targetBucket
+ */
+const moveObject = (file, req) => new Promise((resolve, reject) => {
+  const logger = req.log;
+
+  const s3 = new aws.S3();
+  const targetBucket = config.get('aws.S3.targetBucket');
+  const storageDir = config.get('aws.S3.storageDir');
+  const timeStamp = Date.now();
+
+  const targetS3Key = `${storageDir}/${timeStamp}_${file.filename}`;
+
+  const params = {
+    Bucket: targetBucket,
+    CopySource: getSourceBucketPath(file),
+    Key: targetS3Key,
+  };
+  s3.copyObject(params, (err) => {
+    if (err) {
+      logger.error(err);
+      reject(err);
+    }
+    file.s3Bucket = targetBucket;
+    file.s3Key = targetS3Key;
+    resolve(file);
+  });
+});
 
 /**
  * Handles creation of attachments
  * @param {Object} db sequelize db with all models loaded
- * @param {Object} m2m machine to machine token helper object
  * @return {Object} response object
  */
-module.exports = (db, m2m) =>
-  /**
-   * Upload image to Discourse
-   */
+module.exports = db =>
   (req, resp, next) => {
     const logger = req.log;
-    const helper = HelperService(logger, db, m2m);
 
-    // Validate request parameters
+    // Validate the authentication
     Joi.assert(req.authUser, Joi.object().keys({
       handle: Joi.string().required(),
     }).unknown());
-    const params = Joi.attempt(req.params, Joi.object().keys({
-      postId: Joi.number().required(),
+
+    // validate req parameters and create a file object from request
+    const fileInfo = Joi.attempt(req.body, Joi.object().keys({
+      filename: Joi.string().required(),
+      bucket: Joi.string().required(),
+      path: Joi.string().optional(),
     }).unknown());
-    const query = Joi.attempt(req.query, {
-      referenceId: Joi.number().required(),
-    });
-    const userId = req.authUser.userId.toString();
-    return db.topics.findOne({ topicId: req.params.topicId }).then((topic) => {
-      if (!topic) {
-        const err = new errors.HttpStatusError(404, 'Topic does not exist');
-        return next(err);
+
+    // check rate limits
+    return db.post_attachments.count({
+      where: {
+        createdBy: req.authUser.userId.toString(),
+        postId: null,
+        createdAt: { $gt: moment().add(-1, 'hours') },
+      },
+    })
+    .then((count) => {
+      if (count > config.maximumUnassignedAttachments) {
+        throw new errors.HttpStatusError(429, 'Rate limit - too many unassigned attachments');
       }
-      return helper.callReferenceEndpoint(req.authToken, req.id, topic.reference, query.referenceId)
-        .then((hasAccessResp) => {
-          const hasAccess = helper.userHasAccessToEntity(userId, hasAccessResp, topic.reference);
-          if (!hasAccess && !helper.isAdmin(req)) {
-            throw new errors.HttpStatusError(403, 'User doesn\'t have access to the project');
-          }
-          return upload(req, resp);
-        })
-        .then(() => {
-          if (!req.file) {
-            throw new errors.HttpStatusError(400, 'Missing file');
-          }
-          // Validate parameters
-          Joi.assert(req.file, Joi.object().keys({
-            location: Joi.string().required(),
-            originalname: Joi.string().required(),
-            sha1: Joi.string().required(),
-            size: Joi.number().required(),
-          }).unknown());
-          return db.post_attachments.create({
-            postId: params.postId,
-            originalFileName: req.file.originalname,
-            fileSize: req.file.size,
-            sha1: req.file.sha1,
-            url: req.file.location,
-            createdBy: req.authUser.handle,
-            // follow sequelize on how it fills updatedAt on creation
-            updatedBy: req.authUser.handle,
-          });
-        })
-        .then((createdPostAttachment) => {
-          const content = createdPostAttachment.toJSON();
-          logger.info('Attachment uploaded', content);
-          // remove excluded attributes from the response
-          ['deletedAt', 'deletedBy', 'url'].forEach(attribute => delete content[attribute]);
-          resp.status(200).send(util.wrapResponse(req.id, content));
-        })
-        .catch((error) => {
-          logger.error(error);
-          next(error instanceof HttpStatusError ? error : new HttpStatusError(500, 'Error uploading attachment'));
-        });
+      return Promise.resolve();
+    })
+    .then(() => moveObject(fileInfo, req))
+    .then((file) => {
+      logger.info('Attachment copied to the target bucket', file);
+      return file;
+    })
+    .then(file => db.post_attachments.create({
+      postId: null,
+      originalFileName: file.filename,
+      url: getS3URL(file),
+      createdBy: req.authUser.userId.toString(),
+        // follow sequelize on how it fills updatedAt on creation
+      updatedBy: req.authUser.userId.toString(),
+    }))
+    .then((createdPostAttachment) => {
+      const content = createdPostAttachment.toJSON();
+      logger.info('Attachment uploaded', content);
+      // remove excluded attributes from the response
+      ['deletedAt', 'deletedBy', 'url'].forEach(attribute => delete content[attribute]);
+      resp.status(200).send(util.wrapResponse(req.id, content));
+    })
+    .catch((error) => {
+      logger.error(error);
+      next(error instanceof HttpStatusError ? error : new HttpStatusError(500, 'Error copying attachment'));
     });
   };
