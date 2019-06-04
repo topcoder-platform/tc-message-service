@@ -114,15 +114,15 @@ describe('DELETE /v4/topics/attachments/:attachmentId', () => {
         postId: 1,
         originalFileName: 'aFileName.jpg',
         url: 'https://s3.com/1/12123123-aFileName.jpg',
-        createdBy: auth.handle,
-        updatedBy: auth.handle,
+        createdBy: auth.userId,
+        updatedBy: auth.userId,
       }, {
         id: 2,
         postId: 3,
         originalFileName: 'aFileName.jpg',
         url: 'https://s3.com/1/12123123-aFileName.jpg',
-        createdBy: auth.handle,
-        updatedBy: auth.handle,
+        createdBy: auth.userId,
+        updatedBy: auth.userId,
       }]).then(() => done()).catch(done);
     });
   });
