@@ -19,12 +19,12 @@ module.exports = {
   },
 
   BUS_API_EVENT: {
-    TOPIC_CREATED: 'connect.notifications.project.topic.created',
-    TOPIC_UPDATED: 'connect.notifications.project.topic.updated',
-    TOPIC_DELETED: 'connect.notifications.project.topic.deleted',
-    POST_CREATED: 'connect.notifications.project.post.created',
-    POST_UPDATED: 'connect.notifications.project.post.edited',
-    POST_DELETED: 'connect.notifications.project.post.deleted',
+    TOPIC_CREATED: 'connect.notification.project.topic.created',
+    TOPIC_UPDATED: 'connect.notification.project.topic.updated',
+    TOPIC_DELETED: 'connect.notification.project.topic.deleted',
+    POST_CREATED: 'connect.notification.project.post.created',
+    POST_UPDATED: 'connect.notification.project.post.edited',
+    POST_DELETED: 'connect.notification.project.post.deleted',
   },
 
   DISCOURSE_WEBHOOK_STATUS: {
