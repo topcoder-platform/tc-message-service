@@ -182,8 +182,9 @@ module.exports = (logger, db, m2m) => {
         // and anyone should be able to see the threads
       }
       const referenceLookup = result;
+      const referenceURL = referenceLookup.endpoint.replace('{id}', referenceId);
       return m2m.getMachineToken(config.AUTH0_CLIENT_ID, config.AUTH0_CLIENT_SECRET)
-      .then(token => axios.get(referenceLookup.endpoint.replace('{id}', referenceId), {
+      .then(token => axios.get(referenceURL, {
         headers: {
           'X-Request-Id': requestId,
           Authorization: `Bearer ${token}`,
@@ -196,6 +197,9 @@ module.exports = (logger, db, m2m) => {
         if (response.data && response.data.result &&
           response.data.result.status === 200 && response.data.result.content) {
           return [true, response.data.result.content];
+          // if URL has `/v5/` then response doesn't have `result.content`
+        } else if (/\/v5\//.test(referenceURL) && response.data) {
+          return [true, response.data];
         }
         return [false, null];
       }).catch((error) => {
