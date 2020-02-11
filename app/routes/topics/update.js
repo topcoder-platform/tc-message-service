@@ -86,7 +86,7 @@ module.exports = (db, m2m) => (req, resp, next) => {
                   t.posts = topic.posts;
                   // update elastic search index
                   esIndex.updateElasticSearchIndex(db, adapter, topicId, topicId);
-                  req.app.emit(EVENT.TOPIC_UPDATED, { topic, req });
+                  req.app.emit(EVENT.TOPIC_UPDATED, { topic: t, req });
                   // TODO should get rid of post as seprate field in response
                   resp.status(200).send(util.wrapResponse(req.id, { topic: t, post: p }));
                 });
