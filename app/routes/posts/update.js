@@ -61,7 +61,7 @@ module.exports = (db, m2m) => (req, resp, next) => {
       return db.sequelize.transaction(trans => db.posts.updatePostAttachments(db, postId, attachmentIds, trans)
         .then(() => db.posts.updatePost(db, adapter, { raw: content }, { postId }, userId, trans)
           .then((updatedPost) => {
-            req.app.emit(EVENT.POST_UPDATED, { post, req, topic });
+            req.app.emit(EVENT.POST_UPDATED, { post: updatedPost, req, topic });
             resp.status(200).send(util.wrapResponse(req.id, updatedPost));
           })));
     });
