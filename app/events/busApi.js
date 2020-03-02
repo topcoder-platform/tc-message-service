@@ -88,7 +88,7 @@ module.exports = (app, db, logger) => {
         topicId: topic.id,
         topicTitle: topic.title,
         postId: post.id,
-        postContent: post.raw ? post.raw: post.rawContent,
+        postContent: post.raw ? post.raw : post.rawContent,
         userId: req.authUser.userId,
         projectId: topic.referenceId,
         initiatorUserId: req.authUser.userId,
