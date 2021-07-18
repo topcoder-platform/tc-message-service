@@ -1,6 +1,6 @@
 /* eslint-disable no-unused-expressions, newline-per-chained-call */
 
-import { clearDB, prepareDB, jwts, userIds, getDecodedToken } from '../../tests';
+const { clearDB, prepareDB, jwts, userIds, getDecodedToken } = require('../../tests');
 
 const request = require('supertest');
 const server = require('../../app');

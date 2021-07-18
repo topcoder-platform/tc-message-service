@@ -251,7 +251,7 @@ module.exports = (logger, db, m2m) => {
   }
 
   /**
-   * Checks if a user has access to an entity, and if they do, provision a user in Discourse if one doesn't exist
+   * Checks if a user has access to an entity, and if they do, provision a user if one doesn't exist
    * @param {String} authToken user's auth token to use to call the Topcoder api to get user info for provisioning
    * @param {String} requestId request identifier
    * @param {String} userId userId of the user

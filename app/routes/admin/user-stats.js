@@ -1,5 +1,5 @@
-import _ from 'lodash';
-import HelperService from '../../services/helper';
+const _ = require('lodash');
+const HelperService = require('../../services/helper');
 
 const config = require('config');
 const util = require('tc-core-library-js').util(config);

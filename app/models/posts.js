@@ -23,11 +23,6 @@ module.exports = (Sequelize, DataTypes) => {
       type: DataTypes.STRING,
       allowNull: false,
     },
-    // discourse post id for mapping updates in posts via discourse webhook
-    discoursePostId: {
-      type: DataTypes.BIGINT,
-      allowNull: true,
-    },
     // topic id
     topicId: {
       type: DataTypes.BIGINT,
@@ -89,16 +84,14 @@ module.exports = (Sequelize, DataTypes) => {
    * @param {Object} models Sequelize database models
    * @param {String} postBody content for the post body
    * @param {Object} topic topic object for which post is to be created
-   * @param {String} discoursePostId discourse post id
    * @param {String} reqUserId id of the user requesting the operation
    * @param {Object} transaction the transaction
    *
    * @return {Promise} promise resolving in a Sequelize object representig a post
    */
-  Post.createPost = (models, postBody, topic, discoursePostId = null, reqUserId, transaction = null) => {
+  Post.createPost = (models, postBody, topic, reqUserId, transaction = null) => {
     const post = models.posts.build({
       topicId: topic.id,
-      discoursePostId,
       raw: postBody,
       postNumber: topic.highestPostNumber + 1,
       viaEmail: false,
@@ -220,19 +213,15 @@ module.exports = (Sequelize, DataTypes) => {
    * @param {Object} updatedFields delta object containing the changes to be persisted into the given post object
    * @param {Object} filters object containing filter parameters, currently supported are:
    * postId : id of post to be updated
-   * discoursePostId: discourse post id of the post to be updated
    * @param {String} reqUserId id of the user requesting the operation
    * @param {Object} transaction the transaction
    *
    * @return {Promise} promise which resolves to logical model of the updated post
    */
-  Post.updatePost = (models, adapter, updatedFields, { postId, discoursePostId }, reqUserId, transaction) => {
+  Post.updatePost = (models, adapter, updatedFields, { postId }, reqUserId, transaction) => {
     const where = { deletedAt: { [Sequelize.Op.eq]: null } };
     if (postId) {
       where.id = postId;
-    }
-    if (discoursePostId) {
-      where.discoursePostId = discoursePostId;
     }
     return models.posts.update(
       Object.assign({}, updatedFields, { updatedBy: reqUserId }),

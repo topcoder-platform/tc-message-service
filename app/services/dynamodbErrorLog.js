@@ -12,7 +12,12 @@ const getAdapter = () => {
   if (!adapter) {
     const tableName = config.get('aws.dynamodb.elasticSearchIndexingLogsTable');
 
-    const dynamodb = new aws.DynamoDB(config.get('aws.config'));
+    let dynamodb;
+    if (config.get('aws.dynamodb.url')) {
+      dynamodb = new aws.DynamoDB({ endpoint: config.get('aws.dynamodb.url') });
+    } else {
+      dynamodb = new aws.DynamoDB(config.get('aws.config'));
+    }
     const putItem = Promise.promisify(dynamodb.putItem.bind(dynamodb));
 
 

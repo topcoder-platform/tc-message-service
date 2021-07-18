@@ -1,6 +1,6 @@
 /* eslint-disable no-unused-expressions, newline-per-chained-call */
 
-import { clearDB, jwts, prepareDB } from '../../tests';
+const { clearDB, jwts, prepareDB } = require('../../tests');
 
 const request = require('supertest');
 const models = require('../../models');

@@ -1,6 +1,6 @@
 /* eslint-disable no-unused-expressions, newline-per-chained-call */
 
-import { clearDB, prepareDB, jwts, getDecodedToken } from '../../tests';
+const { clearDB, prepareDB, jwts, getDecodedToken } = require('../../tests');
 
 require('should-sinon');
 
@@ -23,13 +23,13 @@ function assertTopicAndPost(topicId, assertCallback, done) {
     db.topics.findById(topicId),
     db.posts.findOne({ topicId }),
   ])
-  .then((response) => {
-    const topic = response[0];
-    const topicPost = response[1];
-    assertCallback(topic, topicPost);
-    return done();
-  })
-  .catch(() => done());
+    .then((response) => {
+      const topic = response[0];
+      const topicPost = response[1];
+      assertCallback(topic, topicPost);
+      return done();
+    })
+    .catch(() => done());
 }
 
 describe('GET /v5/topics/db', () => {
@@ -61,50 +61,50 @@ describe('GET /v5/topics/db', () => {
   });
   it('should return 403 response without a jwt token', (done) => {
     request(server)
-            .get(apiPath)
-            .expect(403, done);
+      .get(apiPath)
+      .expect(403, done);
   });
 
   it('should return 403 response with invalid jwt token', (done) => {
     request(server)
-            .get(apiPath)
-            .set({
-              Authorization: 'Bearer wrong',
-            })
-            .expect(403, done);
+      .get(apiPath)
+      .set({
+        Authorization: 'Bearer wrong',
+      })
+      .expect(403, done);
   });
 
   it('should return 400 response without filter', (done) => {
     request(server)
-            .get(apiPath)
-            .set({
-              Authorization: `Bearer ${jwts.admin}`,
-            })
-            .expect(400)
-            .end((err) => {
-              if (err) {
-                return done(err);
-              }
-              return done();
-            });
+      .get(apiPath)
+      .set({
+        Authorization: `Bearer ${jwts.admin}`,
+      })
+      .expect(400)
+      .end((err) => {
+        if (err) {
+          return done(err);
+        }
+        return done();
+      });
   });
 
   it('should return 400 response without reference filter', (done) => {
     request(server)
-            .get(apiPath)
-            .set({
-              Authorization: `Bearer ${jwts.admin}`,
-            })
-            .query({
-              filter: 'referenceId=1',
-            })
-            .expect(400)
-            .end((err) => {
-              if (err) {
-                return done(err);
-              }
-              return done();
-            });
+      .get(apiPath)
+      .set({
+        Authorization: `Bearer ${jwts.admin}`,
+      })
+      .query({
+        filter: 'referenceId=1',
+      })
+      .expect(400)
+      .end((err) => {
+        if (err) {
+          return done(err);
+        }
+        return done();
+      });
   });
 
   it('should return 400 response without referenceId filter', (done) => {
@@ -233,7 +233,7 @@ describe('GET /v5/topics/db', () => {
           res.body.should.have.propertyByPath('result', 'content', '0', 'reference').eql('project');
           // console.log(topicPost.updatedAt, 'updatedAt');
           res.body.should.have.propertyByPath('result', 'content', '0', 'lastActivityAt')
-          .eql(topicPost.updatedAt);
+            .eql(topicPost.updatedAt);
         }, done);
       });
   });
@@ -273,7 +273,7 @@ describe('GET /v5/topics/db', () => {
           res.body.should.have.propertyByPath('result', 'content', '0', 'reference').eql('project');
           // console.log(topicPost.updatedAt, 'updatedAt');
           res.body.should.have.propertyByPath('result', 'content', '0', 'lastActivityAt')
-          .eql(topicPost.updatedAt);
+            .eql(topicPost.updatedAt);
         }, done);
       });
   });
@@ -303,7 +303,7 @@ describe('GET /v5/topics/db', () => {
         // should call m2m.getMachineToken
         m2mStub.should.have.be.calledOnce;
         res.body.result.content.should.be.of.length(1);
-        // once for reference endpoint call  and once for getting the topics from discourse
+        // once for reference endpoint call  and once for getting the topics
         sinon.assert.calledOnce(getStub);
         // should call UPDATE on post user stats table
         updateStatsStub.should.have.be.calledOnce;
@@ -313,7 +313,7 @@ describe('GET /v5/topics/db', () => {
           res.body.should.have.propertyByPath('result', 'content', '0', 'reference').eql('project');
           // console.log(topicPost.updatedAt, 'updatedAt');
           res.body.should.have.propertyByPath('result', 'content', '0', 'lastActivityAt')
-          .eql(topicPost.updatedAt);
+            .eql(topicPost.updatedAt);
         }, done);
       });
   });
@@ -344,7 +344,7 @@ describe('GET /v5/topics/db', () => {
         // should call m2m.getMachineToken
         m2mStub.should.have.be.calledOnce;
         res.body.result.content.should.be.of.length(1);
-        // once for reference endpoint call  and once for getting the topics from discourse
+        // once for reference endpoint call  and once for getting the topics
         sinon.assert.calledOnce(getStub);
         // should call UPDATE on post user stats table
         updateStatsStub.should.have.be.calledOnce;
@@ -354,7 +354,7 @@ describe('GET /v5/topics/db', () => {
           res.body.should.have.propertyByPath('result', 'content', '0', 'reference').eql('project');
           // console.log(topicPost.updatedAt, 'updatedAt');
           res.body.should.have.propertyByPath('result', 'content', '0', 'lastActivityAt')
-          .eql(topicPost.updatedAt);
+            .eql(topicPost.updatedAt);
         }, done);
       });
   });
@@ -395,7 +395,7 @@ describe('GET /v5/topics/db', () => {
           res.body.should.have.propertyByPath('result', 'content', '0', 'reference').eql('project');
           // console.log(topicPost.updatedAt, 'updatedAt');
           res.body.should.have.propertyByPath('result', 'content', '0', 'lastActivityAt')
-          .eql(topicPost.updatedAt);
+            .eql(topicPost.updatedAt);
         }, done);
       });
   });
@@ -437,7 +437,7 @@ describe('GET /v5/topics/db', () => {
           res.body.should.have.propertyByPath('result', 'content', '0', 'reference').eql('project');
           // console.log(topicPost.updatedAt, 'updatedAt');
           res.body.should.have.propertyByPath('result', 'content', '0', 'lastActivityAt')
-          .eql(topicPost.updatedAt);
+            .eql(topicPost.updatedAt);
         }, done);
       });
   });
@@ -475,7 +475,7 @@ describe('GET /v5/topics/db', () => {
           res.body.should.have.propertyByPath('result', 'content', '0', 'reference').eql('project');
           // console.log(topicPost.updatedAt, 'updatedAt');
           res.body.should.have.propertyByPath('result', 'content', '0', 'lastActivityAt')
-          .eql(topicPost.updatedAt);
+            .eql(topicPost.updatedAt);
         }, done);
       });
   });
@@ -513,7 +513,7 @@ describe('GET /v5/topics/db', () => {
           res.body.should.have.propertyByPath('result', 'content', '0', 'reference').eql('project');
           // console.log(topicPost.updatedAt, 'updatedAt');
           res.body.should.have.propertyByPath('result', 'content', '0', 'lastActivityAt')
-          .eql(topicPost.updatedAt);
+            .eql(topicPost.updatedAt);
         }, done);
       });
   });

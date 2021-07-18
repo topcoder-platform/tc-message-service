@@ -1,4 +1,4 @@
-import HelperService from '../../services/helper';
+const HelperService = require('../../services/helper');
 
 const config = require('config');
 const util = require('tc-core-library-js').util(config);
@@ -28,37 +28,37 @@ module.exports = (db, m2m) => (req, resp, next) => {
 
   const userId = req.authUser.userId.toString();
   return db.topics.findById(topicId)
-  .then((topic) => {
-    if (!topic) {
-      const err = new errors.HttpStatusError(404, 'Topic does not exist');
-      return next(err);
-    }
-    return helper.callReferenceEndpoint(req.authToken, req.id, topic.reference, topic.referenceId)
-    .then(async (hasAccessResp) => {
-      const hasAccess = await helper.userHasAccessToEntity(userId, hasAccessResp, topic.tags, topic.reference);
-      if (!hasAccess && !helper.isAdmin(req)) {
-        throw new errors.HttpStatusError(403, 'User doesn\'t have access to the entity');
+    .then((topic) => {
+      if (!topic) {
+        const err = new errors.HttpStatusError(404, 'Topic does not exist');
+        return next(err);
       }
+      return helper.callReferenceEndpoint(req.authToken, req.id, topic.reference, topic.referenceId)
+        .then(async (hasAccessResp) => {
+          const hasAccess = await helper.userHasAccessToEntity(userId, hasAccessResp, topic.tags, topic.reference);
+          if (!hasAccess && !helper.isAdmin(req)) {
+            throw new errors.HttpStatusError(403, 'User doesn\'t have access to the entity');
+          }
 
-      const filter = {};
-      filter.topicId = Number(req.params.topicId);
-      if (postIds) {
-        filter.id = { [Op.in]: postIds.map(pid => Number(pid)) };
-      }
-      return db.posts.findPosts(db, adapter, filter)
-      .then((posts) => {
-        if (posts && posts.length > 0) {
-          // marks each post a read for the request user, however, ideally they should be marked
-          // as read only after user has actually seen them in UI because UI might not be showing all posts
-          // at once
-          db.post_user_stats.updateUserStats(db, logger, posts, userId, 'READ');
-        }
-        return resp.status(200).send(util.wrapResponse(req.id, (posts || [])));
-      });
+          const filter = {};
+          filter.topicId = Number(req.params.topicId);
+          if (postIds) {
+            filter.id = { [Op.in]: postIds.map(pid => Number(pid)) };
+          }
+          return db.posts.findPosts(db, adapter, filter)
+            .then((posts) => {
+              if (posts && posts.length > 0) {
+                // marks each post a read for the request user, however, ideally they should be marked
+                // as read only after user has actually seen them in UI because UI might not be showing all posts
+                // at once
+                db.post_user_stats.updateUserStats(db, logger, posts, userId, 'READ');
+              }
+              return resp.status(200).send(util.wrapResponse(req.id, (posts || [])));
+            });
+        });
+    })
+    .catch((error) => {
+      logger.error(error);
+      next(error instanceof errors.HttpStatusError ? error : new errors.HttpStatusError(500, 'Error fetching post'));
     });
-  })
-  .catch((error) => {
-    logger.error(error);
-    next(error instanceof errors.HttpStatusError ? error : new errors.HttpStatusError(500, 'Error fetching post'));
-  });
 };

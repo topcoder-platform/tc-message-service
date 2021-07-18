@@ -1,4 +1,4 @@
-import HelperService from '../../services/helper';
+const HelperService = require('../../services/helper');
 
 const _ = require('lodash');
 const config = require('config');
@@ -19,10 +19,8 @@ const esIndex = require('./../indexing/indexing');
  */
 module.exports = (db, m2m) =>
   /**
-   * Gets topics from Discourse for the specified entity, and in the process it does:
+   * Gets topics for the specified entity, and in the process it does:
    *  - Checks if the user has access to the referred entity
-   *  - Checks if a user exists in Discourse, if not, it creates one
-   *  - Checks if a topic associated with this entity exists in Discourse, if not creates one
    *  - If the topic already exists, checks if the user has access, if not gives access
    * params: standard express parameters
    */

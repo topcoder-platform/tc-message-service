@@ -1,11 +1,11 @@
 
-import _ from 'lodash';
-// import config from 'config';
-import Promise from 'bluebird';
-// import { USER_ROLE } from '../../constants';
+const _ = require('lodash');
+// const config = require('config');
+const Promise = require('bluebird');
+// const { USER_ROLE } = require('../../constants');
 
 /**
- * Retrieves topics from discourse
+ * Retrieves topics
  * @param {Object} logger logging
  * @param {Object} dbTopics topics retrieved from db
  * @param {String} userId id of the user which should be used for fetching topic
@@ -21,7 +21,7 @@ const retrieveTopics = Promise.coroutine(function* a(logger, dbTopics, userId, d
       t.tags = _.find(dbTopics, { discourseTopicId: t.id }).tags; // eslint-disable-line
     });
   } catch (error) {
-    logger.info('Failed to get topics from discourse');
+    logger.info('Failed to get topics');
     logger.error(error);
     topics = null;
   }

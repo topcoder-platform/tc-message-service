@@ -1,5 +1,5 @@
-import _ from 'lodash';
-import HelperService from '../../services/helper';
+const _ = require('lodash');
+const HelperService = require('../../services/helper');
 
 const config = require('config');
 const Sequelize = require('sequelize');
@@ -12,7 +12,7 @@ const Promise = require('bluebird');
 const esIndex = require('./../indexing/indexing');
 
 /**
- * Save a topic in Discourse
+ * Save a topic
  * @param {Object} db sequelize db with models loaded
  * @param {Object} m2m machine to machine token helper object
  * @return {object} response

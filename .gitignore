@@ -63,6 +63,7 @@ local/env.sh
 # Env config
 env.sh
 config/local.js
+.env
 
 # Deployment scripts
 aws-deploy

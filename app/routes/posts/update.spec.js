@@ -1,6 +1,6 @@
 /* eslint-disable no-unused-expressions, newline-per-chained-call */
 
-import { prepareDB, clearDB, jwts, userIds, getDecodedToken } from '../../tests';
+const { prepareDB, clearDB, jwts, userIds, getDecodedToken } = require('../../tests');
 
 const request = require('supertest');
 const server = require('../../app');
@@ -37,10 +37,10 @@ describe('POST /v4/topics/:topicId/posts/:postId/edit ', () => {
   beforeEach((done) => {
     sandbox = sinon.sandbox.create();
     prepareDB()
-    .then(({ posts }) => {
-      expectedTopicPosts = posts;
-      done();
-    });
+      .then(({ posts }) => {
+        expectedTopicPosts = posts;
+        done();
+      });
   });
   afterEach((done) => {
     sandbox.restore();
@@ -73,12 +73,12 @@ describe('POST /v4/topics/:topicId/posts/:postId/edit ', () => {
       data: { result: { status: 200, content: { members: [{ userId: userIds.otherMember }] } } },
     });
     request(server)
-        .post(apiPath)
-        .set({
-          Authorization: `Bearer ${jwts.otherMember}`,
-        })
-        .send(testBody)
-        .expect(403, done);
+      .post(apiPath)
+      .set({
+        Authorization: `Bearer ${jwts.otherMember}`,
+      })
+      .send(testBody)
+      .expect(403, done);
   });
 
   it('should return 403 response when user is not member of the project', (done) => {

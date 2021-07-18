@@ -1,8 +1,8 @@
 
 /* eslint-disable no-unused-expressions, newline-per-chained-call */
 
-import _ from 'lodash';
-import { clearDB, prepareDB, jwts, getDecodedToken } from '../../tests';
+const _ = require('lodash');
+const { clearDB, prepareDB, jwts, getDecodedToken } = require('../../tests');
 
 const models = require('../../models');
 require('should-sinon');

@@ -7,7 +7,7 @@
       "secretAccessKey": "AWS_SECRET_ACCESS_KEY"
     },
     "dynamodb": {
-      "discourseWebhookLogsTable": "DDB_DISCOURSE_WEBHOOK_LOGS_TABLE",
+      "url": "DYNAMODB_URL",
       "elasticSearchIndexingLogsTable": "ES_INDEXING_LOGS_TABLE"
     },
     "S3": {
@@ -18,14 +18,10 @@
     "host": "MESSAGES_ES_URL",
     "apiVersion": "6.2",
     "indexName": "MESSAGES_ES_INDEX_NAME",
-    "docType": "messages",
     "pageSize": "MESSAGE_ES_PAGE_SIZE"
   },
-  "defaultDiscoursePw": "DEFAULT_DISCOURSE_PW",
-  "discourseApiKey": "DISCOURSE_API_KEY",
   "coderBotUsername": "CODERBOT_USERNAME",
   "coderBotUserId": "CODERBOT_USER_ID",
-  "discourseWebhookSecret": "DISCOURSE_WEBHOOK_SECRET",
   "authDomain": "AUTH_DOMAIN",
   "AUTH_SECRET": "AUTH_SECRET",
   "memberServiceUrl": "MEMBER_SERVICE_URL",
@@ -39,7 +35,6 @@
   "systemUserClientId": "SYSTEM_USER_CLIENT_ID",
   "systemUserClientSecret": "SYSTEM_USER_CLIENT_SECRET",
   "VALID_ISSUERS": "VALID_ISSUERS",
-  "jwksUri": "JWKS_URI",
   "busApiUrl": "BUS_API_URL",
   "topicServiceUrl":"TOPIC_SERVICE_V4_URL",
   "AUTH0_URL" : "AUTH0_URL",

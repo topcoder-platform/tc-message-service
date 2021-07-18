@@ -22,10 +22,14 @@ securityDefinitions:
     type: apiKey
     name: Authorization
     in: header
-  DiscourseSignature:
-    type: apiKey
-    name: x-discourse-event-signature
-    in: header
+    
+tags:
+  - name: Admins
+  - name: Topics
+  - name: Posts
+  - name: Attachments
+  - name: Webhooks
+  - name: Others
 
 paths:
   /topics/create:
@@ -78,7 +82,7 @@ paths:
             $ref: '#/definitions/UpdateTopicBodyParam'
       responses:
         '200':
-          description: Success. Returns newly created topic
+          description: Success. Returns updated topic
           schema:
             $ref: "#/definitions/NewTopicResponse"
         '400':
@@ -122,6 +126,41 @@ paths:
           $ref: "#/responses/NotFound"
         '500':
           $ref: "#/responses/UnexpectedFailure"
+  /topics/list/db:  
+    get:
+      tags:
+        - Topics
+      operationId: getTopicsDB
+      security:
+        - Bearer: []
+      summary: Lists topics from db
+      description:  Lists topics according to specified filters.
+      parameters:
+        - name: filter
+          required: true
+          type: string
+          in: query
+          description: |
+            A URL-encoded string that specify criteria for topics matching.
+            Should be in the form `reference={ref_type}&referenceId={ref_id}&tag={tag}`, where:
+            - ref_type(required) - type of entity with which the topic is associated, e.g. `project`, `challenge`, `submission`, etc.
+            - ref_id(required) - id of entity with which the topic is associated, e.g. `455`.
+            - tag(optional) - tag field of the topic, e.g. `PRIMARY`
+            
+            Example: `reference=project&referenceId=1450&tag=PRIMARY`
+      responses:
+        '200':
+          description: Success. Returns list of topics
+          schema:
+            $ref: "#/definitions/TopicListResponse"
+        '400':
+          $ref: "#/responses/ValidationFailure"
+        '403':
+          $ref: "#/responses/InvalidAccess"
+        '404':
+          $ref: "#/responses/NotFound"
+        '500':
+          $ref: "#/responses/UnexpectedFailure"
   /topics/{topicId}/read:
     get:
       tags:
@@ -130,6 +169,37 @@ paths:
       security:
         - Bearer: []
       summary: Get topic
+      description: Fetches the details of the specified topic.
+      parameters:
+        - in: header
+          name: Authorization
+          description: Authorization token
+          required: true
+          type: string
+        - name: topicId
+          in: path
+          description: id of the topic to be fetched
+          required: true
+          type: number
+      responses:
+        '200':
+          description: Success. Returns the topic
+          schema:
+            $ref: "#/definitions/TopicResponse"
+        '403':
+          $ref: "#/responses/InvalidAccess"
+        '404':
+          $ref: "#/responses/NotFound"
+        '500':
+          $ref: "#/responses/UnexpectedFailure"
+  /topics/{topicId}/read/db:
+    get:
+      tags:
+        - Topics
+      operationId: getTopicDB
+      security:
+        - Bearer: []
+      summary: Get topic from db
       description: Fetches the details of the specified topic.
       parameters:
         - in: header
@@ -242,7 +312,7 @@ paths:
             $ref: '#/definitions/NewPostBodyParam'
       responses:
         '200':
-          description: Success. Returns newly created post
+          description: Success. Returns updated post
           schema:
             $ref: "#/definitions/NewPostResponse"
         '400':
@@ -273,6 +343,8 @@ paths:
           description: comma separated ids of the posts to be fetched
       tags:
         - Posts
+      security:
+        - Bearer: []
       responses:
         200:
           description: Success. Returns newly created post
@@ -382,7 +454,7 @@ paths:
         '500':
           $ref: "#/responses/UnexpectedFailure"
           
-  /topics/attachments/{attachmentId}:
+  /topics/attachments/{attachmentId}/read:
     get:
       tags:
         - Attachments
@@ -401,11 +473,6 @@ paths:
           description: Requested Attachment ID
           required: true
           type: number
-        - in: body
-          name: body
-          required: true
-          schema:
-            $ref: "#/definitions/getAttachmentBody"
       responses:
         '200':
           description: Gets a signed URL and starts download
@@ -415,6 +482,7 @@ paths:
           $ref: "#/responses/InvalidAccess"
         '500':
           $ref: "#/responses/UnexpectedFailure"
+  /topics/attachments/{attachmentId}/delete:
     delete:
       tags:
         - Attachments
@@ -433,11 +501,6 @@ paths:
           description: Attachment ID
           required: true
           type: number
-        - in: body
-          name: body
-          required: true
-          schema:
-            $ref: "#/definitions/deleteAttachmentBody"
       responses:
         '200':
           description: Success. 
@@ -450,42 +513,11 @@ paths:
         '500':
           $ref: "#/responses/UnexpectedFailure"
     
-
-      
-  /topics/webhooks/discourse:
-    post:
-      tags:
-        - Webhooks
-      operationId: handleDiscourseWebhook
-      security:
-        - DiscourseSignature: []
-      summary: handle discourse event
-      description: This endpoint serves two purposes. One is to fetch delta changes during parallel run of v4 and v5 APIs and provide backward compaitability support for replying to posts for old notification emails sent by discourse.
-      parameters:
-        - in: body
-          name: body
-          required: true
-          description: Discourse payload
-          schema:
-            $ref: '#/definitions/DiscourseTopicBodyParam'
-      responses:
-        '200':
-          description: Success. Returns newly created post
-          schema:
-            $ref: "#/definitions/NewPostResponse"
-        '400':
-          $ref: "#/responses/ValidationFailure"
-        '403':
-          $ref: "#/responses/InvalidAccess"
-        '500':
-          $ref: "#/responses/UnexpectedFailure"
   /topics/webhooks/sendgrid:
     post:
       tags:
         - Webhooks
       operationId: handleSendgridWebhook
-      security:
-        - Bearer: []
       summary: handle sendgrid event
       description: This endpoint supports incoming emails for replying to posts via replying to notification emails. It creates post for the topic identified by to email address of incoming email.
       parameters:
@@ -500,11 +532,176 @@ paths:
           description: Success.
         '400':
           $ref: "#/responses/ValidationFailure"
+        '500':
+          $ref: "#/responses/UnexpectedFailure"
+          
+  /topics/admin/ownership/edit:
+    post:
+      tags:
+        - Admins
+      operationId: admin update ownership
+      security:
+        - Bearer: []
+      summary: Update ownership
+      description: Update the topic/post ownership
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: '#/definitions/AdminUpdateOwnershipBodyParam'
+      responses:
+        '200':
+          description: Success. Returns updated topic/post
+          schema:
+            $ref: "#/definitions/UpdateOwnershipResponse"
+        '400':
+          $ref: "#/responses/ValidationFailure"
         '403':
           $ref: "#/responses/InvalidAccess"
         '500':
           $ref: "#/responses/UnexpectedFailure"
-
+  /topics/admin/posts/{postId}/stats/create:
+    post:
+      tags:
+        - Admins
+      operationId: adminCreatePostStats
+      security:
+        - Bearer: []
+      summary: Create post stats
+      description: Creates the specified post stats.
+      parameters:
+        - name: postId
+          in: path
+          description: id of the post to be updated
+          required: true
+          type: number
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: '#/definitions/AdminCreatePostStatsBodyParam'
+      responses:
+        '200':
+          description: Success. Returns newly created postUserStats
+          schema:
+            $ref: "#/definitions/NewPostUserStatsResponse"
+        '400':
+          $ref: "#/responses/ValidationFailure"
+        '403':
+          $ref: "#/responses/InvalidAccess"
+        '500':
+          $ref: "#/responses/UnexpectedFailure"
+  /topics/admin/posts/{postId}/edit:
+    post:
+      tags:
+        - Admins
+      operationId: adminUpdatePost
+      security:
+        - Bearer: []
+      summary: Update post
+      description: Updates the specified post.
+      parameters:
+        - name: postId
+          in: path
+          description: id of the post to be updated
+          required: true
+          type: number
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: '#/definitions/AdminUpdatePostBodyParam'
+      responses:
+        '200':
+          description: Success. Returns updated topic
+          schema:
+            $ref: "#/definitions/NewPostResponse"
+        '400':
+          $ref: "#/responses/ValidationFailure"
+        '403':
+          $ref: "#/responses/InvalidAccess"
+        '500':
+          $ref: "#/responses/UnexpectedFailure"
+  /topics/admin/topics/{topicId}/edit:
+    post:
+      tags:
+        - Admins
+      operationId: adminUpdateTopic
+      security:
+        - Bearer: []
+      summary: Update topic
+      description: Updates the specified topic.
+      parameters:
+        - name: topicId
+          in: path
+          description: id of the topic to be updated
+          required: true
+          type: number
+        - in: body
+          name: body
+          required: true
+          description: Topic parameters
+          schema:
+            $ref: '#/definitions/AdminUpdateTopicBodyParam'
+      responses:
+        '200':
+          description: Success. Returns newly created topic
+          schema:
+            $ref: "#/definitions/NewTopicResponse"
+        '400':
+          $ref: "#/responses/ValidationFailure"
+        '403':
+          $ref: "#/responses/InvalidAccess"
+        '500':
+          $ref: "#/responses/UnexpectedFailure"
+          
+  /topics/health:
+    post:
+      tags:
+        - Others
+      operationId: checkHealth
+      summary: Check health
+      description: Check the server health
+      responses:
+        '200':
+          description: Success. Returns Server state.
+          schema:
+            properties:
+              message:
+                type: string
+        '400':
+          $ref: "#/responses/ValidationFailure"
+        '500':
+          $ref: "#/responses/UnexpectedFailure"
+  /topics/esindex:
+    post:
+      tags:
+        - Others
+      operationId: adminUpdateTopicToEs
+      security:
+        - Bearer: []
+      summary: Update topic to es
+      description: Update the topics from database to elasticsearch.
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: '#/definitions/UpdateEsIndexBodyParam'
+      responses:
+        '200':
+          description: Success. Returns update result
+          schema:
+            properties:
+              message:
+                type: string
+        '400':
+          $ref: "#/responses/ValidationFailure"
+        '403':
+          $ref: "#/responses/InvalidAccess"
+        '500':
+          $ref: "#/responses/UnexpectedFailure"
 definitions:
   NewTopicBodyParam:
     type: object
@@ -521,6 +718,11 @@ definitions:
       referenceId:
         type: string
         description: id of entity with which the topic is associated, e.g. '455'.
+      attachmentIds:
+        type: array
+        items:
+          type: number
+        description: attachment id of entity with which the topic is associated.
       tag:
         type: string
         description: tag field of the topic, e.g. 'PRIMARY'
@@ -547,7 +749,138 @@ definitions:
       content:
         type: string
         description: body of the topic/message
-
+      attachmentIds:
+        type: array
+        items:
+          type: number
+        description: attachment id of entity with which the topic is associated.
+  AdminUpdateOwnershipBodyParam:
+    type: object
+    required:
+      - userId
+      - topicId
+    properties:
+      postId:
+        type: number
+      userId:
+        type: number
+      topicId:
+        type: number
+  AdminCreatePostStatsBodyParam:
+    type: object
+    required:
+      - postId
+      - userId
+      - topicId
+      - action
+    properties:
+      postId:
+        type: number
+      userId:
+        type: number
+      topicId:
+        type: number
+      action:
+        type: string
+  NewPostUserStatsResponse:
+    type: object
+    properties:
+      postId:
+        type: number
+      userIds:
+        type: array
+        items:
+          type: string
+      topicId:
+        type: number
+      action:
+        type: string
+  AdminUpdateTopicBodyParam:
+    type: object
+    required:
+       - topic
+    properties:
+      topic:
+        type: object
+        properties:
+          title:
+            type: string
+            description: title of the topic
+          reference:
+            type: string
+          referenceId:
+            type: string
+          tag:
+            type: string
+          createdAt:
+            type: string
+            format: date
+          createdBy:
+            type: number
+          updatedAt:
+            type: string
+            format: date
+          updatedBy:
+            type: number
+          highestPostNumber:
+            type: number
+          closed:
+            type: boolean
+          hidden:
+            type: boolean
+          archived:
+            type: boolean
+          hiddenReason:
+            type: string
+          deletedAt:
+            type: string
+            format: date
+          deletedBy:
+            type: number
+  AdminUpdatePostBodyParam:
+    type: object
+    required:
+       - topicId
+       - post
+    properties:
+      topicId:
+        type: number
+        description: the id of topic
+      post:
+        type: object
+        properties:
+          raw:
+            type: string
+          cooked:
+            type: string
+          topicId:
+            type: number
+          postNumber:
+            type: number
+          viaEmail:
+            type: boolean
+          rawEmail:
+            type: string
+          hidden:
+            type: boolean
+          hiddenReason:
+            type: string
+          createdAt:
+            type: string
+            format: date
+          createdBy:
+            type: number
+          updatedAt:
+            type: string
+            format: date
+          updatedBy:
+            type: number
+          deletedAt:
+            type: string
+            format: date
+          deletedBy:
+            type: number
+            
   NewPostBodyParam:
     type: object
     required:
@@ -556,6 +889,37 @@ definitions:
       post:
         type: string
         description: content of the post
+      attachmentIds:
+        type: array
+        items:
+          type: number
+        description: attachment id of the post associated.
+  UpdateOwnershipResponse:
+    type: object
+    properties:
+      id:
+        type: string
+        description: unique id identifying the request
+      version:
+        type: string
+        description: the api version
+      result:
+        type: object
+        properties:
+          success:
+            type: boolean
+            description: whether the result is successful
+          status:
+            description: http status code
+            type: integer
+            format: int32
+          metadata:
+            type: object
+            description: result metadata
+          content:
+            allOf:
+              - $ref: "#/definitions/TopicObject"
+              - $ref: "#/definitions/PostObject"
 
   NewTopicResponse:
     type: object
@@ -665,7 +1029,7 @@ definitions:
     properties:
       id:
         type: string
-        description: identifier for topic in Discourse
+        description: identifier for topic
       title:
         type: string
         description: title of the topic
@@ -807,19 +1171,6 @@ definitions:
         description: The path to the file (in the source bucket)
         type: "string"
         example: "sub_directory"
-        
-  getAttachmentBody:
-    description: Get Attachment body
-    properties:
-      postId:
-        type: number
-  
-  deleteAttachmentBody:
-    properties:
-      postId:
-        type: number
-      hardDelete:
-        type: boolean
 
   CreateAttachmentResponse:
     type: object
@@ -912,91 +1263,6 @@ definitions:
             type: string
             description: error message
   
-  DiscourseTopicBodyParam:
-    type: object
-    required: [post]
-    properties:
-      id:
-        type: number
-        description: identifier for topic in Discourse
-      title:
-        type: string
-        description: title of the topic
-      username:
-        type: string
-        description: user created the topic
-      reads:
-        type: integer
-        description: topic read count
-      view:
-        type: integer
-        description: views count
-      reply_count:
-        type: integer
-        description: replies count
-      posts_count:
-        type: integer
-        description: count of the posts in the topic
-      created_at:
-        type: string
-        description: created timestamp
-      visible:
-        type: boolean
-        description: visibility flag
-      closed:
-        type: boolean
-        description: flag to indicate closed topic
-      archived:
-        type: boolean
-        description: flag to indicate archived topic
-      user_id:
-        type: number
-        description: id of the topic author
-  
-  DiscoursePostBodyParam:
-    type: object
-    description: Discourse post object
-    properties:
-      id:
-        type: integer
-        description: identifier for post in Discourse
-      name:
-        type: string
-        description: post name
-      username:
-        type: string
-        description: post user name
-      user_id:
-        type: number
-        description: id of the post author
-      created_at:
-        type: string
-        description: created timestamp
-      post_number:
-        type: integer
-        description: post number
-      post_type:
-        type: integer
-        description: post type
-      updated_at:
-        type: string
-        description: updated timestamp
-      reply_count:
-        type: integer
-        description: replies count
-      reply_to_post_number:
-        type: integer
-        description: reply to post number
-      cooked:
-        type: string
-        description: post body
-      reads:
-        type: integer
-        description: post read count
-      score:
-        type: number
-        description: post score
-
   ObjectWithMessage:
     type: object
     properties:
@@ -1007,41 +1273,29 @@ definitions:
   SendgridBodyParam:
     type: object
     properties:
-      headers:
-        type: string
-        description: 'email headers'
-      dkim:
-        type: string
-      to:
-        type: string
-        description: 'to email addresses'
-      html:
-        type: string
-        description: 'HTML content of the email'
-      from:
-        type: string
-        description: 'from email address'
       text:
         type: string
         description: 'text content of the email'
-      nsender_ip:
-        type: string
-      nspam_report:
-        type: string
       envelope:
         type: string
         description: 'Serialized JSON string'
-      attachments:
-        type: string
       subject:
         type: string
         description: 'Subject of the email'
-      spam_score:
+      cc:
         type: string
-      charsets:
+        description: 'CC addresses'
+        
+  UpdateEsIndexBodyParam:
+    type: object
+    properties:
+      reference:
         type: string
-        description: 'Serialized JSON string'
-      nSPF:
+      referenceId:
+        type: string
+      from:
+        type: string
+      to:
         type: string
 
 responses:

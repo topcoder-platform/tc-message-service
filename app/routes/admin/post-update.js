@@ -1,6 +1,6 @@
 
-import _ from 'lodash';
-import HelperService from '../../services/helper';
+const _ = require('lodash');
+const HelperService = require('../../services/helper');
 
 const config = require('config');
 const util = require('tc-core-library-js').util(config);
@@ -27,7 +27,6 @@ module.exports = (db, m2m) => (req, resp, next) => {
     post: Joi.object().keys({
       raw: Joi.string(),
       cooked: Joi.string(),
-      discoursePostId: Joi.number(),
       topicId: Joi.number(),
       postNumber: Joi.number(),
       viaEmail: Joi.boolean(),
@@ -80,7 +79,7 @@ module.exports = (db, m2m) => (req, resp, next) => {
           .then(() => {
             logger.info('updating topic post');
             // create new post
-            return db.posts.createPost(db, lastPost.raw, dbTopic, null, userId)
+            return db.posts.createPost(db, lastPost.raw, dbTopic, userId)
               .then((createdTopicPost) => {
                 if (!createdTopicPost) {
                   return next(new errors.HttpStatusError(500, 'Error updating topic post'));

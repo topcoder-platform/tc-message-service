@@ -1,5 +1,5 @@
-import elasticsearch from 'elasticsearch';
-// import AWS from 'aws-sdk';
+const elasticsearch = require('elasticsearch');
+// const AWS = require('aws-sdk');
 
 const _ = require('lodash');
 const config = require('config');
@@ -48,10 +48,10 @@ _.assign(util, {
         timeout: 4000,
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       })
-    .then((res) => {
-      token = res.data.result.content.token;
-      return token;
-    });
+      .then((res) => {
+        token = res.data.result.content.token;
+        return token;
+      });
   },
 
   /**

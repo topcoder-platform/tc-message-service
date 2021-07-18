@@ -1,10 +1,10 @@
-import errors from 'common-errors';
+const errors = require('common-errors');
 
-import config from 'config';
+const config = require('config');
 
-import Adapter from '../../services/adapter';
+const Adapter = require('../../services/adapter');
 
-import HelperService from '../../services/helper';
+const HelperService = require('../../services/helper');
 
 const _ = require('lodash');
 

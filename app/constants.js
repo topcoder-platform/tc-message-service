@@ -27,12 +27,6 @@ module.exports = {
     POST_DELETED: 'connect.notification.project.post.deleted',
   },
 
-  DISCOURSE_WEBHOOK_STATUS: {
-    PENDING: 'pending',
-    COMPLETED: 'completed',
-    ERROR: 'error',
-  },
-
   TOKEN_SCOPES: {
     CONNECT_PROJECT_ADMIN: 'all:connect_project',
   },

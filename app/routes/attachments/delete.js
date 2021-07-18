@@ -19,7 +19,7 @@ const HttpStatusError = errors.HttpStatusError;
  */
 module.exports = (db, m2m) =>
   /**
-   * Upload image to Discourse
+   * Upload image to s3
    */
   (req, resp, next) => {
     const logger = req.log;
