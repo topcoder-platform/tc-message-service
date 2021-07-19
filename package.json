@@ -35,8 +35,8 @@
     "clean-attachments": "env-cmd node ./scripts/cleanPostAttachments.js",
     "start": "node app/index.js",
     "start:dev": "NODE_ENV=local PORT=8001 env-cmd nodemon app/index.js",
-    "test": "npm run lint && LOG_LEVEL=debug NODE_ENV=test TC_MESSAGE_SERVICE_AUTH_LOOSE=true env-cmd istanbul cover -x '*.spec.js' _mocha -- --timeout 5000 $(find app -path '*.spec.js')",
-    "test:watch": "NODE_ENV=test env-cmd mocha $(find app -name '*.spec.js')"
+    "test": "npm run lint && LOG_LEVEL=debug NODE_ENV=test TC_MESSAGE_SERVICE_AUTH_LOOSE=true env-cmd --verbose --silent istanbul cover -x '*.spec.js' _mocha -- --timeout 5000 $(find app -path '*.spec.js')",
+    "test:watch": "NODE_ENV=test env-cmd --verbose --silent mocha $(find app -name '*.spec.js')"
   },
   "dependencies": {
     "aws-sdk": "^2.200.0",
