@@ -1,0 +1,11 @@
+module.exports = {
+  aws: {
+    config: {
+      region: 'us-east-1',
+    },
+    S3: {
+      targetBucket: 'topcoder-prod-media',
+      storageDir: 'tc-message-service',
+    },
+  },
+};

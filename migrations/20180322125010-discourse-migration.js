@@ -36,6 +36,11 @@ module.exports = {
           type: Sequelize.TEXT,
           allowNull: true,
         },
+        // discourse post id for mapping updates in posts via discourse webhook
+        discoursePostId: {  
+          type: Sequelize.BIGINT,
+          allowNull: true,
+        },
         // topic id
         topicId: {
           type: Sequelize.BIGINT,
@@ -201,6 +206,14 @@ module.exports = {
           type: Sequelize.STRING
         }
       ),
+      queryInterface.changeColumn(
+        'topics',
+        'discourseTopicId',
+        {
+          type: Sequelize.BIGINT,
+          allowNull: true,
+        }
+      ),
       queryInterface.addColumn(
         'topics',
         'deletedAt',
@@ -250,6 +263,14 @@ module.exports = {
       queryInterface.removeColumn('topics', 'hiddenReason'),
       queryInterface.removeColumn('topics', 'deletedAt'),
       queryInterface.removeColumn('topics', 'deletedBy'),
+      queryInterface.changeColumn(
+        'topics',
+        'discourseTopicId',
+        {
+          type: Sequelize.BIGINT,
+          allowNull: false,
+        }
+      ),
     ];
   }
 };

@@ -18,6 +18,10 @@ module.exports = {
                 type: Sequelize.STRING,
                 allowNull: false
             },
+            discourseTopicId: {  
+                type: Sequelize.BIGINT,
+                allowNull: false
+            },
             tag: {  
                 type: Sequelize.STRING
             },

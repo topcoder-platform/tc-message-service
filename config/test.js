@@ -1,0 +1,11 @@
+module.exports = {
+  authDomain: 'topcoder-dev.com',
+  identityServiceEndpoint: 'http://test1/',
+  dbConfig: {
+    masterUrl: 'postgres://coder:mysecretpassword@local.topcoder-dev.com:5432/messages_test',
+  },
+  elasticsearchConfig: {
+    host: 'http://localhost:9200',
+    indexName: 'elastic_search_index_test',
+  },
+};
