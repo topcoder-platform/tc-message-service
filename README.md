@@ -154,7 +154,7 @@
 5. 🚀 Start tc message service
 
    ```bash
-   npm run start:dev
+   npm run dev
    ```
 
    Runs the tc message service using nodemon, so it would be restarted after any of the files is updated.
