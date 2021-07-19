@@ -46,10 +46,6 @@ jobs:
             - node_modules
       - run: npm run lint
       - run: npm run test
-      - persist_to_workspace:
-          root: .
-          paths:
-            - dist
 
   deployDev:
     <<: *defaults
