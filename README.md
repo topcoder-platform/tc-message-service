@@ -149,6 +149,7 @@
 
    This command will do 3 things:
 
+   - create Elasticsearch indexes (drop if exists)
    - create Database tables (drop if exists)
    - import demo data to Database (clears any existent data if exist)
 
@@ -171,6 +172,9 @@
 | `npm run start:dev`                                                                                                       | Start app in the development mode using `nodemon`.                                                                                          |
 | `npm run test`                                                                                                            | Run tests.                                                                                                                                  |
 | `npm run test:watch`                                                                                                      | Run tests and watch.                                                                                        |
+| `npm run create-index`                                                                                                    | Create Elasticsearch indexes. Use `-- --force` flag to skip confirmation                                                                           |
+| `npm run delete-index`                                                                                                    | Delete Elasticsearch indexes. Use `-- --force` flag to skip confirmation          |
+| `npm run reset-index`                                                                                                     | Reset Elasticsearch indexes. Use `-- --force` flag to skip confirmation   |
 | `npm run db:reset`                                                                                                        | Initializes/resets Database.                                                                                                  |
 | `npm run data:import <filePath>`                                                                                          | Imports data into ES and db from filePath (`./data/demo-data.json` is used as default). Use `-- --force` flag to skip confirmation                 |
 | `npm run data:export <filePath>`                                                                                          | Exports data from ES and db into filePath (`./data/demo-data.json` is used as default). Use `-- --force` flag to skip confirmation                 |

@@ -1,4 +1,5 @@
 const Confirm = require('prompt-confirm');
+const esClient = require('../app/elasticSearchConnection');
 
 /**
  * Prompt the user with a y/n query and call a callback function based on the answer
@@ -34,7 +35,35 @@ function getParamFromCliArgs() {
   return null;
 }
 
+/**
+ * Create index in elasticsearch
+ * @param {Object} index the index name
+ * @param {Object} logger the logger object
+ */
+ async function createIndex (index, logger) {
+  await esClient.indices.create({ index })
+  logger.info({
+    component: 'createIndex',
+    message: `ES Index ${index} creation succeeded!`
+  })
+}
+
+/**
+ * Delete index in elasticsearch
+ * @param {Object} index the index name
+ * @param {Object} logger the logger object
+ */
+ async function deleteIndex (index, logger) {
+  await esClient.indices.delete({ index })
+  logger.info({
+    component: 'deleteIndex',
+    message: `ES Index ${index} deletion succeeded!`
+  })
+}
+
 module.exports = {
   promptUser,
   getParamFromCliArgs,
+  deleteIndex,
+  createIndex,
 };
