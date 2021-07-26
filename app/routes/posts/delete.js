@@ -8,7 +8,7 @@ const Adapter = require('../../services/adapter');
 const HelperService = require('../../services/helper');
 
 /**
- * Delete a post in Discourse
+ * Delete a post
  * @param {Object} db sequelize db with models loaded
  * @param {Object} m2m machine to machine token helper object
  * @return {Object} response

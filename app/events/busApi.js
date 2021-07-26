@@ -1,7 +1,6 @@
-import _ from 'lodash';
-import 'config';
-import { EVENT, BUS_API_EVENT } from '../constants';
-import { createEvent } from '../services/busApi';
+const _ = require('lodash');
+const { EVENT, BUS_API_EVENT } = require('../constants');
+const { createEvent } = require('../services/busApi');
 
 module.exports = (app, db, logger) => {
   app.on(EVENT.TOPIC_CREATED, ({ topic, userId }) => {

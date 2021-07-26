@@ -1,4 +1,4 @@
-import { prepareDB, clearDB } from '../tests';
+const { prepareDB, clearDB } = require('../tests');
 
 const server = require('../app');
 const models = require('../models');

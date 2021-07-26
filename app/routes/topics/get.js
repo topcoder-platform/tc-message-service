@@ -1,6 +1,6 @@
-import errors from 'common-errors';
-import config from 'config';
-import HelperService from '../../services/helper';
+const errors = require('common-errors');
+const config = require('config');
+const HelperService = require('../../services/helper');
 
 const util = require('tc-core-library-js').util(config);
 const esClient = require('./../../elasticSearchConnection');
@@ -61,19 +61,20 @@ module.exports = (db, m2m) =>
       }
 
       return helper.callReferenceEndpoint(req.authToken, req.id, dbTopic.reference, dbTopic.referenceId)
-      .then(async (hasAccessResp) => {
-        const tags = _.split(dbTopic.tag, ',');
-        const hasAccess = await helper.userHasAccessToEntity(userId, hasAccessResp, tags, dbTopic.reference);
-        if (!hasAccess && !helper.isAdmin(req)) {
-          throw new errors.HttpStatusError(403, 'User doesn\'t have access to the entity');
-        }
+        .then(async (hasAccessResp) => {
+          const tags = _.split(dbTopic.tag, ',');
+          const hasAccess = await helper.userHasAccessToEntity(userId, hasAccessResp, tags, dbTopic.reference);
+          if (!hasAccess && !helper.isAdmin(req)) {
+            throw new errors.HttpStatusError(403, 'User doesn\'t have access to the entity');
+          }
 
-        logger.debug('returning topic');
-        return dbTopic;
-      })
-      .then(result => resp.status(200).send(util.wrapResponse(req.id, result)));
+          logger.debug('returning topic');
+          return dbTopic;
+        })
+        .then(result => resp.status(200).send(util.wrapResponse(req.id, result)));
     })
-    .catch((error) => {
-      next(error instanceof errors.HttpStatusError ? error : new errors.HttpStatusError(500, 'Error fetching topics'));
-    });
+      .catch((error) => {
+        next(error instanceof errors.HttpStatusError ? error : new errors.HttpStatusError(500,
+           'Error fetching topics'));
+      });
   };

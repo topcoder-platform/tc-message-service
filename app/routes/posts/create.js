@@ -8,7 +8,7 @@ const Joi = require('joi');
 const { EVENT } = require('../../constants');
 
 /**
- * Creates a new post to a topic in Discourse
+ * Creates a new post to a topic
  * @param {Object} db sequelize db with models loaded
  * @param {Object} m2m machine to machine token helper object
  * @return {object} response
@@ -41,7 +41,7 @@ module.exports = (db, m2m) => (req, resp, next) => {
         throw new errors.HttpStatusError(403, 'User doesn\'t have access to the entity');
       }
 
-      return db.posts.createPost(db, postBody, topic, null, userId).then(async (updatedPost) => {
+      return db.posts.createPost(db, postBody, topic, userId).then(async (updatedPost) => {
         logger.info('post created');
         savedPost = updatedPost;
 

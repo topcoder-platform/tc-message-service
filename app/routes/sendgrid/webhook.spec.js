@@ -1,4 +1,4 @@
-import { clearDB, prepareDB, findLast } from '../../tests';
+const { clearDB, prepareDB, findLast } = require('../../tests');
 
 // const Promise = require('bluebird');
 const jwt = require('jsonwebtoken');
@@ -44,9 +44,9 @@ xdescribe('POST /v4/webhooks/topics/sendgrid', () => {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       };
       postStub.withArgs(authUrl, authStr, getAuthOpts)
-              .resolves({
-                data: { result: { status: 200, content: { token: 'mock' } } },
-              });
+        .resolves({
+          data: { result: { status: 200, content: { token: 'mock' } } },
+        });
 
       const getUsersOpts = {
         headers: {
@@ -102,9 +102,9 @@ xdescribe('POST /v4/webhooks/topics/sendgrid', () => {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       };
       postStub.withArgs(authUrl, authStr, getAuthOpts)
-              .resolves({
-                data: { result: { status: 200, content: { token: 'mock' } } },
-              });
+        .resolves({
+          data: { result: { status: 200, content: { token: 'mock' } } },
+        });
 
       const getUsersOpts = {
         headers: {

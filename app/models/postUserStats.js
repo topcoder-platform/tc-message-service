@@ -1,6 +1,6 @@
 'user strict';
 
-import _ from 'lodash';
+const _ = require('lodash');
 
 /**
  * Represents statistics of a post for single user.

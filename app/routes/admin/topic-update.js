@@ -1,5 +1,5 @@
 
-import HelperService from '../../services/helper';
+const HelperService = require('../../services/helper');
 
 const config = require('config');
 const util = require('tc-core-library-js').util(config);
@@ -24,7 +24,6 @@ module.exports = (db, m2m) => (req, resp, next) => {
     topic: Joi.object().keys({
       reference: Joi.string(),
       referenceId: Joi.string(),
-      discourseTopicId: Joi.number(),
       tag: Joi.string(),
       createdAt: Joi.date(),
       createdBy: Joi.number(),

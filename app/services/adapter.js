@@ -11,7 +11,7 @@ const CODERBOT_USERNAME = config.get('coderBotUsername');
 const handleMap = { system: 'system' };
 handleMap[CODERBOT_USERNAME] = CODERBOT_USERNAME;
 
-function Adapter(logger, db, _discourseClient = null) {// eslint-disable-line
+function Adapter(logger, db) {// eslint-disable-line
   const helper = Helper(logger);
 
   this.userIdLookup = function userIdLookup(handle) {

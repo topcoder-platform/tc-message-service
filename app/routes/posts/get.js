@@ -1,4 +1,4 @@
-import HelperService from '../../services/helper';
+const HelperService = require('../../services/helper');
 
 const config = require('config');
 const util = require('tc-core-library-js').util(config);
@@ -21,35 +21,35 @@ module.exports = (db, m2m) => (req, resp, next) => {
   // Get the posts as the system user if the logged is user is an admin
   const userId = req.authUser.userId.toString();
   return db.topics.findOne({ where: { id: topicId }, raw: true })
-  .then((topic) => {
-    if (!topic) {
-      const err = new errors.HttpStatusError(404, 'Topic does not exist');
-      return next(err);
-    }
-    return helper.callReferenceEndpoint(req.authToken, req.id, topic.reference, topic.referenceId)
-    .then(async (hasAccessResp) => {
-      const hasAccess = await helper.userHasAccessToEntity(userId, hasAccessResp, topic.tags, topic.reference);
-      if (!hasAccess && !helper.isAdmin(req)) {
-        throw new errors.HttpStatusError(403, 'User doesn\'t have access to the entity');
+    .then((topic) => {
+      if (!topic) {
+        const err = new errors.HttpStatusError(404, 'Topic does not exist');
+        return next(err);
       }
-      return db.posts.findPost(db, adapter, { topicId, postId }, { raw: false })
-      .then((post) => {
-        if (!post) {
-          throw new errors.HttpStatusError(404, 'Post does not exist');
-        }
-        logger.debug('Fetched post', post);
-        // marks each post a read for the request user, however, ideally they should be marked
-        // as read only after user has actually seen them in UI because UI might not be showing all posts
-        // at once
-        db.post_user_stats.updateUserStats(db, logger, [post], userId, 'READ');
-        // return adapter.adaptPost(response);
-        return post;
-      })
-      .then(post => resp.status(200).send(util.wrapResponse(req.id, post)));
+      return helper.callReferenceEndpoint(req.authToken, req.id, topic.reference, topic.referenceId)
+        .then(async (hasAccessResp) => {
+          const hasAccess = await helper.userHasAccessToEntity(userId, hasAccessResp, topic.tags, topic.reference);
+          if (!hasAccess && !helper.isAdmin(req)) {
+            throw new errors.HttpStatusError(403, 'User doesn\'t have access to the entity');
+          }
+          return db.posts.findPost(db, adapter, { topicId, postId }, { raw: false })
+            .then((post) => {
+              if (!post) {
+                throw new errors.HttpStatusError(404, 'Post does not exist');
+              }
+              logger.debug('Fetched post', post);
+              // marks each post a read for the request user, however, ideally they should be marked
+              // as read only after user has actually seen them in UI because UI might not be showing all posts
+              // at once
+              db.post_user_stats.updateUserStats(db, logger, [post], userId, 'READ');
+              // return adapter.adaptPost(response);
+              return post;
+            })
+            .then(post => resp.status(200).send(util.wrapResponse(req.id, post)));
+        });
+    })
+    .catch((error) => {
+      logger.error(error);
+      next(error instanceof errors.HttpStatusError ? error : new errors.HttpStatusError(500, 'Error fetching post'));
     });
-  })
-  .catch((error) => {
-    logger.error(error);
-    next(error instanceof errors.HttpStatusError ? error : new errors.HttpStatusError(500, 'Error fetching post'));
-  });
 };

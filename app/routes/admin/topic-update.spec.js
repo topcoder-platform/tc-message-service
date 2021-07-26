@@ -1,7 +1,7 @@
 /* eslint-disable no-unused-expressions, newline-per-chained-call */
 
-import _ from 'lodash';
-import { clearDB, prepareDB, jwts, getDecodedToken } from '../../tests';
+const _ = require('lodash');
+const { clearDB, prepareDB, jwts, getDecodedToken } = require('../../tests');
 
 const request = require('supertest');
 const server = require('../../app');
@@ -38,7 +38,6 @@ describe('POST /v5/topics/admin/topics/:topicId/edit ', () => {
     topic: {
       reference: 'submission',
       referenceId: 'referenceId2',
-      discourseTopicId: 123456789,
       tag: 'tag2',
       createdAt: yesterday.toISOString(),
       createdBy: parseInt(getDecodedToken(jwts.manager).userId, 10),
@@ -270,8 +269,7 @@ describe('POST /v5/topics/admin/topics/:topicId/edit ', () => {
           .then((updatedTopic) => {
             // changed elements keys
             const keys = _.keys(_.omit(testBody2.topic,
-              ['discourseTopicId',
-                'updatedAt',
+              ['updatedAt',
                 'updatedBy',
                 'deletedAt',
                 'deletedBy',

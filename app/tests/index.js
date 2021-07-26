@@ -65,6 +65,7 @@ function clearDBPromise() {
         {
           index: config.get('elasticsearchConfig.indexName'),
           type: 'topic',
+          conflicts: 'proceed',
           body: { query: {
             match_all: {},
           } },
@@ -86,7 +87,6 @@ function prepareDB(done) {
       // id: 1,
       reference: 'project',
       referenceId: 'referenceId',
-      discourseTopicId: 1,
       tags: ['tag'],
       title: 'Mock topic title',
       createdBy: userIds.member,
@@ -95,7 +95,6 @@ function prepareDB(done) {
       // id: 1,
       reference: 'project',
       referenceId: 'referenceId1',
-      discourseTopicId: 100,
       tags: ['tag', 'MESSAGES'],
       title: 'Mock topic title2',
       createdBy: userIds.admin,

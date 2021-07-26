@@ -1,4 +1,4 @@
-import HelperService from '../../services/helper';
+const HelperService = require('../../services/helper');
 
 const _ = require('lodash');
 const config = require('config');

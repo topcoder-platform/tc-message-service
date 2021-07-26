@@ -1,7 +1,7 @@
 
 /* eslint-disable no-unused-expressions, newline-per-chained-call */
 
-import { clearDB, prepareDB, jwts, getDecodedToken } from '../../tests';
+const { clearDB, prepareDB, jwts, getDecodedToken } = require('../../tests');
 
 const models = require('../../models');
 

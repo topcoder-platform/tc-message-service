@@ -1,0 +1,6 @@
+connect.notification.project.topic.created
+connect.notification.project.topic.updated
+connect.notification.project.topic.deleted
+connect.notification.project.post.created
+connect.notification.project.post.edited
+connect.notification.project.post.deleted

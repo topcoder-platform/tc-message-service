@@ -1,5 +1,5 @@
 
-import HelperService from '../../services/helper';
+const HelperService = require('../../services/helper');
 
 const config = require('config');
 const util = require('tc-core-library-js').util(config);

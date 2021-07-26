@@ -1,7 +1,7 @@
 
 /* eslint-disable no-unused-expressions, newline-per-chained-call */
 
-import { clearDB, prepareDB, jwts, getDecodedToken } from '../../tests';
+const { clearDB, prepareDB, jwts, getDecodedToken } = require('../../tests');
 
 
 const models = require('../../models');
@@ -43,8 +43,8 @@ describe('GET /v4/topics/:topicId/posts/:postId', () => {
 
   it('should return 403 response without a jwt token', (done) => {
     request(server)
-            .get(apiPath)
-            .expect(403, done);
+      .get(apiPath)
+      .expect(403, done);
   });
 
   it('should return 403 response with invalid jwt token', (done) => {

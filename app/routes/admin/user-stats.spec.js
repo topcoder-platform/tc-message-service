@@ -1,7 +1,7 @@
 /* eslint-disable no-unused-expressions, newline-per-chained-call */
 
-import _ from 'lodash';
-import { prepareDB, clearDB, jwts, getDecodedToken } from '../../tests';
+const _ = require('lodash');
+const { prepareDB, clearDB, jwts, getDecodedToken } = require('../../tests');
 
 const request = require('supertest');
 const server = require('../../app');

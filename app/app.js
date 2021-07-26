@@ -1,14 +1,14 @@
 
 
 // Dependencies
-import express from 'express';
-import config from 'config';
-import _ from 'lodash';
-import bodyParser from 'body-parser';
-import cookieParser from 'cookie-parser';
-import expressRequestId from 'express-request-id';
-import cors from 'cors';
-import busApi from './events/busApi';
+const express = require('express');
+const config = require('config');
+const _ = require('lodash');
+const bodyParser = require('body-parser');
+const cookieParser = require('cookie-parser');
+const expressRequestId = require('express-request-id');
+const cors = require('cors');
+const busApi = require('./events/busApi');
 
 const coreLib = require('tc-core-library-js');
 const Routes = require('./routes');

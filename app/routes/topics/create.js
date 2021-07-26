@@ -20,8 +20,6 @@ module.exports = (db, m2m) =>
   /**
    * Create a new topic for the specified entity.
    *  - Verify if the user has access to the entity (callReferenceEndpoint function), if the user doesn't have access return 403;
-   *  - Try to create a private message in Discourse (createPrivatePost in discourse.js);
-   *  - If it fails, check if the user exists in Discourse, if the user doesn't exist, provision it, and try to create the private message again;
    *  - Set system, and the current user as the users in the post;
    *  - Return the newly created topic.
    * params: standard express parameters
@@ -66,7 +64,7 @@ module.exports = (db, m2m) =>
         return database.transaction(trans =>
           db.topics.createTopic(db, pgTopic, userId, trans).then((savedTopic) => { /* eslint no-param-reassign: ["error", { "props": true, "ignorePropertyModificationsFor": ["savedTopic"] }] */
             logger.debug('topic saved in Postgres: ', savedTopic);
-            return db.posts.createPost(db, params.body, savedTopic, null, userId, trans).then((savedPost) => {
+            return db.posts.createPost(db, params.body, savedTopic, userId, trans).then((savedPost) => {
               logger.info('post saved in Postgres', savedPost);
               const topic = savedTopic.dataValues;
               const post = savedPost.dataValues;

@@ -1,6 +1,6 @@
 /* eslint-disable no-unused-expressions, newline-per-chained-call */
 
-import { clearDB, getDecodedToken, jwts, prepareDB } from '../../tests';
+const { clearDB, getDecodedToken, jwts, prepareDB } = require('../../tests');
 
 const axios = require('axios');
 const request = require('supertest');
@@ -251,7 +251,7 @@ describe('GET /v4/topics/attachments/:attachmentId', () => {
               return done(err);
             }
             res.body.should.have.propertyByPath('result', 'content', 'url')
-            .eql('https://s3.com/1/attachment.jpg?signedParam=true');
+              .eql('https://s3.com/1/attachment.jpg?signedParam=true');
             return done();
           });
       });

@@ -1,5 +1,5 @@
-import formidable from 'express-formidable';
-import compression from 'compression';
+const formidable = require('express-formidable');
+const compression = require('compression');
 
 const router = require('express').Router();
 const config = require('config');
@@ -32,12 +32,8 @@ const updatePostHandler = require('./posts/update');
 const deletePostHandler = require('./posts/delete');
 
 const webhookPostHandler = require('./sendgrid/webhook');
-const discourseWebhookPostHandler = require('./discourse/webhook');
 
 const elasticSearchIndexHandler = require('./indexing/indexing');
-
-const SecurityHelper = require('../services/security');
-
 
 const jwt = require('jsonwebtoken');
 
@@ -59,34 +55,6 @@ module.exports = (logger, db, m2m) => {
 
   // all project service endpoints need authentication
   const jwtAuth = tcCoreLib.middleware.jwtAuthenticator;
-
-  // discourse webhook with custom auth logic
-  router.route(`/${apiVersion}/topics/webhooks/discourse`).post((req, res, next) => {
-    const markUnauthorized = (request, response, message) => {
-      logger.warn(message);
-      response.status(403).json(util.wrapErrorResponse(request.id, 403, 'Invalid token issuer.'));
-      response.send();
-    };
-    const discourseToken = req.header('x-discourse-event-signature');
-    const discourseEvent = req.header('x-discourse-event');
-    const allowedEvents = ['post_created', 'post_edited', 'topic_created', 'topic_edited'].indexOf(discourseEvent) >= 0;
-
-    if (discourseToken) {
-      const token = SecurityHelper.calculateHmac(req.rawBody || '', 'sha256=');
-      if (discourseToken === token) {
-        if (allowedEvents) {
-          discourseWebhookPostHandler(db)(req, res, next);
-        } else {
-          logger.info(`Discourse Webhook Event Ignored: { event: ${discourseEvent} }`);
-          res.status(200).send();
-        }
-      } else {
-        markUnauthorized(req, res, 'Invalid token.');
-      }
-    } else {
-      markUnauthorized(req, res, 'Missing token.');
-    }
-  });
 
   router.all(RegExp(`\\/${apiVersion}\\/topics\\/(?!webhooks|!health).*`), (req, res, next) => {
     if (`${process.env.TC_MESSAGE_SERVICE_AUTH_LOOSE}` !== 'true') {
@@ -174,7 +142,7 @@ module.exports = (logger, db, m2m) => {
   router.route(`/${apiVersion}/topics/webhooks/sendgrid`)
     .post(webhookPostHandler(db, m2m));
   router.route(`/${apiVersion}/topics/esindex`)
-  .post(elasticSearchIndexHandler(db, m2m));
+    .post(elasticSearchIndexHandler(db, m2m));
 
 
   // register error handler

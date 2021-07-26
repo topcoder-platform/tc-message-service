@@ -1,7 +1,7 @@
 
 /* eslint-disable no-unused-expressions, newline-per-chained-call */
 
-import { clearDB, prepareDB, jwts, getDecodedToken } from '../../tests';
+const { clearDB, prepareDB, jwts, getDecodedToken } = require('../../tests');
 
 
 const models = require('../../models');
@@ -24,13 +24,13 @@ function assertTopicAndPost(topicId, assertCallback, done) {
     db.topics.findById(topicId),
     db.posts.findOne({ topicId }),
   ])
-  .then((response) => {
-    const topic = response[0];
-    const topicPost = response[1];
-    assertCallback(topic, topicPost);
-    return done();
-  })
-  .catch(() => done());
+    .then((response) => {
+      const topic = response[0];
+      const topicPost = response[1];
+      assertCallback(topic, topicPost);
+      return done();
+    })
+    .catch(() => done());
 }
 
 describe('GET /v5/topics/:topicId/db', () => {
@@ -194,7 +194,7 @@ describe('GET /v5/topics/:topicId/db', () => {
           res.body.should.have.propertyByPath('result', 'content', '0', 'reference').eql('project');
           // console.log(topicPost.updatedAt, 'updatedAt');
           res.body.should.have.propertyByPath('result', 'content', '0', 'lastActivityAt')
-          .eql(topicPost.updatedAt);
+            .eql(topicPost.updatedAt);
         }, done);
       });
   });
@@ -233,7 +233,7 @@ describe('GET /v5/topics/:topicId/db', () => {
           res.body.should.have.propertyByPath('result', 'content', '0', 'reference').eql('project');
           // console.log(topicPost.updatedAt, 'updatedAt');
           res.body.should.have.propertyByPath('result', 'content', '0', 'lastActivityAt')
-          .eql(topicPost.updatedAt);
+            .eql(topicPost.updatedAt);
         }, done);
       });
   });

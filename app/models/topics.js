@@ -29,12 +29,6 @@ module.exports = (Sequelize, DataTypes) => {
       type: DataTypes.STRING,
       allowNull: false,
     },
-    // The id of the Discourse topic
-    // DEPRICATED, only exists for backward compatability
-    discourseTopicId: {
-      type: DataTypes.BIGINT,
-      allowNull: true,
-    },
     // tags for filtering
     tags: {
       type: DataTypes.ARRAY(DataTypes.STRING),
@@ -98,7 +92,6 @@ module.exports = (Sequelize, DataTypes) => {
     const dbTopic = models.topics.build({
       reference: topic.reference,
       referenceId: topic.referenceId,
-      discourseTopicId: topic.discourseTopicId,
       title: topic.title,
       tags: topic.tags,
       hidden: false,

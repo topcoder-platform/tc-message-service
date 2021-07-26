@@ -13,7 +13,7 @@
     {
       "id": 4,
       "name": "Leader",
-      "description": "<a href=\"https://meta.discourse.org/t/what-do-user-trust-levels-do/4924/7\">Granted</a> global edit, pin, close, archive, split and merge, more likes",
+      "description": "<a href=\"https://meta.topic.org/t/what-do-user-trust-levels-do/4924/7\">Granted</a> global edit, pin, close, archive, split and merge, more likes",
       "grant_count": 1,
       "allow_title": true,
       "multiple_grant": false,
