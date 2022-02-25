@@ -36,7 +36,7 @@
   },
   "dependencies": {
     "amqplib": "^0.5.1",
-    "aws-sdk": "^2.200.0",
+    "aws-sdk": "^2.1068.0",
     "axios": "^0.16.1",
     "babel-eslint": "^8.2.1",
     "bluebird": "^3.4.1",
