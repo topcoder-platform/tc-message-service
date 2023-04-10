@@ -2,7 +2,7 @@ FROM node:18.14.1-alpine3.17
 LABEL version="1.0"
 LABEL description="Messages Microservice"
 
-RUN apt-get install libpq-dev
+RUN apk add libpq-dev
 
 # Create app directory
 RUN mkdir -p /usr/src/app
