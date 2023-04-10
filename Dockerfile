@@ -1,4 +1,4 @@
-FROM node:18.14.1-alpine3.17
+FROM node:8.2.1
 LABEL version="1.0"
 LABEL description="Messages Microservice"
 

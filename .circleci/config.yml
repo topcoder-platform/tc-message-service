@@ -1,20 +1,18 @@
 version: 2
 defaults: &defaults
     docker:
-      - image: cimg/python:3.11.0-browsers  
+      - image: circleci/python:2.7-stretch-browsers  
 install_dependency: &install_dependency
           name: Installation of build and deployment dependencies.
           command: |
-            sudo apt update
             sudo apt install jq
-            sudo apt install python3-pip
-            sudo pip3 install awscli --upgrade
-            sudo pip3 install docker-compose
+            sudo pip install awscli --upgrade
+            sudo pip install docker-compose
             
 install_deploysuite: &install_deploysuite
           name: Installation of install_deploysuite.
           command: |
-            git clone --branch v1.4.14 https://github.com/topcoder-platform/tc-deploy-scripts ../buildscript    
+            git clone --branch master https://github.com/topcoder-platform/tc-deploy-scripts ../buildscript    
             cp ./../buildscript/master_deploy.sh .
             cp ./../buildscript/buildenv.sh .
             cp ./../buildscript/awsconfiguration.sh .
@@ -40,10 +38,10 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: test-node-modules-{{ checksum "yarn.lock" }}
+          key: test-node-modules-{{ checksum "package.json" }}
       - run: npm install
       - save_cache:
-          key: test-node-modules-{{ checksum "yarn.lock" }}
+          key: test-node-modules-{{ checksum "package.json" }}
           paths:
             - node_modules
       - run: npm run lint
