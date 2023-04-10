@@ -15,8 +15,8 @@ module.exports = (db, m2m) => (req, resp, next) => {
   const logger = req.log;
   const helper = HelperService(logger, db, m2m);
   logger.info('Entered Sendgrid webhook handler');
-  logger.trace('Request fields', req.fields);
-  const payload = req.fields;
+  logger.trace('Request fields', req.body);
+  const payload = req.body;
   let rawText = payload.text;
   rawText = rawText.replace(/On[\s\S.]*wrote:[\s\S.]*$/gm, '').trim();
   logger.trace('rawText.cleaned', rawText);

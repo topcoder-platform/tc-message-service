@@ -1,4 +1,4 @@
-import formidable from 'express-formidable';
+import multer from 'multer';
 import compression from 'compression';
 
 const router = require('express').Router();
@@ -170,7 +170,7 @@ module.exports = (logger, db, m2m) => {
   router.route(`/${apiVersion}/topics/attachments/:attachmentId/delete`)
     .delete(deleteAttachmentHandler(db, m2m));
 
-  router.use(`/${apiVersion}/topics/webhooks/sendgrid`, formidable());
+  router.use(`/${apiVersion}/topics/webhooks/sendgrid`, multer().none());
   router.route(`/${apiVersion}/topics/webhooks/sendgrid`)
     .post(webhookPostHandler(db, m2m));
   router.route(`/${apiVersion}/topics/esindex`)
