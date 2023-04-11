@@ -96,15 +96,11 @@ workflows:
     jobs:
       - deployDev:
           context : org-global
-          requires:
-            - test
           filters:
             branches:
               only: [dev,dev-sts,v5-upgrade]
       - deployProd:
           context : org-global
-          requires:
-            - test
           filters:
             branches:
               only: 'master'
