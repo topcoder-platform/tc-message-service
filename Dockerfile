@@ -1,8 +1,12 @@
-FROM node:8.2.1
+FROM node:12.16.1-alpine
 LABEL version="1.0"
 LABEL description="Messages Microservice"
 
-RUN apt-get install libpq-dev
+RUN apk add libpq
+
+RUN apk add --no-cache git
+
+RUN apk add --no-cache python
 
 # Create app directory
 RUN mkdir -p /usr/src/app

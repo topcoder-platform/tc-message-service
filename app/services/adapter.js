@@ -1,5 +1,5 @@
 const _ = require('lodash');
-const Helper = require('./helper.js');
+const Helper = require('./helper');
 const Promise = require('bluebird');
 const config = require('config');
 
