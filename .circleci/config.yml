@@ -85,7 +85,7 @@ jobs:
       - deploy:
           name: Running Masterscript - deploy tc-message-service
           command: |    
-            ./awsconfiguration.sh DEV
+            ./awsconfiguration.sh QA
             source awsenvconf
             ./buildenv.sh -e QA -b qa-tc-message-service-deployvar
             source buildenvvar
