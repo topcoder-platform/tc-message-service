@@ -4,6 +4,10 @@ LABEL description="Messages Microservice"
 
 RUN apk add libpq
 
+RUN apk add --no-cache git
+
+RUN apk add --no-cache python
+
 # Create app directory
 RUN mkdir -p /usr/src/app
 WORKDIR /usr/src/app
