@@ -72,6 +72,24 @@ jobs:
             ./buildenv.sh -e DEV -b dev-tc-message-service-deployvar
             source buildenvvar
             ./master_deploy.sh -d ECS -e DEV -t latest -s dev-global-appvar,dev-tc-message-service-appvar -i tc-message-service -p FARGATE 
+  deployQa:
+    <<: *defaults
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run: *install_dependency
+      - run: *install_deploysuite
+      - attach_workspace:
+          at: ./workspace
+      - run: *run_build
+      - deploy:
+          name: Running Masterscript - deploy tc-message-service
+          command: |    
+            ./awsconfiguration.sh DEV
+            source awsenvconf
+            ./buildenv.sh -e QA -b qa-tc-message-service-deployvar
+            source buildenvvar
+            ./master_deploy.sh -d ECS -e QA -t latest -s qa-global-appvar,qa-tc-message-service-appvar -i tc-message-service -p FARGATE             
   deployProd:
     <<: *defaults
     steps:
@@ -99,6 +117,11 @@ workflows:
           filters:
             branches:
               only: [dev,dev-sts,v5-upgrade]
+      - deployQa:
+          context : org-global
+          filters:
+            branches:
+              only: 'qa'             
       - deployProd:
           context : org-global
           filters:
