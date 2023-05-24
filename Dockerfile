@@ -17,6 +17,7 @@ COPY . /usr/src/app
 
 # Install app dependencies
 RUN npm install
+RUN npm run -s build
 
 EXPOSE 3000
 
