@@ -52,6 +52,7 @@ function updateElasticSearchIndex(db, adapter, from, to, reference, referenceId)
           body: dbTopic,
         }, (err) => {
           if (err) {
+            console.log(err)
             DynamoService.save(uuidv1(), dbTopic.id, 'topic', dbTopic, JSON.stringify(err));
           }
         });
