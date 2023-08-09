@@ -65,7 +65,7 @@ _.assign(util, {
       esClient = elasticsearch.Client({
         apiVersion: config.get('elasticsearchConfig.apiVersion'),
         hosts: esHost,
-        connectionClass: require('http-aws-es'), // eslint-disable-line global-require
+        // connectionClass: require('http-aws-es'), // eslint-disable-line global-require
         // amazonES: {
         //   region: 'us-east-1',
         //   credentials: new AWS.EnvironmentCredentials('AWS'),
