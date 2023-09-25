@@ -69,7 +69,7 @@ module.exports = (db, m2m) =>
                 }
                 // all is good, return the attachment
                 const s3 = new aws.S3();
-                const signedUrl = s3.getSignedUrl('getObject', {
+                const signedUrl = await s3.getSignedUrlPromise('getObject', {
                   Bucket: config.get('aws.S3.targetBucket'),
                   Key: helper.s3KeyFromUrl(attachment.url),
                 });
