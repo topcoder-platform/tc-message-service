@@ -1,4 +1,4 @@
-import elasticsearch from 'elasticsearch';
+import opensearch from '@opensearch-project/opensearch';
 // import AWS from 'aws-sdk';
 
 const _ = require('lodash');
@@ -23,7 +23,7 @@ function isValid(_token) {
 
 const util = _.cloneDeep(require('tc-core-library-js').util(config));
 // the client modifies the config object, so always passed the cloned object
-let esClient = null;
+let osClient = null;
 
 _.assign(util, {
   /**
@@ -55,26 +55,20 @@ _.assign(util, {
   },
 
   /**
-   * Return the initialized elastic search client
-   * @return {Object}           the elasticsearch client instance
+   * Return the initialized opensearch client
+   * @return {Object}           the opensearch client instance
    */
-  getElasticSearchClient: () => {
-    if (esClient) return esClient;
-    const esHost = config.get('elasticsearchConfig.host');
-    if (/.*amazonaws.*/.test(esHost)) {
-      esClient = elasticsearch.Client({
-        apiVersion: config.get('elasticsearchConfig.apiVersion'),
-        hosts: esHost,
-        // connectionClass: require('http-aws-es'), // eslint-disable-line global-require
-        // amazonES: {
-        //   region: 'us-east-1',
-        //   credentials: new AWS.EnvironmentCredentials('AWS'),
-        // },
+  getOpenSearchClient: () => {
+    if (osClient) return osClient;
+    const osHost = config.get('opensearchConfig.host');
+    if (/.*amazonaws.*/.test(osHost)) {
+      osClient = new opensearch.Client({
+        node: osHost
       });
     } else {
-      esClient = new elasticsearch.Client(_.cloneDeep(config.elasticsearchConfig));
+      osClient = new opensearch.Client(_.cloneDeep(config.opensearchConfig));
     }
-    return esClient;
+    return osClient;
   },
 });
 

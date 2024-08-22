@@ -6,7 +6,7 @@ const util = require('tc-core-library-js').util(config);
 const errors = require('common-errors');
 const Joi = require('joi');
 const { EVENT } = require('../../constants');
-const esClient = require('./../../elasticSearchConnection');
+const osClient = require('./../../openSearchConnection');
 const uuidv1 = require('uuid/v1');
 const DynamoService = require('../../services/dynamodbErrorLog');
 
@@ -54,7 +54,7 @@ module.exports = (db, m2m) => (req, resp, next) => {
         topic.deletedBy = userId;
         topic.save().then(() => {
           // update elastic search index
-          esClient.delete({
+          osClient.delete({
             index: config.get('elasticsearchConfig.indexName'),
             type: 'topic',
             id: topic.id,

@@ -5,7 +5,7 @@ const Promise = require('bluebird');
 
 const db = models(server, server.logger);
 
-const esClient = require('./../elasticSearchConnection');
+const osClient = require('./../openSearchConnection');
 
 const config = require('config');
 
@@ -61,7 +61,7 @@ function clearDBPromise() {
       logging: false,
     }))
     .then(() => {
-      esClient.deleteByQuery(
+      osClient.deleteByQuery(
         {
           index: config.get('elasticsearchConfig.indexName'),
           type: 'topic',
@@ -140,16 +140,14 @@ function prepareDB(done) {
         delete tpc1.tags;
         tpc2.tag = tpc2.tags.join(',');
         delete tpc2.tags;
-        esClient.index({
+        osClient.index({
           index: config.get('elasticsearchConfig.indexName'),
           id: tpc1.id,
-          type: 'topic',
           body: tpc1,
         }, () => {
-          esClient.index({
+          osClient.index({
             index: config.get('elasticsearchConfig.indexName'),
             id: tpc2.id,
-            type: 'topic',
             body: tpc2,
           }, () => {
             if (done && typeof done === 'function') {
