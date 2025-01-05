@@ -3,7 +3,7 @@ import config from 'config';
 import HelperService from '../../services/helper';
 
 const util = require('tc-core-library-js').util(config);
-const esClient = require('./../../elasticSearchConnection');
+const osClient = require('./../../openSearchConnection');
 const Adapter = require('../../services/adapter');
 const esIndex = require('./../indexing/indexing');
 const _ = require('lodash');
@@ -29,7 +29,7 @@ module.exports = (db, m2m) =>
     const topicId = req.params.topicId;
     const userId = req.authUser.userId.toString();
 
-    return esClient.search({
+    return osClient.search({
       index: config.get('elasticsearchConfig.indexName'),
       type: 'topic',
       body: { query: { match: { id: topicId } } },

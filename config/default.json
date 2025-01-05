@@ -18,7 +18,7 @@
   "attachmentConfig": {
     "deleteAfter": "1 day"
   },
-  "elasticsearchConfig": {
+  "opensearchConfig": {
     "host": "http://localhost:9200",
     "apiVersion": "6.2",
     "indexName": "messages",

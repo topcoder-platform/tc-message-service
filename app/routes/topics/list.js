@@ -6,7 +6,7 @@ const util = require('tc-core-library-js').util(config);
 const Promise = require('bluebird');
 const errors = require('common-errors');
 const Joi = require('joi');
-const esClient = require('./../../elasticSearchConnection');
+const osClient = require('./../../openSearchConnection');
 const Adapter = require('../../services/adapter');
 const esIndex = require('./../indexing/indexing');
 
@@ -76,10 +76,10 @@ module.exports = (db, m2m) =>
           throw new errors.HttpStatusError(403, 'User doesn\'t have access to the entity');
         }
         // Get topics from the Elastic Search
-        return esClient.search({
-          index: config.get('elasticsearchConfig.indexName'),
+        return osClient.search({
+          index: config.get('opensearchConfig.indexName'),
           type: 'topic',
-          size: config.get('elasticsearchConfig.pageSize'),
+          size: config.get('opensearchConfig.pageSize'),
           body: esFilter,
         })
           .then((dbTopicElastic) => {

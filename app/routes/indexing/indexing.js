@@ -3,7 +3,7 @@ const _ = require('lodash');
 const config = require('config');
 const Joi = require('joi');
 const Adapter = require('../../services/adapter');
-const esClient = require('./../../elasticSearchConnection');
+const osClient = require('../../openSearchConnection');
 const Sequelize = require('sequelize');
 const uuidv1 = require('uuid/v1');
 const errors = require('common-errors');
@@ -45,10 +45,9 @@ function updateElasticSearchIndex(db, adapter, from, to, reference, referenceId)
       // const adaptedTopics = adapter.adaptTopics({ topics : dbTopics });
       _.each(dbTopics, (dbTopic) => {
         db.logger.debug(`Indexing ${dbTopic.id}`);
-        esClient.index({
-          index: config.get('elasticsearchConfig.indexName'),
+        osClient.index({
+          index: config.get('opensearchConfig.indexName'),
           id: dbTopic.id,
-          type: 'topic',
           body: dbTopic,
         }, (err) => {
           if (err) {
