@@ -96,7 +96,7 @@ workflows:
           context : org-global
           filters:
             branches:
-              only: [dev,dev-sts,v5-upgrade, db-schema]
+              only: [dev,dev-sts,v5-upgrade, db_schema]
       - deployProd:
           context : org-global
           filters:
