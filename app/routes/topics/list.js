@@ -73,18 +73,18 @@ module.exports = (db, m2m) =>
       .then(async (hasAccessResp) => {
         const hasAccess = await helper.userHasAccessToEntity(userId, hasAccessResp, [], filter.reference);
         if (!hasAccess && !helper.isAdmin(req)) {
-          throw new errors.HttpStatusError(403, 'User doesn\'t have access to the entity');
+          console.log(`Is admin: ${helper.isAdmin(req)}`)
+          throw new errors.HttpStatusError(403, `User ${userId} doesn\'t have access to the entity`);
         }
         // Get topics from the Elastic Search
         return osClient.search({
           index: config.get('opensearchConfig.indexName'),
-          type: 'topic',
           size: config.get('opensearchConfig.pageSize'),
           body: esFilter,
         })
           .then((dbTopicElastic) => {
             const dbTopics = [];
-            _.forEach(dbTopicElastic.hits.hits, (source) => {
+            _.forEach(dbTopicElastic.body.hits.hits, (source) => {
               dbTopics.push(source._source);
             });
             if (!dbTopics || dbTopics.length === 0) {
@@ -118,7 +118,6 @@ module.exports = (db, m2m) =>
           .then(result => resp.status(200).send(util.wrapResponse(req.id, result)));
       })
       .catch((error) => {
-        logger.error(error);
         next(error instanceof errors.HttpStatusError ?
           error : new errors.HttpStatusError(500, 'Error fetching topics'));
       });

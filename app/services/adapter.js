@@ -44,8 +44,7 @@ function Adapter(logger, db, _discourseClient = null) {// eslint-disable-line
       read: true,
       body: input.raw,
       rawContent: input.raw,
-      attachments: [],
-      type: 'post',
+      attachments: []
     };
     _.each(input.postAttachments, (postAttachment) => {
       const attachment = {
@@ -117,7 +116,6 @@ function Adapter(logger, db, _discourseClient = null) {// eslint-disable-line
           body: dbPost.raw,
           rawContent: dbPost.raw,
           attachments: [],
-          type: 'post',
         };
 
         _.each(dbPost.postAttachments, (postAttachment) => {
