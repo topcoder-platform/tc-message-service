@@ -17,6 +17,11 @@ const db = {};
 
 const sequelize = new Sequelize(config.get('dbConfig.masterUrl'), {
   logging: false,
+  schema: config.get('dbConfig.schema'),
+  dialectOptions: {
+    prependSearchPath: true
+  },
+  searchPath: config.get('dbConfig.schema')
 });
 
 fs
