@@ -30,7 +30,8 @@
   "AUTH_SECRET": "AUTH_SECRET",
   "memberServiceUrl": "MEMBER_SERVICE_URL",
   "dbConfig": {
-    "masterUrl": "DB_MASTER_URL"
+    "masterUrl": "DB_MASTER_URL",
+    "schema": "DB_SCHEMA"
   },
   "logLevel": "LOG_LEVEL",
   "logentriesToken": "LOGENTRIES_TOKEN",

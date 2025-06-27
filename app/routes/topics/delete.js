@@ -56,7 +56,6 @@ module.exports = (db, m2m) => (req, resp, next) => {
           // update elastic search index
           osClient.delete({
             index: config.get('elasticsearchConfig.indexName'),
-            type: 'topic',
             id: topic.id,
           }, (err) => {
             if (err) {

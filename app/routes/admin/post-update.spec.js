@@ -71,8 +71,7 @@ describe('POST /v5/topics/admin/posts/:postId/edit ', () => {
       userId: data.userId !== undefined ? data.userId : undefined,
       read: true,
       body: data.raw !== undefined ? data.raw : undefined,
-      rawContent: data.raw !== undefined ? data.raw : undefined,
-      type: 'post',
+      rawContent: data.raw !== undefined ? data.raw : undefined
     });
     return _.omit(newData, _.isUndefined);
   };
