@@ -63,8 +63,7 @@ function clearDBPromise() {
     .then(() => {
       osClient.deleteByQuery(
         {
-          index: config.get('elasticsearchConfig.indexName'),
-          type: 'topic',
+          index: config.get('opensearchConfig.indexName'),
           body: { query: {
             match_all: {},
           } },

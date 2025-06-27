@@ -31,14 +31,13 @@ module.exports = (db, m2m) =>
 
     return osClient.search({
       index: config.get('elasticsearchConfig.indexName'),
-      type: 'topic',
       body: { query: { match: { id: topicId } } },
     }).then((dbTopicElastic) => {
-      if (dbTopicElastic.hits.hits.length === 0) {
+      if (dbTopicElastic.body.hits.hits.length === 0) {
         const err = new errors.HttpStatusError(404, 'Topic does not exist');
         return next(err);
       }
-      const dbTopic = dbTopicElastic.hits.hits[0]._source;
+      const dbTopic = dbTopicElastic.body.hits.hits[0]._source;
 
       if (!dbTopic) {
         const err = new errors.HttpStatusError(404, 'Topic does not exist');
